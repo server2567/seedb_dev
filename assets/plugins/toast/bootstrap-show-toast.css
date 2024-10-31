@@ -1,0 +1,7 @@
+/* toast alert check_que_appointment_doctor_wts */
+.toast-wts-alert-container {
+    z-index: 1050; /* Adjust as needed to ensure it's on top */
+}
+.toast-wts-alert-container .toast-wts-alert{
+    background-color: rgba(var(--bs-body-bg-rgb), 1);
+}

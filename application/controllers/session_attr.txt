@@ -1,0 +1,17 @@
+us_id               user id
+us_ps_id            hr id
+us_username         username
+us_dp_id            user department id
+us_name             name of user
+dp_name_th          name of department's user
+logged_in           is login
+
+st_id               system id
+st_home_url         home's system url
+st_name_abbr_en     abbr_en's system url
+menus_sidebar       menu at sidebar that user can access
+
+language            language environment
+us_groups           roles(ums_group) detail that user have
+
+eqs_rm_id           (encrypt) eqs_equipments id (medical tool) that user log in DIM
