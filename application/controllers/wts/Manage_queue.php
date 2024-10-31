@@ -506,8 +506,16 @@ class Manage_queue extends WTS_Controller
 	
 	public function assign_status($apm_id) {
 		$apm_id = decrypt_id($apm_id);
-
 		$this->load->model('ams/M_ams_notification_result');
+
+		$check_room = $this->M_que_appointment->get_room($apm_id)->result_array();
+		if(empty($check_room)){
+			echo json_encode([
+				'status_response' => 'error not select room',
+				'message' => 'กรุณาแจ้งเจ้าหน้าที่หน้าห้องตรวจให้ระบุห้อง'
+			]);
+			return;
+		}
 		
 		$this->M_que_appointment->apm_id = $apm_id;
 		$this->M_que_appointment->apm_sta_id = $this->input->post('sta_id');
@@ -656,6 +664,9 @@ class Manage_queue extends WTS_Controller
 
       // pre($sql_room); die;
       $pdo = $this->connect_his_database();
+		// if ($pdo === null) {
+		// 	die("Database connection failed.");
+		// }
       $sql = "INSERT INTO tabDoctorRoom (visit, sender_name, sender_last_name, sending_location_room, datetime_sent, doctor_room, location) 
       VALUES (:visit, :sender_name, :sender_last_name, :sending_location_room, :datetime_sent, :doctor_room, :location)";
       $stmt = $pdo->prepare($sql);

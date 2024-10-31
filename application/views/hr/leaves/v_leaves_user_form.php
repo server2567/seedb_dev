@@ -93,11 +93,11 @@
                         <div class="col-md-7">
                             <div class="row mb-2">
                                 <div class="col-md-4 text-end">
-                                    <label for="" class="form-label">ชื่อ-นามสกุล</label>
+                                    <label id="ps_name_display" for="" class="form-label">ชื่อ-นามสกุล</label>
                                 </div>
                                 <!-- <div class="col-md-3"> -->
                                 <div class="col-md-4">
-                                    <label for="" class="form-label"><?php echo $target_user_leave_summary['pf_name'].$target_user_leave_summary['ps_fname']." ".$target_user_leave_summary['ps_lname']; ?></label>
+                                    <label id="ps_name_display" for="" class="form-label"><?php echo $target_user_leave_summary['pf_name'].$target_user_leave_summary['ps_fname']." ".$target_user_leave_summary['ps_lname']; ?></label>
                                     <!-- <label for="" class="form-label">นพ.บรรยง ชินกุลกิจนิวัฒน์</label> -->
                                 </div>
                             </div>
@@ -106,7 +106,7 @@
                                     <label for="" class="form-label">ประเภทบุคลากร</label>
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="" class="form-label"><?php echo $target_user_leave_summary['hire_abbr']; ?></label>
+                                    <label id="hire_abbr_display" for="" class="form-label"><?php echo $target_user_leave_summary['hire_abbr']; ?></label>
                                 </div>
                             </div>
                             <div class="row mb-2">
@@ -296,8 +296,6 @@
 
     document.getElementById("work-age").innerHTML = calWorkAge(`<?= $target_user_leave_summary['final_found'] ?>`, <?= $target_user_leave_summary['work_experience_days'] ?>);
 
-
-
     ///
 
     function renderWorkAgeCalSettingUI(calType) {
@@ -313,7 +311,7 @@
                 $("#div_select_date_cal_type").removeClass("col-4");
                 $("#div_select_dp_id").addClass("col-6");
                 $("#div_select_date_cal_type").addClass("col-6");
-            }
+        }
 
         // if (switchingMode) {
         //     if (calType === "custom_year") {
@@ -351,172 +349,93 @@
     
     $(document).ready(function() {
         // Initial DataTable update
-        // updateDataTable();
+        // getData();
         renderWorkAgeCalSettingUI($('#select_date_cal_type').val());
+        getData();
     });
-
-    
 
     // Event listeners for select dropdowns
     $('#select_date_cal_type').on('change', function() {
-        // updateDataTable();
+        // getData();
         renderWorkAgeCalSettingUI($('#select_date_cal_type').val());
-        
     });
 
     // Event listeners for select dropdowns
-    // $('#select_dp_id, #select_date_cal_type , #select_end_date_cal').on('change', function() {
-    //     // Update DataTable when a select dropdown changes
-    //     // alert(`Hi ${$('#select_budget_year').val()}`);
-    //     updateDataTable();
-    // });
+    $('#select_dp_id, #select_date_cal_type , #select_end_date_cal').on('change', function() {
+        // Update DataTable when a select dropdown changes
+        // alert(`Hi ${$('#select_budget_year').val()}`);
+        getData();
+    });
 
-    // Function to update DataTable based on select dropdown values
-    // function updateDataTable() {
-        
-    //     // Initialize DataTable
-    //     var dataTable = $('#leave_summary_table').DataTable();
+    //Function to update DataTable based on select dropdown values
+    function getData() {
+        // console.log('getData()');
+        // Make AJAX request to fetch updated data
+        $.ajax({
+            url: '<?php echo site_url() . "/" . $controller_dir ?>' + "leaves_user/get_data_for_edit_page/",
+            type: 'POST',
+            data: {
+                budget_year: <?php echo $budget_year; ?>,
+                user_id: <?php echo $user_id; ?>
+            },
+            success: function(response) {
+                // data = response;
+                data = JSON.parse(response);
+                console.log('data: ', data);
 
-    //     // select_budget_year = Number(select_budget_year) - 543;
-    //     // var select_budget_year = $('#select_budget_year').val() - 543;
-    //     // var select_budget_year = $('#select_budget_year').val();
-    //     let select_budget_year = document.getElementById("select_budget_year").value;
-    //     var select_hire_is_medical = $('#select_hire_is_medical').val();
-    //     var select_hire_type = $('#select_hire_type').val();
-    //     var select_work_status = $('#select_work_status').val();
 
-    //     // alert(`detect ${select_budget_year}`);
+                $("div.div_1").html( 
 
-    //     function checkData(data) {
-    //         if (data == "YES") {
-    //             return "มีข้อมูลแล้ว";
-    //         } else {
-    //             return "ยังไม่มีข้อมูล";
-    //         }
-    //     }
+                // Clear existing DataTable data
+                // dataTable.clear().draw();
 
-    //     function calWorkAge(data, workAgeDays) {
-    //         if (data == "YES") {
-    //             // return "แสดงข้อมูล";
-                
-    //             days = workAgeDays;
+                // // // Update summary count
+                // $("#leave_summary_table_row_amount").text(data.result.length);
 
-    //             years_remaining = parseInt(days / 365); //divide by 365 and throw away the remainder
-    //             minused = (years_remaining * 365); 
-
-    //             days -= minused;
-
-    //             months_remaining = parseInt(days / 30); //divide by 365 and throw away the remainder
-    //             minused = (months_remaining * 30); 
-
-    //             days -= minused;
-
-    //             days_remaining = days % 365;    //divide by 365 and *return* the remainder
-
-    //             return `${years_remaining} ปี ${months_remaining} เดือน ${days_remaining} วัน`;
-    //         } else {
-    //             return "-";
-    //         }
-    //     }
-
-    //     function checkDateCalType(data) {
-    //         if (data == "carlendar_year") {
-    //             return "ปีปฏิทิน";
-    //         } else if (data == "custom_year") {
-    //             return "วันที่ที่เจ้าหน้าที่กำหนด";
-    //         } else {
-    //             return "-";
-    //         }
-    //     }
-
-    //     function checkDataShowDash(data) {
-    //         if (data !== null) {
-    //             return data;
-    //         } else {
-    //             return "-";
-    //         }
-    //     }
-
-    //     function displayEndDateCal(dateCalType, endDateCal, year) {
-    //         if (dateCalType == 'carlendar_year') {
-    //             return `${year}-01-01`
-    //         } else if (dateCalType == 'custom_year') {
-    //             if (endDateCal != null) {
-    //                 return endDateCal;
-    //             } else {
-    //                 return "-";
-    //             }
-    //         } else {
-    //             return '-';
-    //         }
-            
-    //     }
-
-    //     // Make AJAX request to fetch updated data
-    //     $.ajax({
-    //         url: '<?php //site_url() . "/" . $controller_dir ?>' + "leaves_user/get_leave_summary_by_condition/",
-    //         type: 'POST',
-    //         data: {
-    //             select_budget_year: Number(select_budget_year),
-    //             // select_budget_year: Number(select_budget_year) - 543,
-    //             select_hire_is_medical,
-    //             select_hire_type,
-    //             select_work_status
-    //         },
-    //         success: function(response) {
-    //             data = JSON.parse(response)
-    //             // console.log('data: ', data);
-
-    //             // Clear existing DataTable data
-    //             dataTable.clear().draw();
-
-    //             // // Update summary count
-    //             $("#leave_summary_table_row_amount").text(data.result.length);
-
-    //             index = 1;
-    //             data.result.forEach((item, index) => {
+                // index = 1;
+                // data.result.forEach((item, index) => {
                     
-    //                 // button = `
-    //                 //     <div class="text-center option">
-    //                 //         <button class="btn btn-warning" onclick="window.location.href='<?php// echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/<?php echo 1 ?>'"><i class="bi-pencil-square"></i></button>
-    //                 //     </div>
-    //                 // `;
+                //     // button = `
+                //     //     <div class="text-center option">
+                //     //         <button class="btn btn-warning" onclick="window.location.href='<?php// echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/<?php// echo 1 ?>'"><i class="bi-pencil-square"></i></button>
+                //     //     </div>
+                //     // `;
 
-    //                 button = `
-    //                     <div class="text-center option">
-    //                         <button class="btn btn-warning" onclick="window.location.href='<?php echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/?select_budget_year=${select_budget_year}&user_id=${item['T1.pos_ps_id']}'"><i class="bi-pencil-square"></i></button>
-    //                     </div>
-    //                 `;
+                //     button = `
+                //         <div class="text-center option">
+                //             <button class="btn btn-warning" onclick="window.location.href='<?php // echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/?select_budget_year=${select_budget_year}&user_id=${item['T1.pos_ps_id']}'"><i class="bi-pencil-square"></i></button>
+                //         </div>
+                //     `;
 
                     
 
-    //                 // Add new row to DataTable
-    //                 dataTable.row.add([
-    //                         ++index,
-    //                         (`${item.ps_fname} ${item.ps_lname}`) ,
-    //                         item.hire_abbr,
-    //                         item.detail,
-    //                         checkData(item.final_found),
-    //                         calWorkAge(item.final_found, item.work_experience_days),
-    //                         checkDateCalType(item.lsum_date_cal_type),
-    //                         // checkDataShowDash(item.pos_work_start_date),
-    //                         checkDataShowDash(item.pos_work_start_date),
-    //                         displayEndDateCal(item.lsum_date_cal_type, item.lsum_end_date_cal, Number(select_budget_year)),
-    //                         // item.lsum_year,
-    //                         button
-    //                     ]).draw();
-    //             });
+                //     // Add new row to DataTable
+                //     dataTable.row.add([
+                //             ++index,
+                //             (`${item.ps_fname} ${item.ps_lname}`) ,
+                //             item.hire_abbr,
+                //             item.detail,
+                //             checkData(item.final_found),
+                //             calWorkAge(item.final_found, item.work_experience_days),
+                //             checkDateCalType(item.lsum_date_cal_type),
+                //             // checkDataShowDash(item.pos_work_start_date),
+                //             checkDataShowDash(item.pos_work_start_date),
+                //             displayEndDateCal(item.lsum_date_cal_type, item.lsum_end_date_cal, Number(select_budget_year)),
+                //             // item.lsum_year,
+                //             button
+                //         ]).draw();
+                // });
 
-    //             // Initialize tooltips for new buttons
-    //             $('[data-bs-toggle="tooltip"]').tooltip();
-    //         },
-    //         error: function(xhr, status, error) {
-    //             // Handle errors
-    //             dialog_error({
-    //                 'header': text_toast_default_error_header,
-    //                 'body': text_toast_default_error_body
-    //             });
-    //         }
-    //     });
-    // }
+                // // Initialize tooltips for new buttons
+                // $('[data-bs-toggle="tooltip"]').tooltip();
+            },
+            error: function(xhr, status, error) {
+                // Handle errors
+                dialog_error({
+                    'header': text_toast_default_error_header,
+                    'body': text_toast_default_error_body
+                });
+            }
+        });
+    }
 </script>

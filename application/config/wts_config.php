@@ -28,5 +28,8 @@
     $config['wts_room_rel'] = '28'; // แผนกศูนย์เคลียร์เลสิค 
 
 
+    $config['wts_finance'] = '63';
+    $config['wts_medicine'] = '77'; 
+
     // PROFILE Directory Name
 ?>

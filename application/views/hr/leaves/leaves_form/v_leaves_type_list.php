@@ -75,7 +75,7 @@
 
                                                 $text_remain = "";
                                                 if ($row->lsum_remain_day == 0) {
-                                                    $text_remain .= "คงเหลือ " . $row->lsum_remain_day . " วัน ";
+                                                    $text_remain .= "คงเหลือ ";
                                                 }
                                                 else {
                                                     $text_remain .= "คงเหลือ " . $row->lsum_remain_day . " วัน ";
