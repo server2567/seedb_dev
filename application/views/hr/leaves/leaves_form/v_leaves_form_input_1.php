@@ -110,7 +110,7 @@ $row = $person_department_detail[0];
 
                         <div class="row mt-3">
                             <div class="col-md-2"></div>
-                            <div  class="col-md-10" id="output_leaves_table">
+                            <div class="col-md-10" id="output_leaves_table">
                                 <table id="result_leaves_table" class="table table-bordered table-hover" width="100%">
                                     
                                 </table>
@@ -226,7 +226,7 @@ $row = $person_department_detail[0];
 
 
 <script>
-
+var isValid = true;
 $(document).ready(function() {
     // Set default end date
     const defaultEndDate = new Date(new Date().getFullYear() + 543, new Date().getMonth(), new Date().getDate()); // Set default end date as 7 days ahead
@@ -236,7 +236,6 @@ $(document).ready(function() {
 
 function leaves_save_form() {
     var formData = new FormData($('#leaves_form_input')[0]); // Capture the form including files
-    var isValid = true;
 
     var startDate = buddhistToGregorian(document.getElementById("leaves_start_date").value);
     var endDate = buddhistToGregorian(document.getElementById("leaves_end_date").value);
@@ -245,11 +244,14 @@ function leaves_save_form() {
     var leaves_summary_value = $("#leaves_summary_value").val();
     var [day, hour, minute] = leaves_summary_value.split('-');
 
+    var text_valid = "";
+
     $('#leaves_form_input .form-control').each(function() {
         var fieldName = $(this).attr('name');
 
         if (fieldName === "leaves_upload_file" && day >= 3 && $(this).val() === '') {
             isValid = false;
+            text_valid = "กรุณากรอกข้อมูลให้ครบถ้วน<br>";
             $(this).removeClass('is-valid').addClass('is-invalid').siblings('.invalid-feedback').show();
         } else {
             $(this).removeClass('is-invalid').addClass('is-valid').siblings('.invalid-feedback').hide();
@@ -257,11 +259,21 @@ function leaves_save_form() {
 
         if (fieldName === "leaves_detail" && $(this).val() === '') {
             isValid = false;
+            text_valid = "กรุณากรอกข้อมูลให้ครบถ้วน<br>";
             $(this).removeClass('is-valid').addClass('is-invalid').siblings('.invalid-feedback').show();
         } else {
             $(this).removeClass('is-invalid').addClass('is-valid').siblings('.invalid-feedback').hide();
         }
     });
+
+    if(day == 0 && hour == 0 && minute == 0){
+        isValid = false;
+        text_valid = "ผลรวมจำนวนต้องมากกว่า 1 ชั่วโมง<br>";
+    }
+    else if(day == 0 && hour < 1){
+        isValid = false;
+        text_valid = "ผลรวมจำนวนต้องมากกว่า 1 ชั่วโมง<br>";
+    }
 
     if (isValid) {
         // All fields are filled, proceed with AJAX request
@@ -295,9 +307,8 @@ function leaves_save_form() {
     else{
         Swal.fire({
             icon: "error",
-            title: "ดำเนินการไม่สำเร็จ<br>กรุณากรอกข้อมูลให้ครบถ้วน",
-            showConfirmButton: false,
-            timer: 1500
+            title: "ดำเนินการไม่สำเร็จ<br>" + text_valid,
+            showConfirmButton: true
         });
     }
 }
@@ -330,14 +341,14 @@ function generate_leaves_table() {
     var table = "<table class='table table-bordered' width='100%'>" +
                     "<thead class='table-primary'>" +
                         "<tr>" +
-                            "<th class='text-center' scope='col' rowspan='2'>#</th>" +
-                            "<th class='text-center' scope='col' rowspan='2'>วันที่</th>" +
-                            "<th class='text-center' scope='col' colspan='2'>ประเภทเวลา</th>" +
-                            "<th class='text-center' scope='col' rowspan='2'>รวม</th>" +
+                            "<th class='text-center' scope='col' rowspan='2' width='5%'>#</th>" +
+                            "<th class='text-center' scope='col' rowspan='2' width='15%'>วันที่</th>" +
+                            "<th class='text-center' scope='col' colspan='2' width='15%'>ประเภทเวลา</th>" +
+                            "<th class='text-center' scope='col' rowspan='2' width='10%'>รวม</th>" +
                         "</tr>" +
                         "<tr>" +
-                            "<th class='text-center' scope='col'>ลาเต็มวัน</th>" +
-                            "<th class='text-center' scope='col'>ลารายชั่วโมง</th>" +
+                            "<th class='text-center' scope='col' width='10%'>ลาเต็มวัน</th>" +
+                            "<th class='text-center' scope='col' width='20%'>ลารายชั่วโมง</th>" +
                         "</tr>" +
                     "</thead>" +
                     "<tbody>";
@@ -349,21 +360,29 @@ function generate_leaves_table() {
         count_day++;
         table += "<tr>" +
                     "<td><div class='text-center'>" + (i + 1) + "</div></td>" +
-                    "<td><div class='text-center'>" + formattedDate + "</div></td>" +
-                    "<td><div class='form-check'>" +
+                    "<td>" +
+                        "<div class='text-center'>" + formattedDate + "</div>" +
+                        "<div class='text-center'><span class='badge bg-primary text-white' id='show_warning_timework_plan_work_"+i+"'><i class='bi bi-briefcase me-1 font-16'></i>วันทำงาน</span></div>" +
+                        "<div class='text-center'><span class='badge bg-success text-white' id='show_warning_timework_plan_holiday_"+i+"'><i class='bi bi-calendar-check me-1 font-16'></i>วันหยุดประจำสัปดาห์</span></div>" +
+                    "</td>" +
+                    "<td id='td_leaves_time_type_"+i+"'><div class='form-check' id='div_form_check_"+i+"'>" +
                         "<input class='form-check-input' type='radio' name='leaves_time_type_" + i + "' id='leaves_time_type_" + i + "_1' value='1' onchange='calculate_leaves_summary()' checked>" +
                     "</div></td>" +
-                    "<td>" +
+                    "<td id='td_group_leave_time_"+i+"'>" +
                     "<div class='input-group' id='group_leaves_time_" + i + "' name='group_leaves_time_" + i + "'>" +
                         "<span class='input-group-text'><input class='form-check-input' type='radio' name='leaves_time_type_" + i + "' id='leaves_time_type_" + i + "_2' value='2' onchange='calculate_leaves_summary()'></span>" + 
                         "<input type='text' id='leaves_start_time_" + i + "' name='leaves_start_time_" + i + "' class='form-control leaves_start_time' onchange='calculate_leaves_summary()'>" +
                         "<span class='input-group-text'>ถึง</span>" +
                         "<input type='text' id='leaves_end_time_" + i + "' name='leaves_end_time_" + i + "' class='form-control leaves_end_time' onchange='calculate_leaves_summary()'>" +
                     "</div>" +
+                    "<div class='text-center'><span class='badge bg-warning text-dark' id='show_warning_time_type_2_"+i+"'><i class='bi bi-exclamation-triangle me-1 font-16'></i> 8 ชั่วโมง มีค่าเท่ากับ 1 วัน</span></div>" +
+                    "<div class='text-center'><span class='badge bg-success text-white' id='show_warning_break_type_2_"+i+"'><i class='bi bi-check-circle me-1 font-16'></i> ไม่นับชั่วโมงในเวลาพักเที่ยง</span></div>" +
                     "</td>" +
                     "<td>" +
                         "<div class='text-center' id='leaves_summary_" + i + "' name='leaves_summary_" + i + "'></div>" + 
+                        "<div class='text-center'><span class='badge bg-warning text-white' id='show_warning_time_summary_"+i+"'><i class='bi bi-exclamation-triangle me-1 font-16'></i>คำนวณไม่ถูกต้อง</span></div>" +
                         "<input type='hidden' id='leaves_date_" + i + "' name='leaves_date_" + i + "' class='form-control' value='"+ formattedDate +"'>" + 
+                        "<input type='hidden' id='leaves_timework_plan_" + i + "' name='leaves_timework_plan_" + i + "' class='form-control' value='holiday'>" + 
                         "<input type='hidden' id='leaves_summary_day_" + i + "' name='leaves_summary_day_" + i + "' class='form-control' value=''>" +
                         "<input type='hidden' id='leaves_summary_hour_" + i + "' name='leaves_summary_hour_" + i + "' class='form-control' value=''>" +
                         "<input type='hidden' id='leaves_summary_minute_" + i + "' name='leaves_summary_minute_" + i + "' class='form-control' value=''>"
@@ -374,11 +393,12 @@ function generate_leaves_table() {
     table += "</tbody>" +
                 "<tfoot>" +
                     "<tr>" +
-                        "<td colspan='4'><div class='text-center'>รวม</div></td>" +
+                        "<td colspan='4'><div class='text-center'>รวม </div></td>" +
                         "<td><div class='text-center' id='leaves_summary_text' name='leaves_summary_text'></div><input type='hidden' id='leaves_summary_value' name='leaves_summary_value' class='form-control' value=''></td>" +
                     "</tr>" +
                 "</tfoot>" +
-            "</table>";
+            "</table>" +
+            "<p><font color='red'> * หมายเหตุ : ทั้งนี้หากท่านคิดว่าข้อมูลของท่านไม่ถูกต้อง กรุณาประสานงานเจ้าหน้าที่ทรัพยากรบุคคล</font></p>";
 
     document.getElementById("output_leaves_table").innerHTML = table;
 
@@ -401,113 +421,248 @@ function generate_leaves_table() {
         defaultDate: "09:00"
     });
     $(".leaves_end_time").attr("disabled", true);
+
     calculate_leaves_summary();
+    
 }
 
-function calculate_leaves_summary() {
-    var totalDays = 0; // Initialize total days counter
-    var totalHours = 0; // Initialize total hours counter
-    var totalMinutes = 0; // Initialize total minutes counter
+function buddhistThToGregorian(dateStr) {
+    // Split the input date (day/month/year) format
+    let [day, month, year] = dateStr.split('/').map(Number);
 
+    // Convert Buddhist year to Gregorian year by subtracting 543
+    year -= 543;
+
+    // Format the Gregorian date as YYYY-MM-DD
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function check_timework_plan(callback) {
     var startDateValue = document.getElementById("leaves_start_date").value;
     var endDateValue = document.getElementById("leaves_end_date").value;
 
-    // Convert Buddhist dates to Gregorian dates
-    let startDate = buddhistToGregorian(startDateValue);
-    let endDate = buddhistToGregorian(endDateValue);
+    let startDate = buddhistThToGregorian(startDateValue);
+    let endDate = buddhistThToGregorian(endDateValue);
 
-    // Calculate the difference in days
-    let diffTime = endDate - startDate;
-    let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    $.ajax({
+        url: '<?php echo site_url()."/".$controller; ?>check_timework_plan_for_leave',
+        type: 'POST',
+        data: {
+            start_date: startDate,
+            end_date: endDate,
+            ps_id: "<?php echo encrypt_id($row_profile->ps_id); ?>"
+        },
+        success: function(response) {
+            data = JSON.parse(response);
 
-    // Loop through each day in the date range
-    for (var i = 0; i <= diffDays; i++) {
-        var radioValue = document.querySelector("input[name='leaves_time_type_" + i + "']:checked").value;
-        var dayCounter = 0;
-        var hourCounter = 0;
-        var minuteCounter = 0;
+            // Calculate the difference in days
+            let startDateLeave = buddhistToGregorian(startDateValue);
+            let endDateLeave = buddhistToGregorian(endDateValue);
 
-        if (radioValue === '1') {
-            dayCounter = 1;
-            totalDays += 1;
-            $("#leaves_start_time_" + i).attr("disabled", true);
-            $("#leaves_end_time_" + i).attr("disabled", true);
+            let diffTime = new Date(endDateLeave) - new Date(startDateLeave);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            document.getElementById("leaves_summary_day_" + i).value = dayCounter;
-            document.getElementById("leaves_summary_hour_" + i).value = 0;
-            document.getElementById("leaves_summary_minute_" + i).value = 0;
-        } else if (radioValue === '2') {
-            // Enable time input fields
-            var startTimeValue = document.getElementById("leaves_start_time_" + i).value;
-            var endTimeValue = document.getElementById("leaves_end_time_" + i).value;
-            $("#leaves_start_time_" + i).attr("disabled", false);
-            $("#leaves_end_time_" + i).attr("disabled", false);
+            for (var i = 0; i <= diffDays; i++) {
+                var leaves_date = buddhistThToGregorian($("#leaves_date_" + i).val());
+                // Show the holiday warning by default
+                $("#show_warning_timework_plan_holiday_" + i).show();
 
-            // Calculate time difference in hours and minutes
-            var startTime = new Date("2000-01-01T" + startTimeValue + ":00");
-            var endTime = new Date("2000-01-01T" + endTimeValue + ":00");
-            let timeDiff = endTime - startTime;
+                // Loop through data to determine if it is a work or holiday
+                for (let j = 0; j < data.length; j++) {
+                    let item = data[j];
+                    if (item.twpp_start_date === leaves_date) {
+                        // If date matches, show work warning, hide holiday warning, set as work
+                        $("#show_warning_timework_plan_work_" + i).show();
+                        $("#show_warning_timework_plan_holiday_" + i).hide();
+                        $("#leaves_timework_plan_" + i).val('work');
+                        break;
+                    } else {
+                        // If no match, set as holiday
+                        $("#show_warning_timework_plan_work_" + i).hide();
+                        $("#show_warning_timework_plan_holiday_" + i).show();
+                        $("#leaves_timework_plan_" + i).val('holiday');
+                    }
+                }
+            }
+            // Once AJAX completes, run the provided callback (calculate_leaves_summary logic)
+            if (typeof callback === "function") {
+                callback(data);
+            }
+        },
+        error: function(xhr, status, error) {
+            dialog_error({
+                'header': text_toast_default_error_header,
+                'body': text_toast_default_error_body
+            });
+        }
+    });
+}
 
-            let hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
-            let minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+function calculate_leaves_summary() {
+    check_timework_plan(function(data) {
+        // The summary calculation logic now runs only after AJAX completes
+        var totalDays = 0;
+        var totalHours = 0;
+        var totalMinutes = 0;
 
-            // Update counters for this row
-            hourCounter = hoursDiff;
-            minuteCounter = minutesDiff;
+        var startDateValue = document.getElementById("leaves_start_date").value;
+        var endDateValue = document.getElementById("leaves_end_date").value;
 
-            // Add row counters to total counters
-            totalHours += hoursDiff;
-            totalMinutes += minutesDiff;
+        let startDate = buddhistToGregorian(startDateValue);
+        let endDate = buddhistToGregorian(endDateValue);
 
-            document.getElementById("leaves_summary_day_" + i).value = 0;
-            document.getElementById("leaves_summary_hour_" + i).value = hourCounter;
-            document.getElementById("leaves_summary_minute_" + i).value = minuteCounter;
+        let diffTime = endDate - startDate;
+        let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-            // Convert excess minutes to hours for this row
-            if (minuteCounter >= 60) {
-                hourCounter += Math.floor(minuteCounter / 60);
-                minuteCounter %= 60;
+        for (var i = 0; i <= diffDays; i++) {
+            var radioValue = document.querySelector("input[name='leaves_time_type_" + i + "']:checked").value;
+            var dayCounter = 0;
+            var hourCounter = 0;
+            var minuteCounter = 0;
+
+            // Hide warnings by default
+            $("#show_warning_time_type_2_" + i).hide();
+            $("#show_warning_break_type_2_" + i).hide();
+            $("#show_warning_time_summary_" + i).hide();
+            // $("#show_warning_timework_plan_work_" + i).hide();
+            // $("#show_warning_timework_plan_holiday_" + i).hide();
+
+            var status_work_date = $("#leaves_timework_plan_" + i).val();
+
+            if(status_work_date == "holiday"){
+                document.getElementById("leaves_summary_day_" + i).value = 0;
+                document.getElementById("leaves_summary_hour_" + i).value = 0;
+                document.getElementById("leaves_summary_minute_" + i).value = 0;
+                
+            }
+            else if (status_work_date == "work" && radioValue === '1') {
+                dayCounter = 1;
+                totalDays += 1;
+                $("#leaves_start_time_" + i).attr("disabled", true);
+                $("#leaves_end_time_" + i).attr("disabled", true);
+
+                document.getElementById("leaves_summary_day_" + i).value = dayCounter;
+                document.getElementById("leaves_summary_hour_" + i).value = 0;
+                document.getElementById("leaves_summary_minute_" + i).value = 0;
+            } else if (status_work_date == "work" && radioValue === '2') {
+                var startTimeValue = document.getElementById("leaves_start_time_" + i).value;
+                var endTimeValue = document.getElementById("leaves_end_time_" + i).value;
+                $("#leaves_start_time_" + i).attr("disabled", false);
+                $("#leaves_end_time_" + i).attr("disabled", false);
+
+                var breakStart = new Date("2000-01-01T12:00:00");
+                var breakEnd = new Date("2000-01-01T13:00:00");
+
+                var startTime = new Date("2000-01-01T" + startTimeValue + ":00");
+                var endTime = new Date("2000-01-01T" + endTimeValue + ":00");
+
+                let timeDiff = endTime - startTime;
+
+                if (startTime < breakEnd && endTime > breakStart) {
+                    $("#show_warning_break_type_2_" + i).show();
+                    if (startTime < breakStart) {
+                        timeDiff -= (breakEnd - breakStart);
+                    } else {
+                        timeDiff = endTime - breakEnd;
+                    }
+                } else {
+                    $("#show_warning_break_type_2_" + i).hide();
+                }
+
+                let hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
+                let minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+                if (hoursDiff >= 8) {
+                    dayCounter += Math.floor(hoursDiff / 8);
+                    hoursDiff %= 8;
+                    $("#show_warning_time_type_2_" + i).show();
+                } else {
+                    $("#show_warning_time_type_2_" + i).hide();
+                }
+
+                hourCounter = hoursDiff;
+                minuteCounter = minutesDiff;
+
+                totalDays += dayCounter;
+                totalHours += hourCounter;
+                totalMinutes += minuteCounter;
+
+                document.getElementById("leaves_summary_day_" + i).value = dayCounter;
+                document.getElementById("leaves_summary_hour_" + i).value = hourCounter;
+                document.getElementById("leaves_summary_minute_" + i).value = minuteCounter;
+
+                if(startTimeValue == endTimeValue || totalHours < 0 || totalMinutes < 0){
+                    $("#show_warning_time_summary_" + i).show();
+                    isValid = false;
+                } else {
+                    $("#show_warning_time_summary_" + i).hide();
+                    isValid = true;
+                }
             }
 
-            // Convert hours to days if they exceed 8 in this row
-            if (hourCounter >= 8) {
-                dayCounter += Math.floor(hourCounter / 8);
-                hourCounter %= 8;
+            if(status_work_date == "holiday"){
+                $("#show_warning_timework_plan_holiday_" + i).show();
+                $("#show_warning_timework_plan_work_" + i).hide();
+                updateLeaveTypeRow(i, true);
+                document.getElementById("leaves_summary_" + i).innerText = " 0 วัน";
+            } else {
+                $("#show_warning_timework_plan_work_" + i).show();
+                $("#show_warning_timework_plan_holiday_" + i).hide();
+                updateLeaveTypeRow(i, false);
+                document.getElementById("leaves_summary_" + i).innerText = generateSummaryText(dayCounter, hourCounter, minuteCounter);
             }
         }
 
-        // Display individual summary text for each row
-        document.getElementById("leaves_summary_" + i).innerText = generateSummaryText(dayCounter, hourCounter, minuteCounter);
-    }
+        totalHours += Math.floor(totalMinutes / 60);
+        totalMinutes %= 60;
 
-    // Final conversion for accumulated total minutes to hours
-    totalHours += Math.floor(totalMinutes / 60);
-    totalMinutes %= 60;
+        totalDays += Math.floor(totalHours / 8);
+        totalHours %= 8;
 
-    // Final conversion for accumulated total hours to days
-    totalDays += Math.floor(totalHours / 8);
-    totalHours %= 8;
-
-    // Generate and display the final summary
-    let finalSummaryText = generateSummaryText(totalDays, totalHours, totalMinutes);
-    document.getElementById("leaves_summary_text").innerText = finalSummaryText;
-    document.getElementById("leaves_summary_value").value = totalDays + "-" + totalHours + "-" + totalMinutes;
+        let finalSummaryText = generateSummaryText(totalDays, totalHours, totalMinutes);
+        document.getElementById("leaves_summary_text").innerText = finalSummaryText;
+        document.getElementById("leaves_summary_value").value = totalDays + "-" + totalHours + "-" + totalMinutes;
+    });
 }
+
+function updateLeaveTypeRow(i, isHoliday) {
+    let tdLeavesTimeType = document.getElementById("td_leaves_time_type_" + i);
+    let divFormCheck = document.getElementById("div_form_check_" + i);
+    let tdGroupLeaveTime = document.getElementById("td_group_leave_time_" + i);
+
+    if (isHoliday) {
+        // Set colspan to 2 for the leave time type cell
+        tdLeavesTimeType.setAttribute("colspan", "2");
+
+        // Hide the form check and leave time group elements
+        divFormCheck.style.display = "none";
+        tdGroupLeaveTime.style.display = "none";
+    } else {
+        // Remove colspan if it's not a holiday
+        tdLeavesTimeType.removeAttribute("colspan");
+
+        // Show the form check and leave time group elements
+        divFormCheck.style.display = "";
+        tdGroupLeaveTime.style.display = "";
+    }
+}
+
 
 // Helper function to generate summary text
 function generateSummaryText(days, hours, minutes) {
     let summaryText = "";
-    if (days !== 0) {
+    if (days > 0) {
         summaryText += days + " วัน";
     }
-    if (hours !== 0) {
+    if (hours > 0) {
         summaryText += (summaryText ? ", " : "") + hours + " ชั่วโมง";
     }
-    if (minutes !== 0) {
+    if (minutes > 0) {
         summaryText += (summaryText ? ", " : "") + minutes + " นาที";
     }
     return summaryText;
 }
+
 
 function formatDate(date) {
     let day = date.getDate();

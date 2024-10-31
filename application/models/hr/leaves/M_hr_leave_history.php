@@ -194,4 +194,34 @@ class M_hr_leave_history extends Da_hr_leave_history
 	}
 	// check_leaves_approve_group_detail_by_lapg_id
 
+		/*
+	* get_all_timework_data_by_date
+	* ข้อมูลการตารางวันทำงานรายบุคคลตามช่วงวันที่
+	* @input $ps_id, $start_date, $end_date
+	* @output timework data by_person
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 2567-10-31
+	*/
+	function get_all_timework_data_by_date($ps_id, $start_date, $end_date)
+	{
+		$sql = "SELECT 	*
+				FROM " . $this->hr_db . ".hr_timework_person_plan
+                LEFT JOIN " . $this->hr_db . ".hr_timework_attendance_config
+                    ON twac_id = twpp_twac_id
+                LEFT JOIN " . $this->eqs_db . ".eqs_room
+                    ON rm_id = twpp_rm_id
+                LEFT JOIN " . $this->eqs_db . ".eqs_building
+                    ON rm_bd_id = bd_id
+                WHERE 	
+						twpp_start_date >= '{$start_date}'
+						AND twpp_end_date <= '{$end_date}'
+						AND twpp_is_public = 0
+						AND twpp_ps_id = {$ps_id}
+
+				ORDER BY twpp_start_date ASC";
+		$query = $this->hr->query($sql);
+		return $query;
+	}
+	// get_all_timework_param_data_by_person_id
+
 } // end class M_hr_person

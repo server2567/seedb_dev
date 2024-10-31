@@ -123,6 +123,7 @@ class Manage_queue_trello extends WTS_Controller
 	*/
 	public function floor()
 	{
+    
 		$data['view_dir'] = $this->view_dir;
 
 		$wts_floor_of_manage_queue = $this->session->userdata('wts_floor_of_manage_queue');
@@ -138,6 +139,14 @@ class Manage_queue_trello extends WTS_Controller
 		// pre($this->session->userdata()); die;
 		$selected_departments = $this->session->userdata('selected_departments'); // This is an array of department IDs
 		$data['departments'] = !empty($selected_departments) ? $selected_departments : [];
+
+    if($data['departments'][0] == 63){
+      echo 'dddss'; die;
+    } else if($data['departments'][0] == 77){
+      echo '12234'; die;
+    }
+
+
 
 
 		$this->load->model('eqs/m_eqs_room');
