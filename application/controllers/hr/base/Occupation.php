@@ -20,6 +20,7 @@ class Occupartion extends Base_Controller
 	// Base Prefix
 	public function get_occupation()
 	{
+		var_dump('เข้า');
 		$data['session_mn_active_id'] = 300014; // set session_mn_active_id / breadcrumb
 		$data['status_response'] = $this->config->item('status_response_show');;
 		$this->load->model($this->model . "m_hr_occupation");
@@ -86,5 +87,161 @@ class Occupartion extends Base_Controller
 
 		$result = array('data' => $data);
 		echo json_encode($result);
+	}
+	// End Of Base Prefix
+	public function get_Subdistrict()
+	{
+		$data['session_mn_active_id'] = 300021; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_Subdistrict', $data);
+	}
+	public function get_Subdistrict_add()
+	{
+		$data['session_mn_active_id'] = 300021; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_Subdistrict_form', $data);
+	}
+	public function get_Subdistrict_edit($StID = null)
+	{
+		$data['StID'] = $StID;
+
+		$data['session_mn_active_id'] = 300021; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_Subdistrict_form', $data);
+	}
+	public function get_District()
+	{
+		$data['session_mn_active_id'] = 300022; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_District', $data);
+	}
+	public function get_District_add()
+	{
+		$data['session_mn_active_id'] = 300022; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_District_form', $data);
+	}
+	public function get_District_edit($StID = null)
+	{
+		$data['StID'] = $StID;
+		$data['session_mn_active_id'] = 300022; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_District_form', $data);
+	}
+	public function get_Province()
+	{
+		$data['session_mn_active_id'] = 300023; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_Province', $data);
+	}
+	public function get_Province_add()
+	{
+		$data['session_mn_active_id'] = 300023; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_Province_form', $data);
+	}
+	public function get_Province_edit($StID = null)
+	{
+		$data['StID'] = $StID;
+
+		$data['session_mn_active_id'] = 300023; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_Province_form', $data);
+	}
+	public function get__user()
+	{
+		$data['session_mn_active_id'] = $this->mn_active_id; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profille_user_show', $data);
+	}
+	public function get_occupation_form($StID = null)
+	{
+		$data['session_mn_active_id'] = 300015; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_occupation_form', $data);
+	}
+	public function get_life_status()
+	{
+		$data['session_mn_active_id'] = 300016; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_life_status_show', $data);
+	}
+	public function get_life_status_form()
+	{
+		$data['session_mn_active_id'] = 300016; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_life_status_form', $data);
+	}
+	public function get_nation()
+	{
+		$data['session_mn_active_id'] = 300017; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_nation_show', $data);
+	}
+	public function get_nation_form($StID = null)
+	{
+		$data['session_mn_active_id'] = 300017; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_nation_form', $data);
+	}
+	public function get_race()
+	{
+		$data['session_mn_active_id'] = 300018; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_race_show', $data);
+	}
+	public function get_race_form($StID = null)
+	{
+		$data['session_mn_active_id'] = 300018; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_race_form', $data);
+	}
+	public function get_religion()
+	{
+		$data['session_mn_active_id'] = 300019; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_religion_show', $data);
+	}
+	public function get_religion_form($StID = null)
+	{
+		$data['session_mn_active_id'] = 300019; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_religion_form', $data);
+	}
+	public function get_person_status()
+	{
+		$data['session_mn_active_id'] = 300020; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_person_status_show', $data);
+	}
+	public function get_person_status_form($StID = null)
+	{
+		$data['session_mn_active_id'] = 300020; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_person_status_form', $data);
+	}
+	public function get_country()
+	{
+		$data['session_mn_active_id'] = 300024; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_country_show', $data);
+	}
+	public function get_country_form()
+	{
+		$data['session_mn_active_id'] = 300024; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_Profile_country_form', $data);
+	}
+	public function get_person_holiday()
+	{
+		$data['session_mn_active_id'] = 300036; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_holiday', $data);
+	}
+	public function get_person_holiday_add()
+	{
+		$data['session_mn_active_id'] = 300036; // set session_mn_active_id / breadcrumb
+		$data['status_response'] = $this->config->item('status_response_show');;
+		$this->output('hr/Profile/v_person_holiday_form', $data);
 	}
 }
