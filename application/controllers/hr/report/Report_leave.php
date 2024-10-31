@@ -31,6 +31,14 @@ class Report_leave extends Report_Controller
         $data['session_mn_active_url'] = $this->mn_active_url; // set session_mn_active_url / breadcrumb
         $data['status_response'] = $this->config->item('status_response_show');
         $data['controller_dir'] = 'hr/report/Report_leave/';
+        $this->ums_db = $this->load->database('ums', TRUE);
+        $sql = "SELECT * FROM see_umsdb.ums_department";
+        $query = $this->ums_db->query($sql);
+        $data['department_list'] = $query->result_array();
+        $data['base_develop_type_list'] = $this->M_hr_develop_type->get_all_by_active('asc')->result();
+        $data['base_admin_position_list'] = $this->M_hr_person->get_hr_base_admin_position_data()->result();
+        $data['base_hire_list'] = $this->M_hr_hire->get_all_by_active()->result();
+        $data['base_adline_list'] = $this->M_hr_adline_position->get_all_by_active()->result();
         $this->output('hr/report/v_report_overview_leave.php', $data);
     }
     public function get_overview_leave_summary()
@@ -95,7 +103,6 @@ class Report_leave extends Report_Controller
         if ($length != 0) {
             $sql .= " LIMIT " . (int)$start . ", " . (int)$length;
         }
-       pre($sql);
         // Execute the query
         $this->hr = $this->load->database('hr', TRUE);
         $query = $this->hr->query($sql);
