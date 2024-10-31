@@ -96,11 +96,42 @@ class Leaves_user extends Leaves_Controller
 		$data['target_user_leave_summary'] = $this->M_hr_leave_summary->get_target_user_leave_summary($budget_year, $user_id);
 		
 		$data['base_info'] = $this->M_hr_leave_summary->get_base_info_for_cal_work_age($budget_year, $user_id);
+		// $data['base_info'] = $this->get_base_info_for_edit($budget_year, $user_id);
 		
 		// die(print_r($data['base_info']));
 
 		// print_r($data);
+		$data['controller_dir'] = $this->controller;
 		$this->output($this->view.'v_leaves_user_form', $data);
+		// $this->output($this->view.'v_leaves_user_form', json_encode($data));
+	}
+
+	/*
+	* get_data_for_edit_page
+	* รับข้อมูลพื้นฐานที่ใช้สำหรับหน้าแก้ไขข้อมูลสิทธิ์ลารายบุคคลของบุคลากรเป้าหมาย
+	* @input -
+	* $output -
+	* @author Patcharapol Sirimaneechot
+	* @Create Date 2567-10-25
+	*/
+	function get_data_for_edit_page() {
+		$budget_year = $this->input->post('budget_year');
+		$user_id = $this->input->post('user_id');
+
+		// // die("$budget_year, $user_id");
+
+		$data['target_user_leave_summary'] = $this->M_hr_leave_summary->get_target_user_leave_summary($budget_year, $user_id);
+
+		$data['base_info'] = $this->M_hr_leave_summary->get_base_info_for_cal_work_age($budget_year, $user_id);
+	
+		// $data['budget_year'] = $budget_year;
+		// $data['user_id'] = $user_id;
+
+
+		// return json_encode($data);
+
+		// echo "HI";
+		echo json_encode($data);
 	}
 
 

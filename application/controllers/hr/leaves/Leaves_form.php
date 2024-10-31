@@ -465,7 +465,25 @@ class Leaves_form extends Leaves_Controller
 	}
 	// get_leave_flow_by_lhis_id
 
+	/*
+	* check_timework_plan_for_leave
+	* ตรวจสอบเวลาการทำงาน
+	* @input start_date, end_date
+	* $output -
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 31/10/2567
+	*/
+	function check_timework_plan_for_leave(){
+		// $this->load->model($this->config->item('hr_dir').$this->config->item('hr_timework_dir') . 'M_hr_timework_person_plan');
+		$start_date = $this->input->post('start_date');
+		$end_date = $this->input->post('end_date');
+		$ps_id = decrypt_id($this->input->post('ps_id'));
+		
+		$result = $this->M_hr_leave_history->get_all_timework_data_by_date($ps_id, $start_date, $end_date)->result();
 
+		echo json_encode($result);
+	}
+	// check_timework_plan_for_leave
 
 
 
