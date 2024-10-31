@@ -46,7 +46,8 @@ class Report_leave extends Report_Controller
         $draw = $this->input->post('draw');     // รอบการวาดของ DataTables
         $searchValue = $this->input->post('search')['value']; // ค่าค้นหา
         $sql ='
-        SELECT lsum.*,CONCAT(pf.pf_name," ",ps.ps_fname," ",ps.ps_lname) as ps_name FROM see_hrdb.hr_leave_summary as lsum 
+        SELECT lsum.*,leave.leave_name,CONCAT(pf.pf_name," ",ps.ps_fname," ",ps.ps_lname) as ps_name FROM see_hrdb.hr_leave_summary as lsum 
+        LEFT JOIN see_hrdb.hr_leave as leave on leave.leave_id = lsum.lsum_leave_id
         LEFT JOIN see_hrdb.hr_person as ps on ps.ps_id = lsum.lsum_ps_id
         LEFT JOIN see_hrdb.hr_base_prefix as pf on pf.pf_id = ps.ps_pf_id ';
     }
