@@ -117,7 +117,7 @@
                                 <span class="span-date pe-1">
                                     ประจำวันที่ <?php echo formatShortDateThai(date("Y-m-d H:i:s")) ;?>
                                 </span>
-                                <span class="badge bg-success font-14"> ผู้ป่วยที่ทำเรื่องนัดหมายแพทย์</span>
+                                <span class="badge-wait bg-success font-14"> ผู้ป่วยที่ทำเรื่องนัดหมายแพทย์</span>
                             </button>
                         </h2>
                         <div id="collapse-wait" class="accordion-collapse collapse show" 
@@ -163,7 +163,7 @@
                                 <span class="span-date pe-1">
                                     ประจำวันที่ <?php echo formatShortDateThai(date("Y-m-d H:i:s")) ;?>
                                 </span>
-                                <span class="badge bg-success font-14"> ผู้ป่วยที่พบแพทย์เสร็จแล้ว</span>
+                                <span class="badge-completed bg-success font-14"> ผู้ป่วยที่พบแพทย์เสร็จแล้ว</span>
                             </button>
                         </h2>
                         <div id="collapse-completed" class="accordion-collapse collapse show" 

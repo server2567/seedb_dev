@@ -268,11 +268,11 @@ function leaves_save_form() {
 
     if(day == 0 && hour == 0 && minute == 0){
         isValid = false;
-        text_valid .= "ผลรวมจำนวนต้องมากกว่า 1 ชั่วโมง<br>";
+        text_valid = "ผลรวมจำนวนต้องมากกว่า 1 ชั่วโมง<br>";
     }
     else if(day == 0 && hour < 1){
         isValid = false;
-        text_valid .= "ผลรวมจำนวนต้องมากกว่า 1 ชั่วโมง<br>";
+        text_valid = "ผลรวมจำนวนต้องมากกว่า 1 ชั่วโมง<br>";
     }
 
     if (isValid) {
