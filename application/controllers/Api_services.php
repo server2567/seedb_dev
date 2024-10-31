@@ -1637,9 +1637,21 @@ class Api_services extends UMS_Controller
 
           foreach ($check_visit->result() as $appointment) {
 
+            if($data['ntdp_loc_Id'] == '10'){
+              $apm_data = array(
+                'apm_sta_id' => 16
+                // 'apm_rm_code' => $data['apm_rm_code']
+              );
+            } else if($data['ntdp_loc_Id'] == '11') {
+              $apm_data = array(
+                'apm_sta_id' => 17
+              );
+            } else {
             $apm_data = array(
               'apm_sta_id' => 10
             );
+            }
+
             $this->que->where('apm_id', $appointment->apm_id);
             $this->que->update('que_appointment', $apm_data);
 

@@ -216,6 +216,7 @@
 </div>
 
 <script>
+    var patients_by_doctors = [];
 
     $(document).ready(function() {
         // โหลดข้อมูลเริ่มต้นในแต่ละ Tab
@@ -245,186 +246,6 @@
             badge.innerHTML = `${count} ${oldText}`;
         }   
     }
-
-    $(document).on('click', '.swal-status', function () {
-        const url = $(this).data('url');
-
-        fetch('<?php echo site_url('wts/Manage_queue/status_list'); ?>', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Assuming data.appointments is an array with the dropdown options
-            let options = '';
-            data.appointments.forEach(sta => {
-                options += `<option value="${sta.sta_id}">${sta.sta_name} </option>`;
-            });
-
-            Swal.fire({
-                title: "จัดการสถานะผู้ป่วย",
-                html: `<select id="swal-select" class="form-control select2">${options}</select>`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#198754",
-                cancelButtonColor: "#dc3545",
-                confirmButtonText: "ยืนยัน",
-                cancelButtonText: "ยกเลิก",
-                preConfirm: () => {
-                    const selectedId = document.getElementById('swal-select').value;
-                    return selectedId ? selectedId : Swal.showValidationMessage('โปรดเลือกสถานะ');
-                },
-                didOpen: () => {
-                    $('#swal-select').select2({
-                dropdownParent: $('.swal2-popup')
-            });
-        }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: url,
-                        type: 'POST',
-                        dataType: 'json',
-                        data: { sta_id: result.value },
-                        success: function (data) {
-                            if (data.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
-                                Swal.fire({
-                                    title: 'ยืนยันการบันทึกข้อมูล',
-                                    text: 'ข้อมูลได้รับการบันทึกเรียบร้อยแล้ว',
-                                    icon: 'success',
-                                    confirmButtonText: 'ตกลง',
-                                    customClass: {
-                                    htmlContainer: 'swal2-html-line-height'
-                                    },
-                                }).then(() => {
-                                    // location.reload();
-                                    // resetInterval();
-                                    reloadDataTable();
-                                });
-                            } else {
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: 'Something went wrong!',
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error(xhr);
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'An error occurred while processing your request.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    });
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching appointment data:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to load appointment data.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        });
-    });
-
-    $(document).on('click', '.swal-doctor', function () {
-        const url = $(this).data('url');
-
-        fetch('<?php echo site_url('wts/Manage_queue/doctor_list'); ?>', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Assuming data.appointments is an array with the dropdown options
-            let options = '';
-            data.appointments.forEach(apm => {
-                options += `<option value="${apm.ps_id}">${apm.pf_name} ${apm.ps_fname}  ${apm.ps_lname}</option>`;
-            });
-
-            Swal.fire({
-                title: "ระบุแพทย์",
-                html: `<select id="swal-select" class="form-control select2">${options}</select>`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#198754",
-                cancelButtonColor: "#dc3545",
-                confirmButtonText: "ยืนยัน",
-                cancelButtonText: "ยกเลิก",
-                preConfirm: () => {
-                    const selectedId = document.getElementById('swal-select').value;
-                    return selectedId ? selectedId : Swal.showValidationMessage('Please select an appointment');
-                },
-                didOpen: () => {
-                    $('#swal-select').select2({
-                    dropdownParent: $('.swal2-popup')
-                });
-            }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: url,
-                        type: 'POST',
-                        dataType: 'json',
-                        data: { ps_id: result.value },
-                        success: function (data) {
-                            if (data.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
-                                Swal.fire({
-                                    title: 'ยืนยันการบันทึกข้อมูล',
-                                    text: 'ข้อมูลได้รับการบันทึกเรียบร้อยแล้ว',
-                                    icon: 'success',
-                                    confirmButtonText: 'ตกลง',
-                                    customClass: {
-                                    htmlContainer: 'swal2-html-line-height'
-                                    },
-                                }).then(() => {
-                                    // location.reload();
-                                    // resetInterval();
-                                    reloadDataTable();
-                                });
-                            } else {
-                                Swal.fire({
-                                    title: 'Error',
-                                    text: 'Something went wrong!',
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error(xhr);
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'An error occurred while processing your request.',
-                                icon: 'error',
-                                confirmButtonText: 'OK'
-                            });
-                        }
-                    });
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching appointment data:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to load appointment data.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        });
-    });
 
     function convertYearsToThai() {
         const calendar = document.querySelector('.flatpickr-calendar');
@@ -780,6 +601,13 @@
                         else 
                             location.reload();
                     });
+                } else if (data.status_response === 'error not select room') {
+                    Swal.fire({
+                        title: 'ข้อผิดพลาด',
+                        text: data.message,
+                        icon: 'warning',
+                        confirmButtonText: 'ตกลง'
+                    });
                 } else {
                     Swal.fire({
                         title: 'Error',
@@ -948,6 +776,81 @@
             },
             "drawCallback": function(settings) {
                 set_bg_clor_td(`#${tableId}`);
+            }
+        });
+    }
+
+    function goto_see_doctor(url, sta_id = 2) {
+        let title = 'เรียกพบแพทย์แล้ว';
+        let text = '';
+        if (sta_id == 10) {
+            title = 'พบแพทย์เสร็จสิ้นแล้ว';
+            text = '';
+        }
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                sta_id: sta_id
+            },
+            success: function(response) {
+                console.log("AJAX Success Callback");
+                var data = JSON.parse(response);
+                if (data.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
+                    console.log("Swal.fire is being called");
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        customClass: {
+                            htmlContainer: 'swal2-html-line-height'
+                        },
+                    }).then(() => {
+                        // if change status => success / cancel
+                        if (data.appointment != undefined && data.appointment != null) {
+                            let is_break = false;
+                            for (let i = 0; i < patients_by_doctors.length; i++) {
+                                if (is_break) break;
+                                let doctorRecord = patients_by_doctors[i];
+                                if (doctorRecord.ps_id === data.appointment.apm_ps_id) {
+                                    for (let j = 0; j < doctorRecord.patient_ques.length; j++) {
+                                        if (is_break) break;
+                                        let que = doctorRecord.patient_ques[j];
+                                        if (que.apm_ql_code === data.appointment.apm_ql_code) {
+                                            let apm_sta_id = parseInt(data.appointment.apm_sta_id);
+                                            if (apm_sta_id === 10 || apm_sta_id === 9) {
+                                                // Remove the que from doctorRecord.patient_ques
+                                                doctorRecord.patient_ques.splice(j, 1);
+
+                                                // Find and remove the corresponding sortable-item from the DOM
+                                                $(`.sortable-list[data-ps-id="${data.appointment.apm_ps_id}"] .sortable-item[data-task-id="${data.appointment.apm_ql_code}"]`).remove();
+
+                                                // Exit both loops
+                                                is_break = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        console.log("Reloading the page now...");
+                        location.reload();
+                    });
+                } else {
+                    console.log("Status response is not successful");
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Something went wrong!',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error in AJAX request:", error);
+                alert("Error in AJAX request: " + error);
             }
         });
     }

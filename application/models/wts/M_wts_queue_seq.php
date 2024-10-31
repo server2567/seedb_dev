@@ -262,6 +262,47 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 		return $query;
 	}
 
+	function get_waiting_que_by_finance_medicine($date) {
+    $sql = "SELECT qa_with_rn.*, qs.*, 
+               status.sta_id AS status_sta_id, status.sta_name AS status_name, status.sta_color AS status_color,
+               subquery.channel_names
+        FROM (
+            SELECT qa.*, ntd.*, 
+                   ROW_NUMBER() OVER (PARTITION BY qa.apm_id ORDER BY ntd.ntdp_time_start DESC) AS rn
+            FROM see_quedb.que_appointment AS qa
+            LEFT JOIN see_wtsdb.wts_notifications_department AS ntd
+            ON qa.apm_id = ntd.ntdp_apm_id 
+              AND (
+                  (ntdp_seq = 10 AND qa.apm_sta_id = 16) 
+                  OR 
+                  (ntdp_seq = 10 AND qa.apm_sta_id = 18) 
+                  OR 
+                  (ntdp_seq = 11 AND qa.apm_sta_id = 17) 
+                  OR 
+                  (ntdp_seq = 11 AND qa.apm_sta_id = 19)
+              )
+            WHERE qa.apm_date = ? 
+            AND qa.apm_sta_id IN (16,17,18,19)
+        ) AS qa_with_rn
+        LEFT JOIN see_wtsdb.wts_queue_seq AS qs 
+        ON qs.qus_apm_id = qa_with_rn.apm_id
+        LEFT JOIN see_wtsdb.wts_base_status AS status
+        ON status.sta_id = qs.qus_status
+        LEFT JOIN (
+            SELECT qs.qus_apm_id,
+                  GROUP_CONCAT(channel.sta_name ORDER BY channel.sta_id SEPARATOR ', ') AS channel_names
+            FROM see_wtsdb.wts_queue_seq AS qs
+            LEFT JOIN see_wtsdb.wts_base_status AS channel
+            ON FIND_IN_SET(channel.sta_id, qs.qus_channel) > 0
+            GROUP BY qs.qus_apm_id
+        ) AS subquery
+        ON subquery.qus_apm_id = qa_with_rn.apm_id
+        WHERE qa_with_rn.rn = 1 GROUP BY apm_id";
+
+    
+		$query = $this->wts->query($sql, array($date));
+		return $query;
+	}
 
 	function get_waiting_room($date, $stde) {
 		$sql = "SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_id, see_hrdb.hr_person.ps_fname,
@@ -300,7 +341,7 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 	function get_waiting_doctor_by_floor($date, $floor) {
     $sql = "
         SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_id, see_hrdb.hr_person.ps_fname,
-               see_hrdb.hr_person.ps_lname, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name, see_hrdb.hr_structure_detail.stde_name_th, see_wtsdb.wts_queue_seq.qus_announce
+				   see_hrdb.hr_person.ps_lname, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name, see_hrdb.hr_structure_detail.stde_name_th, see_wtsdb.wts_queue_seq.qus_announce,see_hrdb.hr_person_room.psrm_rm_id
 				FROM see_wtsdb.wts_queue_seq
 				LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
 				LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
@@ -340,6 +381,7 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
     ";
 		// echo $sql; die;
 		$query = $this->wts->query($sql, array($date, $floor));
+		// echo $this->que->last_query();
 		return $query;
 	}
 	function get_announce_by_floor($date, $floor) {
@@ -442,6 +484,9 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 		// echo $this->que->last_query();
 		return $query;
 	}
+
+
+
 
 	/*
 	* update_psrm_id_by_apm_id

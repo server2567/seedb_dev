@@ -35,20 +35,101 @@ class Report_leave extends Report_Controller
     }
     public function get_overview_leave_summary()
     {
-        $fitiler_depart = $this->input->post('filter_depart');
+        $filter_depart = $this->input->post('filter_depart');
         $filter_year = $this->input->post('filter_year') - 543;
-        $fitiler_hire = $this->input->post('filter_hire');
-        $fitiler_admin = $this->input->post('filter_admin');
-        $fitiler_adline = $this->input->post('filter_adline');
+        $filter_hire = $this->input->post('filter_hire');
+        $filter_admin = $this->input->post('filter_admin');
+        $filter_adline = $this->input->post('filter_adline');
         $filter_status = $this->input->post('filter_status');
-        $start = $this->input->post('start') == 'NaN' ? 0 : $this->input->post('start');   // เริ่มต้นแถว
-        $length = $this->input->post('length'); // จำนวนแถวต่อหน้า
-        $draw = $this->input->post('draw');     // รอบการวาดของ DataTables
-        $searchValue = $this->input->post('search')['value']; // ค่าค้นหา
-        $sql ='
-        SELECT lsum.*,leave.leave_name,CONCAT(pf.pf_name," ",ps.ps_fname," ",ps.ps_lname) as ps_name FROM see_hrdb.hr_leave_summary as lsum 
-        LEFT JOIN see_hrdb.hr_leave as leave on leave.leave_id = lsum.lsum_leave_id
-        LEFT JOIN see_hrdb.hr_person as ps on ps.ps_id = lsum.lsum_ps_id
-        LEFT JOIN see_hrdb.hr_base_prefix as pf on pf.pf_id = ps.ps_pf_id ';
+        $start = $this->input->post('start') == 'NaN' ? 0 : $this->input->post('start'); // Start row
+        $length = $this->input->post('length'); // Rows per page
+        $draw = $this->input->post('draw');     // DataTables draw count
+        $searchValue = $this->input->post('search')['value']; // Search value
+
+        // SQL query with joins
+        $sql = "
+    SELECT 
+        lsum.*, 
+        lv.leave_name, 
+        CONCAT(pf.pf_name, ' ', ps.ps_fname, ' ', ps.ps_lname) AS ps_name 
+    FROM see_hrdb.hr_leave_summary AS lsum
+    LEFT JOIN see_hrdb.hr_leave AS lv ON lv.leave_id = lsum.lsum_leave_id
+    LEFT JOIN see_hrdb.hr_person AS ps ON ps.ps_id = lsum.lsum_ps_id
+    LEFT JOIN see_hrdb.hr_base_prefix AS pf ON pf.pf_id = ps.ps_pf_id
+    LEFT JOIN see_hrdb.hr_person_position as pos on pos.pos_ps_id = ps.ps_id";
+
+        $searchableColumns = [
+            'pf.pf_name',
+            'ps.ps_fname',
+            'ps.ps_lname'
+        ];
+
+        // Add search conditions if a search value is provided
+        if (!empty($searchValue)) {
+            $likeConditions = [];
+            foreach ($searchableColumns as $column) {
+                $likeConditions[] = "$column LIKE '%" . $this->db->escape_like_str($searchValue) . "%'";
+            }
+            $sql .= " WHERE (" . implode(' OR ', $likeConditions) . ")";
+        } else {
+            $sql .= " WHERE lsum_year =".($filter_year)." AND lsum.lsum_dp_id = '$filter_depart'";// Base WHERE clause to append additional filters
+        }
+
+        // Additional filters based on POST parameters
+        if ($filter_hire != 'all') {
+            $sql .= " AND pos.pos_hire_id = '$filter_hire'";
+        }
+        if ($filter_adline != 'all') {
+            $sql .= " AND pos.pos_adline_id = '$filter_adline'";
+        }
+        if ($filter_admin != 'all') {
+            $sql .= " AND pos.pos_admin_id = '$filter_admin'";
+        }
+        if ($filter_status != 'all') {
+            $sql .= " AND pos.pos_status = '$filter_status'";
+        }
+
+        // Apply grouping and ordering
+        $sql .= " GROUP BY lsum.lsum_id ORDER BY ps.ps_id";
+        // Pagination limit
+        if ($length != 0) {
+            $sql .= " LIMIT " . (int)$start . ", " . (int)$length;
+        }
+       pre($sql);
+        // Execute the query
+        $this->hr = $this->load->database('hr', TRUE);
+        $query = $this->hr->query($sql);
+        $result = $query->result_array();
+
+        // Add sequence number and handle null values
+        $dataWithSequence = [];
+        foreach ($result as $index => $item) {
+            $item['sequence'] = $start + $index + 1;
+            foreach ($item as $key => $value) {
+                if (is_null($value) || $value === '') {
+                    $item[$key] = '-';
+                }
+            }
+            $dataWithSequence[] = $item;
+        }
+
+        // Count total rows
+        $totalRows = $this->hr->count_all('hr_leave_summary');
+
+        // Count rows that match the search criteria
+        $totalFiltered = $query->num_rows();
+
+        // JSON response for DataTables
+        $response = [
+            "draw" => intval($draw),
+            "recordsTotal" => $totalRows,
+            "recordsFiltered" => $totalFiltered,
+            "data" => $dataWithSequence
+        ];
+
+        // Output JSON
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
     }
 }

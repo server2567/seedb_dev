@@ -72,6 +72,7 @@ $colorSchemes = [
 // pre($this->session->userdata());
 // pre($departments); die;
 $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['selected_departments'] : [];
+
 ?>
 
 <div class="card">
@@ -171,18 +172,20 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card m-1 p-1 pb-0">
-                                <div class="card-header bg-warning text-white mb-2">
-                                    <p class="mb-2 text-black font-24">รอระบุแพทย์</p>
-                                    <div class="patient-count text-black"></div>
-                                </div>
-                                <div class="sortable-list p-0" id="tasks-wait" data-ps-id="">
-                                    <!-- Tasks will be dynamically added here -->
-                                </div>
-                            </div>
-                        </div>
-                        <?php foreach ($get_doctors as $index => $doctor):
+                        <?php if (isset($selected_departments[0]) && $selected_departments[0] != $this->config->item('wts_finance') && $selected_departments[0] != $this->config->item('wts_medicine')) { ?>
+                          <div class="col-md-4">
+                              <div class="card m-1 p-1 pb-0">
+                                  <div class="card-header bg-warning text-white mb-2">
+                                      <p class="mb-2 text-black font-24">รอระบุแพทย์</p>
+                                      <div class="patient-count text-black"></div>
+                                  </div>
+                                  <div class="sortable-list p-0" id="tasks-wait" data-ps-id="">
+                                      <!-- Tasks will be dynamically added here -->
+                                  </div>
+                              </div>
+                          </div>
+                        <?php } ?>
+                        <?php pre($get_doctors); foreach ($get_doctors as $index => $doctor):
                             $bg_color = isset($colorSchemes[$index + 1]) ?
                                 'background-color: ' . $colorSchemes[$index + 1]['background-color'] . ';'
                                 . 'color: ' . $colorSchemes[$index + 1]['color'] . ';'

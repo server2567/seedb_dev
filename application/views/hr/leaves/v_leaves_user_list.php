@@ -234,8 +234,7 @@
         }
 
         // Make AJAX request to fetch updated data
-        $.ajax({
-            url: '<?php site_url() . "/" . $controller_dir ?>' + "leaves_user/get_leave_summary_by_condition/",
+        $.ajax({url: '<?php site_url() . "/" . $controller_dir ?>' + "leaves_user/get_leave_summary_by_condition/",
             type: 'POST',
             data: {
                 select_budget_year: Number(select_budget_year),
@@ -259,7 +258,7 @@
                     
                     // button = `
                     //     <div class="text-center option">
-                    //         <button class="btn btn-warning" onclick="window.location.href='<?php// echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/<?php echo 1 ?>'"><i class="bi-pencil-square"></i></button>
+                    //         <button class="btn btn-warning" onclick="window.location.href='<?php// echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/<?php// echo 1 ?>'"><i class="bi-pencil-square"></i></button>
                     //     </div>
                     // `;
 

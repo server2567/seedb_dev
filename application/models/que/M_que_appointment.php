@@ -1671,6 +1671,7 @@ class M_que_appointment extends Da_que_appointment
         $sql .= " LIMIT ?, ?";
         array_push($binds, (int)$start, (int)$length);
 
+        echo $sql; die();
         $query = $this->que->query($sql, $binds);
 
         if (!$query) {

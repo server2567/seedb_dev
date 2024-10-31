@@ -764,8 +764,11 @@ class M_hr_leave_summary extends Da_hr_leave_summary
             $data['pos_work_start_date_with_dp_id'] = $this->hr->query($sql1)->result_array();
 
             // get_current_selected_base_info
+            // $sql2 = "
+            //     SELECT lsum_date_cal_type, lsum_dp_id, lsum_end_date_cal FROM `hr_leave_summary` WHERE lsum_ps_id = ".$this->db->escape_str($user_id)." AND lsum_year = '".$this->db->escape_str($carlendar_year)."'";
+            
             $sql2 = "
-                SELECT lsum_date_cal_type, lsum_dp_id, lsum_end_date_cal FROM `hr_leave_summary` WHERE lsum_ps_id = ".$this->db->escape_str($user_id)." AND lsum_year = '".$this->db->escape_str($carlendar_year)."'";
+                SELECT DISTINCT lsum_date_cal_type, lsum_dp_id, lsum_end_date_cal FROM `hr_leave_summary` WHERE lsum_ps_id = ".$this->db->escape_str($user_id)." AND lsum_year = '".$this->db->escape_str($carlendar_year)."' ORDER BY lsum_id ASC";
 
             $data['get_current_selected_base_info'] = $this->hr->query($sql2)->result_array();
 

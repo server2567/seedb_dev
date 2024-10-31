@@ -150,10 +150,10 @@ class Manage_queue_trello extends WTS_Controller
 
 		// Get all doctors for create cards
 		$this->load->model('que/m_que_appointment');
-		$doctors = $this->m_que_appointment->get_doctors_by_department_que('66')->result_array();
+		$doctors = $this->m_que_appointment->get_doctors_by_department_que()->result_array();
 		// pre($doctors); die;
 		$data['dep'] = $this->m_que_appointment->get_department_que_appointment()->result_array();
-		// pre($data['dep']);
+		// pre($data['dep']); die;
 		// Step 1: Extract the specific key values from the array
 		$doctor_ids = array_column($doctors, 'ps_id');
 		// Step 2: Use array_unique to remove duplicate values
@@ -395,10 +395,12 @@ class Manage_queue_trello extends WTS_Controller
 	*/
 	public function Manage_queue_trello_get_stdes_select()
 	{
+
 		$floor = $this->input->post('floor');
 
 		$this->load->model('eqs/m_eqs_room');
 		$rooms = $this->m_eqs_room->get_room_by_floor($floor)->result_array();
+
 		$filtered_rooms = array_filter($rooms, function ($room) {
 			return $room['rm_bdtype_id'] == 2 && !empty($room['rm_stde_id']);
 		});
@@ -431,7 +433,7 @@ class Manage_queue_trello extends WTS_Controller
 	* Manage_queue_trello_get_ques
 	* get [QUE] que_appointments by doctor
 	* @input filter data
-	* $output [QUE] que_appointment list by doctor
+	* $output [QUE] que_appointment list by doctorF
 	* @author Areerat Pongurai
 	* @Create Date 20/08/2024
 	*/
