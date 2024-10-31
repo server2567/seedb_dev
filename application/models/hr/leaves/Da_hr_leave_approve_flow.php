@@ -17,6 +17,7 @@ class Da_hr_leave_approve_flow extends Hr_model
     public $lafw_laps_id;
     public $lafw_lapg_id;
     public $lafw_lhis_id;
+    public $lafw_last_id;
     public $lafw_status;
     public $lafw_comment;
     public $lafw_update_user;
@@ -34,9 +35,9 @@ class Da_hr_leave_approve_flow extends Hr_model
     {
         // Insert all the relevant fields into the database
         $sql = "INSERT INTO " . $this->hr_db . ".hr_leave_approve_flow 
-                (lafw_seq, lafw_ps_id, lafw_laps_id, lafw_lapg_id, lafw_lhis_id, lafw_status, lafw_comment, lafw_update_user, lafw_update_date)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $this->hr->query($sql, array($this->lafw_seq, $this->lafw_ps_id, $this->lafw_laps_id, $this->lafw_lapg_id, $this->lafw_lhis_id, $this->lafw_status, $this->lafw_comment, $this->lafw_update_user, $this->lafw_update_date));
+                (lafw_seq, lafw_ps_id, lafw_laps_id, lafw_lapg_id, lafw_lhis_id, lafw_last_id, lafw_status, lafw_comment, lafw_update_user, lafw_update_date)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $this->hr->query($sql, array($this->lafw_seq, $this->lafw_ps_id, $this->lafw_laps_id, $this->lafw_lapg_id, $this->lafw_lhis_id, $this->lafw_last_id, $this->lafw_status, $this->lafw_comment, $this->lafw_update_user, $this->lafw_update_date));
         $this->last_insert_id = $this->hr->insert_id();
     }
 
@@ -44,9 +45,9 @@ class Da_hr_leave_approve_flow extends Hr_model
     {
         // Update all relevant fields based on the primary key lafw_id
         $sql = "UPDATE " . $this->hr_db . ".hr_leave_approve_flow
-				SET lafw_seq=?, lafw_ps_id=?, lafw_laps_id=?, lafw_lapg_id=?, lafw_lhis_id=?, lafw_status=?, lafw_comment=?, lafw_update_user=?, lafw_update_date=?
+				SET lafw_seq=?, lafw_ps_id=?, lafw_laps_id=?, lafw_lapg_id=?, lafw_lhis_id=?, lafw_status=?, lafw_last_id=?, lafw_comment=?, lafw_update_user=?, lafw_update_date=?
 				WHERE lafw_id=?";
-        $this->hr->query($sql, array($this->lafw_seq, $this->lafw_ps_id, $this->lafw_laps_id, $this->lafw_lapg_id, $this->lafw_lhis_id, $this->lafw_status, $this->lafw_comment, $this->lafw_update_user, $this->lafw_update_date, $this->lafw_id));
+        $this->hr->query($sql, array($this->lafw_seq, $this->lafw_ps_id, $this->lafw_laps_id, $this->lafw_lapg_id, $this->lafw_lhis_id, $this->lafw_status, $this->lafw_last_id, $this->lafw_comment, $this->lafw_update_user, $this->lafw_update_date, $this->lafw_id));
     }
 
     function delete()

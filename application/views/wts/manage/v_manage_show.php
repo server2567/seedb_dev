@@ -860,6 +860,7 @@ function gotoSeeDoctor(url) {
     let url_temp = '';
     let is_first_load_exr = true;
     function showModalNtr(url) {
+        console.log("url manage : ",url)
         url_temp = url;
         // window.location.href = url;
         // $('#notification-result-data').empty();

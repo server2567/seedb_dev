@@ -143,11 +143,11 @@ class Manage_queue extends WTS_Controller
 			} elseif ($apm['apm_sta_id'] == 3 ) {
 				$status_text = "ไม่พบผู้ป่วย";
 				$status_class = "text-danger";
-				$btn = '<button class="btn btn-info me-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
+				$btn = '<button class="btn btn-info ms-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
 			} elseif ( $apm['apm_sta_id'] == 9 ) {
 				$status_text = "ยกเลิกนัดหมาย";
 				$status_class = "text-danger";
-				$btn = '<button class="btn btn-info me-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
+				$btn = '<button class="btn btn-info ms-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
 			}
 
 			if (in_array($apm['apm_sta_id'], [5, 10])) { // ดำเนินการเสร็จสิ้น
@@ -279,46 +279,52 @@ class Manage_queue extends WTS_Controller
 			$status_class = "text-warning";
 			$btn_url = site_url('wts/Manage_queue/form_info/') . '/' . $encrypted_id;
 			$btn_noti_result_url = site_url('wts/Manage_queue/Manage_queue_result_info/0') . '/' . $encrypted_id;
-			$btn_url_noti = base_url() . 'index.php/ams/Notification_result/Notification_result_get_exr/' . $apm['apm_visit'] . '/' . $apm['stde_name_th'] . '/1' ;
+			$btn_get_exr_url = base_url() . 'index.php/ams/Notification_result/Notification_result_get_exr/' . $apm['apm_visit'] . '/' . $apm['stde_name_th'] . '/1' ;
 			
-			$btn = '<button class="btn btn-info" title="ดูรายละเอียด" onclick="window.location.href=\'' . $btn_url_noti . '\'"><i class="bi-search"></i></button>';
-			$btn .= '<button class="btn btn-info ms-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
+			// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
+			$btn = '<button class="btn btn-info ms-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-search"></i></button>';
 			if($is_have_ps_id) {
 				$btn .= '<button class="btn btn-warning ms-1" title="แก้ไขเครื่องมือหัตถการ" onclick="showModalNtr(\'' . $btn_noti_result_url . '\')"><i class="bi-pencil-square"></i></button>'
-					. '<button class="btn btn-success btn-see-doctor ms-1" title="เข้าพบแพทย์" onclick="gotoSeeDoctor(\'' . base_url() . 'index.php/wts/Manage_queue/assign_status/' . $encrypted_id . '\')"><i class="bi-megaphone-fill"></i></button>';
+					. '<button class="btn btn-primary btn-see-doctor ms-1" title="เข้าพบแพทย์" onclick="gotoSeeDoctor(\'' . base_url() . 'index.php/wts/Manage_queue/assign_status/' . $encrypted_id . '\')"><i class="bi-megaphone-fill"></i></button>';
 			}
 			if ($apm['apm_sta_id'] == 2) {
 				$status_text = "กำลังพบแพทย์";
 				$status_class = "text-info";
 				$btn_url = site_url('wts/Manage_queue/Manage_queue_result_info/0') . '/' . $encrypted_id;
-				$btn = '<button class="btn btn-warning" title="แก้ไขเครื่องมือหัตถการ" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-pencil-square"></i></button>';
+				// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
+				$btn = '<button class="btn btn-warning ms-1" title="แก้ไขเครื่องมือหัตถการ" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-pencil-square"></i></button>'
+				     . '<button class="btn btn-success btn-see-doctor ms-1 tooltips p-0 ps-1 pe-1" title="พบแพทย์เสร็จสิ้น" onclick="goto_see_doctor(\'' . base_url() . 'index.php/wts/Manage_queue_trello/Manage_queue_trello_success/' . $encrypted_id . '\', 10)"><i class="bi-person-fill-check font-20"></i></button>';
 			} else if ($apm['apm_sta_id'] == 11) {
 				$status_text = "กำลังตรวจในห้องปฏิบัติการ";
 				$status_class = "text-info";
 				$btn_url = site_url('wts/Manage_queue/Manage_queue_result_info/0') . '/' . $encrypted_id;
+				// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
 				$btn = '<button class="btn btn-warning" title="แก้ไขเครื่องมือหัตถการ" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-pencil-square"></i></button>';
 			} else if ($apm['apm_sta_id'] == 12) {
 				$status_text = "ตรวจในห้องปฏิบัติการเสร็จแล้ว";
 				$status_class = "text-success";
 				$btn_url = site_url('wts/Manage_queue/Manage_queue_result_info/0') . '/' . $encrypted_id;
+				// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
 				$btn = '<button class="btn btn-warning" title="แก้ไขเครื่องมือหัตถการ" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-pencil-square"></i></button>'
-					 . '<button class="btn btn-success btn-see-doctor ms-1" title="เข้าพบแพทย์" onclick="gotoSeeDoctor(\'' . base_url() . 'index.php/wts/Manage_queue/assign_status/' . $encrypted_id . '\')"><i class="bi-megaphone-fill"></i></button>';
+					 . '<button class="btn btn-primary btn-see-doctor ms-1" title="เข้าพบแพทย์" onclick="gotoSeeDoctor(\'' . base_url() . 'index.php/wts/Manage_queue/assign_status/' . $encrypted_id . '\')"><i class="bi-megaphone-fill"></i></button>';
 			} else if ($apm['apm_sta_id'] == 3 ) {
 				$status_text = "ไม่พบผู้ป่วย";
 				$status_class = "text-danger";
-				$btn = '<button class="btn btn-info me-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
+				// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
+				$btn = '<button class="btn btn-info ms-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-search"></i></button>';
 			} else if ( $apm['apm_sta_id'] == 9 ) {
 				$status_text = "ยกเลิกนัดหมาย";
 				$status_class = "text-danger";
-				$btn = '<button class="btn btn-info me-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-clipboard-check"></i></button>';
+				// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
+				$btn = '<button class="btn btn-info ms-1" title="ข้อมูลการนัดหมาย" onclick="navigateToAddAppointmentStep2(\'' . $encrypted_id . '\')"><i class="bi-search"></i></button>';
 			}
 
 			if (in_array($apm['apm_sta_id'], [10, 15])) { // พบแพทย์เสร็จสิ้น
 				$status_text = "พบแพทย์เสร็จสิ้น";
 				$status_class = "text-success";
 				$btn_url = site_url('wts/Manage_queue/Manage_queue_result_info/1') . '/' . $encrypted_id;
-				$btn = '<button class="btn btn-info" title="ดูรายละเอียด" onclick="window.location.href=\'' . $btn_url_noti . '\'"><i class="bi-search"></i></button>';
-				$btn .= '<button class="btn btn-outline-info ms-1" title="ดูรายละเอียด" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-search"></i></button>';
+				// $btn = '<button class="btn btn-info" title="ดูผลตรวจ" onclick="window.location.href=\'' . $btn_get_exr_url . '\'"><i class="bi-search"></i></button>';
+				$btn = '<button class="btn btn-outline-info ms-1" title="ดูรายละเอียด" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-search"></i></button>';
 			}
 
   			$data[] = [

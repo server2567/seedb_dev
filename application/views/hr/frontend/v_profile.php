@@ -135,7 +135,7 @@
                                                                     <div class="col-2">
                                                                         <span class="badge badge-warning font-18" <?= $dp->dp_id % 2 != 0 ? 'style="background: #9d6c01;"' : 'style="background: #006491;"' ?>> </span>
                                                                     </div>
-                                                                    <div class="col-10">
+                                                                    <div class="col-10 font-14">
                                                                         <?php if (isset($today_timework[$dp->dp_id]['timework'])) : ?>
                                                                             <?= preg_replace('/\s?น\./u', '', $today_timework[$dp->dp_id]['timework']) ?>
                                                                         <?php else: ?>
@@ -157,7 +157,7 @@
                                                         <h6 class="mb-2 fw-bold" style="line-height: 1.6;">จำนวนวันออกตรวจ<br>
                                                             <span class="font-20"><?= abbreDate6(date('Y-m-d')) ?></span>
                                                         </h6>
-                                                        <h6 class="mb-2 font-18">
+                                                        <h6 class="mb-2 font-14">
                                                             <?php foreach ($person_department_topic as $key => $dp) { ?>
                                                                 <?php if (isset($days_count_current[$dp->dp_id])) { ?>
                                                                     <span class="badge badge-warning font-18 mt-2" <?= $dp->dp_id % 2 != 0 ? 'style="background: #9d6c01; "' : 'style="background: #006491;"' ?>> </span> <?= $days_count_current[$dp->dp_id] ?> วัน<br>
@@ -277,7 +277,7 @@
                                                         <h6 class="mb-2 font-18">
                                                             <?php foreach ($person_department_topic as $key => $dp) { ?>
                                                                 <?php if (isset($days_count_previous[$dp->dp_id])) { ?>
-                                                                    <span class="badge badge-warning font-18 mt-2" <?= $dp->dp_id % 2 != 0 ? 'style="background: #006491;"' : 'style="background: #9d6c01;"' ?>> </span> <?= $days_count_previous[$dp->dp_id] ?> วัน<br>
+                                                                    <span class="badge badge-warning font-18 mt-2" <?= $dp->dp_id % 2 != 0 ? 'style="background: #006491;"' : 'style="background: #9d6c01;"' ?>> </span> <span class="font-14"> <?= $days_count_previous[$dp->dp_id] ?> วัน</span><br>
                                                             <?php }
                                                             } ?>
                                                         </h6>

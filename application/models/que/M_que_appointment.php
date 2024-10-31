@@ -1668,7 +1668,6 @@ class M_que_appointment extends Da_que_appointment
             $sql .= " ORDER BY $order_column $order_dir";
         }
         
-        // $sql .= " ORDER BY $order_column $order_dir";
         $sql .= " LIMIT ?, ?";
         array_push($binds, (int)$start, (int)$length);
 

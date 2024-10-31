@@ -710,11 +710,6 @@
         let day = date.getDate();
         return `${day} ${month} ${year}`;
     }
-
-    document.querySelector('#search').addEventListener('click', function(event) {
-                event.preventDefault();
-                searchDataTable();
-    });
         
     function checkForUpdates() {
         const searchParams = getSearchParams();
@@ -809,6 +804,7 @@
     let is_first_load_exr = true;
 
     function showModalNtr(url) {
+        console.log("url noti : ",url)
         url_temp = url;
 
         // Clear the modal content
@@ -955,5 +951,10 @@
             }
         });
     }
+
+    // document.querySelector('#search').addEventListener('click', function(event) {
+    //             event.preventDefault();
+    //             searchDataTable();
+    // });
 
 </script>

@@ -55,67 +55,78 @@
 
                                             foreach($leave_type_list as $key=>$row){ 
                                                 $seq++;
-    $text_class = "";
+                                                $text_class = "";
 
-    // Calculate total remaining time in minutes, considering 1 day = 8 hours
-    $total_remain_minutes = ($row->lsum_remain_day * 8 * 60) + ($row->lsum_remain_hour * 60) + $row->lsum_remain_minute;
-    $total_per_minutes = ($row->lsum_per_day * 8 * 60) + ($row->lsum_per_hour * 60) + $row->lsum_per_minute;
+                                                // Calculate total remaining time in minutes, considering 1 day = 8 hours
+                                                $total_remain_minutes = ($row->lsum_remain_day * 8 * 60) + ($row->lsum_remain_hour * 60) + $row->lsum_remain_minute;
+                                                $total_per_minutes = ($row->lsum_per_day * 8 * 60) + ($row->lsum_per_hour * 60) + $row->lsum_per_minute;
 
-    // Calculate the remaining percentage
-    $remain_percentage = $total_per_minutes > 0 ? ($total_remain_minutes / $total_per_minutes) * 100 : 0;
+                                                // Calculate the remaining percentage
+                                                $remain_percentage = $total_per_minutes > 0 ? ($total_remain_minutes / $total_per_minutes) * 100 : 0;
 
-    // Determine the color class based on the percentage
-    if ($remain_percentage > 50) {
-        $text_class = "success";
-    } else if ($remain_percentage >= 21 && $remain_percentage <= 49) {
-        $text_class = "warning";
-    } else {
-        $text_class = "danger";
-    }
+                                                // Determine the color class based on the percentage
+                                                if ($remain_percentage > 50) {
+                                                    $text_class = "success";
+                                                } else if ($remain_percentage >= 21 && $remain_percentage <= 49) {
+                                                    $text_class = "warning";
+                                                } else {
+                                                    $text_class = "danger";
+                                                }
 
-    $text_remain = "";
-    if ($row->lsum_remain_day != 0) {
-        $text_remain .= $row->lsum_remain_day . " วัน ";
-    }
-    if ($row->lsum_remain_hour != 0) {
-        $text_remain .= $row->lsum_remain_hour . " ชั่วโมง ";
-    }
-    if ($row->lsum_remain_minute != 0) {
-        $text_remain .= $row->lsum_remain_minute . " นาที ";
-    }
+                                                $text_remain = "";
+                                                if ($row->lsum_remain_day == 0) {
+                                                    $text_remain .= "คงเหลือ " . $row->lsum_remain_day . " วัน ";
+                                                }
+                                                else {
+                                                    $text_remain .= "คงเหลือ " . $row->lsum_remain_day . " วัน ";
+                                                }
+                                                if ($row->lsum_remain_hour != 0) {
+                                                    $text_remain .= $row->lsum_remain_hour . " ชั่วโมง ";
+                                                }
+                                                if ($row->lsum_remain_minute != 0) {
+                                                    $text_remain .= $row->lsum_remain_minute . " นาที ";
+                                                }
 
-    $text_per = "";
-    if ($row->lsum_per_day != 0) {
-        $text_per .= $row->lsum_per_day . " วัน ";
-    }
-    if ($row->lsum_per_hour != 0) {
-        $text_per .= $row->lsum_per_hour . " ชั่วโมง ";
-    }
-    if ($row->lsum_per_minute != 0) {
-        $text_per .= $row->lsum_per_minute . " นาที ";
-    }
+                                                $text_per = "";
+                                                if ($row->lsum_per_day != 0) {
+                                                    $text_per .= $row->lsum_per_day . " วัน ";
+                                                }
+                                                if ($row->lsum_per_hour != 0) {
+                                                    $text_per .= $row->lsum_per_hour . " ชั่วโมง ";
+                                                }
+                                                if ($row->lsum_per_minute != 0) {
+                                                    $text_per .= $row->lsum_per_minute . " นาที ";
+                                                }
 
-    // JavaScript data attributes for conditional behavior
-    $card_data_attributes = $remain_percentage == 0 ? 'data-toggle="modal" data-target="#alertModal"' : '';
-    $card_data_attributes .= ($remain_percentage > 0 && $row->lhis_id) ? 'data-lhis-id="' . $row->lhis_id . '"' : '';
-?>
 
-    <div class="col-xxl-4 col-md-6">
-        <div class="card info-card" <?php echo $card_data_attributes; ?>>
-            <div class="card-body">
-                <h6 class="card-title"><?php echo $row->leave_name; ?></h6>
-                <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center <?php echo "leave".$seq; ?>">
-                        <i class="ri ri-number-<?php echo $seq; ?>"></i>
-                    </div>
-                    <div class="ps-3 mt-3">
-                        <h5><span class="text-<?php echo $text_class; ?> fw-bold">คงเหลือ <?php echo $text_remain; ?></span></h5>
-                        <span class="text-dark small">จำนวนสิทธิ์การลาที่ได้รับ <?php echo $text_per; ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                                            ?>
+
+                                            <div class="col-xxl-4 col-md-6">
+                                                    <div class="card info-card" 
+                                                        <?php if ($remain_percentage == 0): ?>
+                                                            onclick="showNoRemainingLeaveModal()"
+                                                        <?php elseif ($remain_percentage > 0): ?>
+                                                            <?php if (!empty($row->lhis_id)): ?>
+                                                                onclick="fetchLeaveDetails(<?php echo $row->lhis_id; ?>)"
+                                                            <?php else: ?>
+                                                                onclick="window.location.href='<?php echo site_url().'/'.$controller.'/leaves_input/'.$row->lsum_leave_id.'/'.encrypt_id($row->lsum_ps_id); ?>'"
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
+                                                    >
+                                                        <div class="card-body">
+                                                            <h6 class="card-title"><?php echo $row->leave_name; ?></h6>
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center <?php echo "leave".$seq; ?>">
+                                                                    <i class="ri ri-number-<?php echo $seq; ?>"></i>
+                                                                </div>
+                                                                <div class="ps-3 mt-3">
+                                                                    <h5><span class="text-<?php echo $text_class; ?> fw-bold"><?php echo $text_remain; ?></span></h5>
+                                                                    <span class="text-dark small">จำนวนสิทธิ์การลาที่ได้รับ <?php echo $text_per; ?></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 
 
                                 <?php
@@ -142,15 +153,15 @@
     </div>
 </div>
 
-<!-- Alert Modal for 0% remaining -->
-<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
+<!-- Modal for no remaining leave -->
+<div class="modal fade" id="noRemainingLeaveModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="alertModalLabel">การแจ้งเตือน</h5>
+                <h5 class="modal-title">แจ้งเตือน</h5>
             </div>
             <div class="modal-body">
-                คุณไม่สามารถเลือกการ์ดนี้ได้ เนื่องจากคงเหลือเป็น 0%
+                <p>คุณไม่มีสิทธิ์การลาคงเหลือ</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
@@ -159,15 +170,16 @@
     </div>
 </div>
 
-<!-- Detail Modal -->
-<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+<!-- Modal for leave details -->
+<div class="modal fade" id="leaveDetailsModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="detailModalLabel">เส้นทางอนุมัติการลา</h5>
+                <h5 class="modal-title">รายละเอียดการลา</h5>
             </div>
-            <div class="modal-body" id="detailModalContent">
-                <!-- Content loaded via AJAX -->
+            <div class="modal-body">
+                <!-- Content will be loaded via AJAX -->
+                <p>Loading...</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
@@ -177,25 +189,29 @@
 </div>
 
 <script>
-    // Handle card clicks
-    document.querySelectorAll('.info-card[data-lhis-id]').forEach(card => {
-        card.addEventListener('click', function() {
-            const lhisId = this.getAttribute('data-lhis-id');
-            
-            // Make AJAX request to fetch details and show in modal
-            $.ajax({
-                url: '<?php echo site_url()."/".$controller; ?>get_leave_flow_by_lhis_id', // Replace with your actual URL
-                type: 'POST',
-                data: { lhis_id: lhisId },
-                success: function(data) {
-                    data = JSON.parse(data);
-                    $('#detailModalContent').html(data); // Populate modal content
-                    $('#detailModal').modal('show'); // Show modal
-                },
-                error: function() {
-                    alert('ไม่สามารถโหลดข้อมูลได้');
-                }
-            });
-        });
+
+function showNoRemainingLeaveModal() {
+    // Trigger modal when there's 0% remaining leave
+    $('#noRemainingLeaveModal').modal('show');
+}
+
+function fetchLeaveDetails(lhis_id) {
+    // Trigger the modal to display leave details
+    $('#leaveDetailsModal').modal('show');
+    
+    // Perform AJAX request to fetch data based on lhis_id
+    $.ajax({
+        url: '<?php echo site_url()."/".$controller; ?>get_leave_flow_by_lhis_id', // Replace with your actual URL
+        method: 'POST',
+        data: { lhis_id: lhis_id },
+        success: function(response) {
+            data = JSON.parse(response);
+            // Assuming `response` contains the HTML content for the modal
+            $('#leaveDetailsModal .modal-body').html(response);
+        },
+        error: function() {
+            $('#leaveDetailsModal .modal-body').html('<p>Error loading details.</p>');
+        }
     });
+}
 </script>

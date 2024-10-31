@@ -166,8 +166,7 @@ class Profile extends UMS_Controller
               'timework' => $info['timework'],
               'day' => $info['day'],
               'is_today' => ($info['days'][0] == date('Y-m-d')) ? '1' : '0',
-              'days' => $info['days'],
-              'room_name'=>$info['room_name'],
+              'days' => $info['days']
             ];
           }
         }
@@ -187,8 +186,7 @@ class Profile extends UMS_Controller
               'timework' => $info['timework'],
               'day' => $info['day'],
               'is_today' => ($info['days'][0] == date('Y-m-d')) ? '1' : '0',
-              'days' => $info['days'],
-              'room_name'=>$info['room_name'],
+              'days' => $info['days']
             ];
           }
         }
@@ -337,7 +335,6 @@ class Profile extends UMS_Controller
   {
     $result = null;
     $timework_strings = []; // เก็บ timework ของทุกข้อมูลในวันนี้
-
     foreach ($timework_data as $timework) {
       if ($timework['work_date'] === $today) {
         // หากยังไม่มีผลลัพธ์ เริ่มสร้างจากข้อมูลแรกที่ตรงกับวันนี้
@@ -345,7 +342,7 @@ class Profile extends UMS_Controller
           $result = $timework; // คัดลอกข้อมูลทั้งหมดของรายการแรก
         }
         // เก็บ timework ใน array เพื่อเชื่อมต่อภายหลัง
-        $timework_strings[] = $timework['timework'];
+        $timework_strings[] = $timework['timework'].(isset($timework['room_name'])&&$timework['room_name'] != null?' <span class="font-12">('.$timework['room_name'].')</span>':'');
       }
     }
 
@@ -465,8 +462,7 @@ class Profile extends UMS_Controller
           'timework' => '',
           'is_today' => ($day_in_month == date('Y-m-d') ? '1' : '0'),
           'day' => (int) date('d', strtotime($day_in_month)),
-          'days' => [$day_in_month],
-          'room_name'=>$room_name
+          'days' => [$day_in_month]
         ];
       }
 
@@ -474,7 +470,7 @@ class Profile extends UMS_Controller
         $result[$week_of_month][$weekday_name_thai]['timework'] .= '<br>';
       }
 
-      $result[$week_of_month][$weekday_name_thai]['timework'] .= $row['timework'];
+      $result[$week_of_month][$weekday_name_thai]['timework'] .= $row['timework'].(isset($room_name)&&$room_name != null?' <span class="font-12">('.$room_name.')</span>':'');
     }
 
     // ตรวจสอบและสร้างวันที่สำหรับวันของเดือนก่อนหน้า/ถัดไป

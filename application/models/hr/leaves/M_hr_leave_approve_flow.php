@@ -31,6 +31,12 @@ class M_hr_leave_approve_flow extends Da_hr_leave_approve_flow
                 lafw_comment,
                 lafw_update_user,
                 lafw_update_date,
+                last_name,
+                last_mean,
+                last_yes,
+                last_no,
+                lapg_name,
+                lapg_type,
                 ps_id,
                 pf_name,
                 ps_fname,
@@ -55,7 +61,9 @@ class M_hr_leave_approve_flow extends Da_hr_leave_approve_flow
                 END AS hire_is_medical_label
 			
 			FROM " . $this->hr_db . ".hr_leave_approve_flow 
-			LEFT JOIN " . $this->hr_db . ".hr_person ON lafw_laps_id = ps_id
+            LEFT JOIN " . $this->hr_db . ".hr_leave_approve_group ON lafw_lapg_id = lapg_id
+            LEFT JOIN " . $this->hr_db . ".hr_base_leave_approve_status ON lafw_last_id = last_id
+			LEFT JOIN " . $this->hr_db . ".hr_person ON lafw_ps_id = ps_id
             LEFT JOIN " . $this->hr_db . ".hr_base_prefix ON ps_pf_id = pf_id
             LEFT JOIN " . $this->hr_db . ".hr_person_position ON pos_ps_id = ps_id
             LEFT JOIN " . $this->hr_db . ".hr_base_hire ON pos_hire_id = hire_id

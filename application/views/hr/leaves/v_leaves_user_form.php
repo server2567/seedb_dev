@@ -18,6 +18,7 @@
 
     $target_user_leave_summary = $target_user_leave_summary[0];
 ?>
+
 <div class="card">
     <div class="accordion">
         <div class="accordion-item">
@@ -29,7 +30,7 @@
             <div id="collapseAdd" class="accordion-collapse collapse show" aria-labelledby="headingAdd">
                 <div class="accordion-body">
                     <form class="row g-3" method="post" action="<?php echo base_url(); ?>index.php/ums/SyncHRsingle">
-                        <div class="col-6" id="div_select_dp_id">
+                        <div class="col-4" id="div_select_dp_id">
                             <label for="SearchLastName" class="form-label">เลือกหน่วยงาน</label>
                             <select class="select2" name="select_dp_id" id="select_dp_id">
                                 <option value="-1" disabled>-- เลือกหน่วยงาน --</option>
@@ -41,7 +42,7 @@
                                 <?php $i++; } ?>
                             </select>
                         </div>
-                        <div class="col-6" id="div_select_date_cal_type">
+                        <div class="col-4" id="div_select_date_cal_type">
                             <label for="SearchLastName" class="form-label">เลือกประเภทการคำนวณอายุงาน</label>
                             <select class="select2" name="select_date_cal_type" id="select_date_cal_type">
                                 <option value="-1" disabled>-- เลือกประเภทการคำนวณอายุงาน --</option>
@@ -54,6 +55,22 @@
                                 <?php $i++; } ?>
                                 */ ?>
                             </select>
+                        </div>
+                        <div class="col-4" id="div_select_end_date_cal">
+                            <label for="SearchLastName" class="form-label">เลือกวันที่สิ้นสุดการคำนวณอายุงาน</label>
+                            <!-- <input name="select_end_date_cal" id="select_end_date_cal" class="flatpickr flatpickr-input active" type="text" placeholder="Select Date.." readonly="readonly"> -->
+                            <input type="input" class="form-control" name="select_end_date_cal" id="select_end_date_cal" placeholder="" />
+                            <!-- <select class="select2" name="select_date_cal_type" id="select_date_cal_type">
+                                <option value="-1" disabled>-- เลือกประเภทการคำนวณอายุงาน --</option>
+                                <option value="carlendar_year">ปีปฏิทิน</option>
+                                <option selected value="custom_year">กำหนดวันที่คำนวณอายุงาน</option>
+                                <?php /*
+                                <?php $i = 1;
+                                foreach ($filter_options["lsum_year"] as $y) { ?>
+                                    <option <?php  ?>value="<?php echo $y; ?>"><?php echo $y+543 ?></option>
+                                <?php $i++; } ?>
+                                */ ?>
+                            </select> -->
                         </div>
                         
                     </form>
@@ -237,6 +254,20 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // If using flatpickr in a framework, its recommended to pass the element directly
+    flatpickr($("#select_end_date_cal"), {});
+
+    // // $(".selector").flatpickr(optional_config);
+
+    // flatpickr("#start_time", {
+    //     enableTime: true,
+    //     noCalendar: true,
+    //     dateFormat: "H:i",
+    //     time_24hr: true
+    // });
+</script>
 <script>
 
     function calWorkAge(data, workAgeDays) {
@@ -269,33 +300,28 @@
 
     ///
 
-    
-    $(document).ready(function() {
-        // Initial DataTable update
-        updateDataTable();
-        renderWorkAgeCalSettingUI($('#select_date_cal_type').val());
-    });
-
-    function renderWorkAgeCalSettingUI(calType, switchUI = false) {
+    function renderWorkAgeCalSettingUI(calType) {
         if (calType === "custom_year") {
+                $("#div_select_end_date_cal").show();
                 $("#div_select_dp_id").removeClass("col-6");
                 $("#div_select_date_cal_type").removeClass("col-6");
-                $("#div_select_dp_id").addClass("col-3");
-                $("#div_select_date_cal_type").addClass("col-3");
+                $("#div_select_dp_id").addClass("col-4");
+                $("#div_select_date_cal_type").addClass("col-4");
         } else {
-                $("#div_select_dp_id").removeClass("col-3");
-                $("#div_select_date_cal_type").removeClass("col-3");
+                $("#div_select_end_date_cal").hide();
+                $("#div_select_dp_id").removeClass("col-4");
+                $("#div_select_date_cal_type").removeClass("col-4");
                 $("#div_select_dp_id").addClass("col-6");
                 $("#div_select_date_cal_type").addClass("col-6");
             }
 
-        // if (switchUI) {
+        // if (switchingMode) {
         //     if (calType === "custom_year") {
         //         $("#div_select_dp_id").removeClass("col-6");
         //         $("#div_select_date_cal_type").removeClass("col-6");
         //         $("#div_select_dp_id").addClass("col-3");
         //         $("#div_select_date_cal_type").addClass("col-3");
-        //         } else {
+        //         } else { // carlendar_year
         //             if ($("#div_select_dp_id").hasClass("col-3") && $("#div_select_date_cal_type").hasClass("col-3")) {
         //                 $("#div_select_dp_id").removeClass("col-3");
         //                 $("#div_select_date_cal_type").removeClass("col-3");
@@ -305,33 +331,41 @@
         //     }
         // } else {
         //     if (calType === "custom_year") {
-        //         if (calType === "custom_year") {
         //         $("#div_select_dp_id").removeClass("col-6");
         //         $("#div_select_date_cal_type").removeClass("col-6");
         //         $("#div_select_dp_id").addClass("col-3");
         //         $("#div_select_date_cal_type").addClass("col-3");
-        //         } else {
-        //             if ($("#div_select_dp_id").hasClass("col-3") && $("#div_select_date_cal_type").hasClass("col-3")) {
-        //                 $("#div_select_dp_id").removeClass("col-3");
-        //                 $("#div_select_date_cal_type").removeClass("col-3");
-        //                 $("#div_select_dp_id").addClass("col-6");
-        //                 $("#div_select_date_cal_type").addClass("col-6");
-        //             }
-        //         }
+        //     } else { // carlendar_year
+        //         // if ($("#div_select_dp_id").hasClass("col-3") && $("#div_select_date_cal_type").hasClass("col-3")) {
+        //         $("#div_select_dp_id").removeClass("col-3");
+        //         $("#div_select_date_cal_type").removeClass("col-3");
+        //         $("#div_select_dp_id").addClass("col-6");
+        //         $("#div_select_date_cal_type").addClass("col-6");
+        //         // }
         //     }
+            
         // }
         
     }
 
+    
+    $(document).ready(function() {
+        // Initial DataTable update
+        // updateDataTable();
+        renderWorkAgeCalSettingUI($('#select_date_cal_type').val());
+    });
+
+    
+
     // Event listeners for select dropdowns
     $('#select_date_cal_type').on('change', function() {
         // updateDataTable();
-        renderWorkAgeCalSettingUI($('#select_date_cal_type').val(), true);
+        renderWorkAgeCalSettingUI($('#select_date_cal_type').val());
         
     });
 
     // Event listeners for select dropdowns
-    // $('#select_dp_id, #select_date_cal_type , #select_hire_type, #select_work_status').on('change', function() {
+    // $('#select_dp_id, #select_date_cal_type , #select_end_date_cal').on('change', function() {
     //     // Update DataTable when a select dropdown changes
     //     // alert(`Hi ${$('#select_budget_year').val()}`);
     //     updateDataTable();

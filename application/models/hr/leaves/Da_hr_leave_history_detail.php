@@ -64,8 +64,8 @@ class Da_hr_leave_history_detail extends Hr_model
     {
         $sql = "SELECT *
 				FROM " . $this->hr_db . ".hr_leave_history_detail
-				WHERE lhde_id=?";
-        $query = $this->hr->query($sql, array($this->lhde_id));
+				WHERE lhde_lhis_id=?";
+        $query = $this->hr->query($sql, array($this->lhde_lhis_id));
         if ($withSetAttributeValue) {
             $this->row2attribute($query->row());
         } else {

@@ -88,7 +88,7 @@ $row = $person_department_detail[0];
                         <div class="row mt-4">
                             <div class="col-md-2"><label for="leaves_detail" class="form-label">ขอลาป่วยเนื่องจาก<span class="text-danger"> *</span></label></div>
                             <div class="col-md-10">
-                                <textarea class="form-control" name="leaves_detail" id="leaves_detail" style="height: 100px" placeholder="รายละเอียดการลาป่วย">เป็นไข้เลือดออก</textarea>
+                                <textarea class="form-control" name="leaves_detail" id="leaves_detail" style="height: 100px" placeholder="รายละเอียดการลาป่วย"></textarea>
                             </div> 
                         </div>
                         <!-- ขอลาป่วยเนื่องจาก -->
@@ -210,7 +210,7 @@ $row = $person_department_detail[0];
 
                         <div class="row mt-5">
                             <div class="col-md-12">
-                                <button type="button" class="btn btn-secondary float-start" onclick="window.location.href='<?php echo site_url().'/'.$controller.'leaves_type' ; ?>'"> ย้อนกลับ</button>
+                                <button type="button" class="btn btn-secondary float-start" onclick="window.location.href='<?php echo site_url().'/'.$controller.'leaves_type'.'/'.encrypt_id($row_profile->ps_id); ?>'"> ย้อนกลับ</button>
                                 <button type="button" class="btn btn-success float-end" onclick="leaves_save_form()">บันทึก</button>
                             </div>
                         </div>
@@ -254,8 +254,14 @@ function leaves_save_form() {
         } else {
             $(this).removeClass('is-invalid').addClass('is-valid').siblings('.invalid-feedback').hide();
         }
-    });
 
+        if (fieldName === "leaves_detail" && $(this).val() === '') {
+            isValid = false;
+            $(this).removeClass('is-valid').addClass('is-invalid').siblings('.invalid-feedback').show();
+        } else {
+            $(this).removeClass('is-invalid').addClass('is-valid').siblings('.invalid-feedback').hide();
+        }
+    });
 
     if (isValid) {
         // All fields are filled, proceed with AJAX request
@@ -350,9 +356,9 @@ function generate_leaves_table() {
                     "<td>" +
                     "<div class='input-group' id='group_leaves_time_" + i + "' name='group_leaves_time_" + i + "'>" +
                         "<span class='input-group-text'><input class='form-check-input' type='radio' name='leaves_time_type_" + i + "' id='leaves_time_type_" + i + "_2' value='2' onchange='calculate_leaves_summary()'></span>" + 
-                        "<input type='text' id='leaves_start_time_" + i + "' name='leaves_start_time_" + i + "' class='form-control leaves_time' onchange='calculate_leaves_summary()'>" +
+                        "<input type='text' id='leaves_start_time_" + i + "' name='leaves_start_time_" + i + "' class='form-control leaves_start_time' onchange='calculate_leaves_summary()'>" +
                         "<span class='input-group-text'>ถึง</span>" +
-                        "<input type='text' id='leaves_end_time_" + i + "' name='leaves_end_time_" + i + "' class='form-control leaves_time' onchange='calculate_leaves_summary()'>" +
+                        "<input type='text' id='leaves_end_time_" + i + "' name='leaves_end_time_" + i + "' class='form-control leaves_end_time' onchange='calculate_leaves_summary()'>" +
                     "</div>" +
                     "</td>" +
                     "<td>" +
@@ -378,18 +384,27 @@ function generate_leaves_table() {
 
     $("#leaves_count_select").val(count_day);
 
-    flatpickr(".leaves_time", {
+    flatpickr(".leaves_start_time", {
         enableTime: true,
         noCalendar: true,
         dateFormat: "H:i",
         time_24hr: true,
         defaultDate: "08:00"
     });
-    $(".leaves_time").attr("disabled", true);
+    $(".leaves_start_time").attr("disabled", true);
+
+    flatpickr(".leaves_end_time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        defaultDate: "09:00"
+    });
+    $(".leaves_end_time").attr("disabled", true);
     calculate_leaves_summary();
 }
 
-function calculate_leaves_summary(){
+function calculate_leaves_summary() {
     var totalDays = 0; // Initialize total days counter
     var totalHours = 0; // Initialize total hours counter
     var totalMinutes = 0; // Initialize total minutes counter
@@ -401,104 +416,97 @@ function calculate_leaves_summary(){
     let startDate = buddhistToGregorian(startDateValue);
     let endDate = buddhistToGregorian(endDateValue);
 
-    // Calculate the difference in milliseconds
-    let diffTime = endDate - startDate;
-
     // Calculate the difference in days
+    let diffTime = endDate - startDate;
     let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    // Loop through each row in the table
+    // Loop through each day in the date range
     for (var i = 0; i <= diffDays; i++) {
-        // Get the selected radio button value for each row
         var radioValue = document.querySelector("input[name='leaves_time_type_" + i + "']:checked").value;
-        var totalDay = 0; // Initialize total day counter
-        var totalHour = 0; // Initialize total hour counter
-        var totalMinute = 0; // Initialize total minute counter
+        var dayCounter = 0;
+        var hourCounter = 0;
+        var minuteCounter = 0;
 
-        // Increment totalDays based on the radio button value
         if (radioValue === '1') {
+            dayCounter = 1;
             totalDays += 1;
-            totalDay += 1;
             $("#leaves_start_time_" + i).attr("disabled", true);
             $("#leaves_end_time_" + i).attr("disabled", true);
 
-            document.getElementById("leaves_summary_day_" + i).value = 1;
+            document.getElementById("leaves_summary_day_" + i).value = dayCounter;
             document.getElementById("leaves_summary_hour_" + i).value = 0;
             document.getElementById("leaves_summary_minute_" + i).value = 0;
-
         } else if (radioValue === '2') {
-            // If radio value is 4, calculate the hours and minutes from the start and end time inputs
+            // Enable time input fields
             var startTimeValue = document.getElementById("leaves_start_time_" + i).value;
             var endTimeValue = document.getElementById("leaves_end_time_" + i).value;
             $("#leaves_start_time_" + i).attr("disabled", false);
             $("#leaves_end_time_" + i).attr("disabled", false);
 
-            // Parse start and end time strings to Date objects
+            // Calculate time difference in hours and minutes
             var startTime = new Date("2000-01-01T" + startTimeValue + ":00");
             var endTime = new Date("2000-01-01T" + endTimeValue + ":00");
-
-            // Calculate the difference in milliseconds
             let timeDiff = endTime - startTime;
 
-            // Calculate the difference in hours and minutes
             let hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
             let minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
-            // Increment totalHours and totalMinutes
+            // Update counters for this row
+            hourCounter = hoursDiff;
+            minuteCounter = minutesDiff;
+
+            // Add row counters to total counters
             totalHours += hoursDiff;
             totalMinutes += minutesDiff;
 
-            // Increment totalHour and totalMinute
-            totalHour = hoursDiff;
-            totalMinute += minutesDiff;
             document.getElementById("leaves_summary_day_" + i).value = 0;
-            document.getElementById("leaves_summary_hour_" + i).value = totalHour;
-            document.getElementById("leaves_summary_minute_" + i).value = totalMinute;
+            document.getElementById("leaves_summary_hour_" + i).value = hourCounter;
+            document.getElementById("leaves_summary_minute_" + i).value = minuteCounter;
+
+            // Convert excess minutes to hours for this row
+            if (minuteCounter >= 60) {
+                hourCounter += Math.floor(minuteCounter / 60);
+                minuteCounter %= 60;
+            }
+
+            // Convert hours to days if they exceed 8 in this row
+            if (hourCounter >= 8) {
+                dayCounter += Math.floor(hourCounter / 8);
+                hourCounter %= 8;
+            }
         }
 
-        // Convert excess minutes to hours if it's 60 or more
-        if (totalMinute >= 60) {
-            totalHour += Math.floor(totalMinute / 60);
-            totalMinute = totalMinute % 60;
-        }
-
-        // Generate the summary text based on non-zero values
-        var summaryText = "";
-        if (totalDay !== 0) {
-            summaryText += totalDay + " วัน";
-        }
-        if (totalHour !== 0) {
-            summaryText += (summaryText ? ", " : "") + totalHour + " ชั่วโมง";
-        }
-        if (totalMinute !== 0) {
-            summaryText += (summaryText ? ", " : "") + totalMinute + " นาที";
-        }
-
-       
-
-        document.getElementById("leaves_summary_" + i).innerText = summaryText;
+        // Display individual summary text for each row
+        document.getElementById("leaves_summary_" + i).innerText = generateSummaryText(dayCounter, hourCounter, minuteCounter);
     }
 
-    // Convert excess minutes to hours if it's 60 or more
-    if (totalMinutes >= 60) {
-        totalHours += Math.floor(totalMinutes / 60);
-        totalMinutes = totalMinutes % 60;
-    }
+    // Final conversion for accumulated total minutes to hours
+    totalHours += Math.floor(totalMinutes / 60);
+    totalMinutes %= 60;
 
-    // Generate the summary text based on non-zero values
-    var summaryText = "";
-    if (totalDays !== 0) {
-        summaryText += totalDays + " วัน";
-    }
-    if (totalHours !== 0) {
-        summaryText += (summaryText ? ", " : "") + totalHours + " ชั่วโมง";
-    }
-    if (totalMinutes !== 0) {
-        summaryText += (summaryText ? ", " : "") + totalMinutes + " นาที";
-    }
+    // Final conversion for accumulated total hours to days
+    totalDays += Math.floor(totalHours / 8);
+    totalHours %= 8;
 
-    document.getElementById("leaves_summary_text").innerText = summaryText;
+    // Generate and display the final summary
+    let finalSummaryText = generateSummaryText(totalDays, totalHours, totalMinutes);
+    document.getElementById("leaves_summary_text").innerText = finalSummaryText;
     document.getElementById("leaves_summary_value").value = totalDays + "-" + totalHours + "-" + totalMinutes;
+}
+
+// Helper function to generate summary text
+function generateSummaryText(days, hours, minutes) {
+    let summaryText = "";
+    if (days !== 0) {
+        summaryText += days + " วัน";
+    }
+    if (hours !== 0) {
+        summaryText += (summaryText ? ", " : "") + hours + " ชั่วโมง";
+    }
+    if (minutes !== 0) {
+        summaryText += (summaryText ? ", " : "") + minutes + " นาที";
+    }
+    return summaryText;
 }
 
 function formatDate(date) {
@@ -521,7 +529,10 @@ flatpickr("#leaves_start_date", {
     ],
     dateFormat: 'd/m/Y',
     locale: 'th',
-    defaultDate: new Date(new Date().getFullYear() + 543, new Date().getMonth(), new Date().getDate()), // ตั้งค่าเป็นวันที่ปัจจุบันของปฎิทิน พ.ศ.
+    defaultDate: [
+                    new Date(new Date().getFullYear() + 543, new Date().getMonth(), new Date().getDate()),
+                    new Date(new Date().getFullYear() + 543, new Date().getMonth(), new Date().getDate())
+                ], // ตั้งค่าเป็นวันที่ปัจจุบันของปฎิทิน พ.ศ.
     onReady: function(selectedDates, dateStr, instance) {
         addMonthNavigationListeners();
         convertYearsToThai();

@@ -305,9 +305,11 @@ class Leaves_form extends Leaves_Controller
 		$lhis_write_date = $this->input->post('leaves_create_date');
 		$lhis_replace_id = $this->input->post('leaves_replace_id');
 		$lhis_tell = $this->input->post('leaves_from');
+
+		pre($this->input->post()); die;
 		
 		if (isset($_FILES['leaves_upload_file']) && $_FILES['leaves_upload_file']['error'] === UPLOAD_ERR_OK) {
-    
+			
 			$file_tmp = $_FILES['leaves_upload_file']['tmp_name'];
 			$file_mime_type = $_FILES['leaves_upload_file']['type'];
 			$original_file_name = pathinfo($_FILES['leaves_upload_file']['name'], PATHINFO_FILENAME);
@@ -342,10 +344,6 @@ class Leaves_form extends Leaves_Controller
 				throw new Exception('File upload failed');
 			}
 		
-		} else {
-			// Handle the case where no file was uploaded or an error occurred
-			$data['status_response'] = $this->config->item('status_response_error');
-			throw new Exception('No file uploaded or file upload error');
 		}
 
 		$this->M_hr_leave_history->lhis_ps_id = $lhis_ps_id;
@@ -390,8 +388,9 @@ class Leaves_form extends Leaves_Controller
 			$this->M_hr_leave_approve_flow->lafw_seq = $row->lage_seq;
 			$this->M_hr_leave_approve_flow->lafw_ps_id  = $row->lage_ps_id;
 			$this->M_hr_leave_approve_flow->lafw_laps_id = $row->lage_last_id;
-			$this->M_hr_leave_approve_flow->lafw_lapg_id  = $row->lage_lapg_id;
-			$this->M_hr_leave_approve_flow->lafw_lhis_id  = 42;
+			$this->M_hr_leave_approve_flow->lafw_lapg_id = $row->lage_lapg_id;
+			$this->M_hr_leave_approve_flow->lafw_last_id = $row->lage_last_id;
+			$this->M_hr_leave_approve_flow->lafw_lhis_id  = $lhis_last_insert_id;
 			$this->M_hr_leave_approve_flow->lafw_status = "W";
 			$this->M_hr_leave_approve_flow->lafw_comment = "";
 			$this->M_hr_leave_approve_flow->lafw_update_user = "";
@@ -399,9 +398,6 @@ class Leaves_form extends Leaves_Controller
 			$this->M_hr_leave_approve_flow->insert();
 		}
 		
-
-
-
 		$leaves_count_select = $this->input->post("leaves_count_select");
 
 		$lhde_seq = 0;
@@ -409,45 +405,43 @@ class Leaves_form extends Leaves_Controller
 			$lhde_seq++;
 
 			$leaves_date = splitDateForm1($this->input->post("leaves_date_".$i));
-			$this->hr_leave_history_detail->lhde_date = $leaves_date;
-			$this->hr_leave_history_detail->lhde_lhis_id = $lhis_last_insert_id;
+			$this->M_hr_leave_history_detail->lhde_date = $leaves_date;
+			$this->M_hr_leave_history_detail->lhde_lhis_id = $lhis_last_insert_id;
 
 			if ($lhis_leave_id == 2 && null !== $this->input->post('leaves_clnd_id')) {	//ลาหยุดตามประเพณี
-				$this->hr_leave_history_detail->lhde_clnd_id = $this->input->post('leaves_clnd_id');
+				$this->M_hr_leave_history_detail->lhde_clnd_id = $this->input->post('leaves_clnd_id');
 			}
 			else{
-				$this->hr_leave_history_detail->lhde_clnd_id = "";
+				$this->M_hr_leave_history_detail->lhde_clnd_id = "";
 			}
 
 			$leaves_time_type = $this->input->post("leaves_time_type_".$i);
 			if($leaves_time_type == 1){
-				$this->hr_leave_history_detail->lhde_start_time = "00:00:00";
-				$this->hr_leave_history_detail->lhde_end_time = "00:00:00";
-				$this->hr_leave_history_detail->lhde_type_day = "D";
-				$this->hr_leave_history_detail->lhde_num_hour = 8;	
-				$this->hr_leave_history_detail->lhde_num_minute = 0;
+				$this->M_hr_leave_history_detail->lhde_start_time = "00:00:00";
+				$this->M_hr_leave_history_detail->lhde_end_time = "00:00:00";
+				$this->M_hr_leave_history_detail->lhde_type_day = "D";
+				$this->M_hr_leave_history_detail->lhde_num_hour = 8;	
+				$this->M_hr_leave_history_detail->lhde_num_minute = 0;
 			}
 			else{
-				$this->hr_leave_history_detail->lhde_start_time = $this->input->post("leaves_start_time_".$i);
-				$this->hr_leave_history_detail->lhde_end_time = $this->input->post("leaves_end_time_".$i);
-				$this->hr_leave_history_detail->lhde_type_day = "H";
-				$this->hr_leave_history_detail->lhde_num_hour = $this->input->post("leaves_summary_hour_".$i);
-				$this->hr_leave_history_detail->lhde_num_minute = $this->input->post("leaves_summary_minute_".$i);
+				$this->M_hr_leave_history_detail->lhde_start_time = $this->input->post("leaves_start_time_".$i);
+				$this->M_hr_leave_history_detail->lhde_end_time = $this->input->post("leaves_end_time_".$i);
+				$this->M_hr_leave_history_detail->lhde_type_day = "H";
+				$this->M_hr_leave_history_detail->lhde_num_hour = $this->input->post("leaves_summary_hour_".$i);
+				$this->M_hr_leave_history_detail->lhde_num_minute = $this->input->post("leaves_summary_minute_".$i);
 			}
-			$this->hr_leave_history_detail->lhde_seq = $lhde_seq;
-			$this->hr_leave_history_detail->insert();
+			$this->M_hr_leave_history_detail->lhde_seq = $lhde_seq;
+			$this->M_hr_leave_history_detail->insert();
 		}
 
-        // Now you can use these variables in your controller logic
-        // For example, you can perform database operations, validation, etc.
-        // Here's a simple example of echoing the received data:
-        echo "Received data:\n";
-        echo "Location: " . $location . "\n";
-        echo "Create Date: " . $create_date . "\n";
-        echo "From: " . $from . "\n";
-        echo "Detail: " . $detail . "\n";
-        echo "Start Date: " . $start_date . "\n";
-        echo "Address: " . $address . "\n";
+		// กำหนดค่าการตอบกลับหลังจากบันทึกข้อมูลเสร็จ
+		$data['status_response'] = $this->config->item('status_response_success');
+		$data['message_dialog'] = $this->config->item('text_toast_default_success_body');
+		$data['return_url'] = site_url($this->controller); // URL กลับไปหน้าที่ต้องการ
+
+		// ส่งผลลัพธ์กลับในรูปแบบ JSON
+		echo json_encode($data);
+
 	}//end leaves_save
 
 	
@@ -462,7 +456,11 @@ class Leaves_form extends Leaves_Controller
 	function get_leave_flow_by_lhis_id(){
 		$lhis_id = $this->input->post('lhis_id');
 
-		$result = $this->M_hr_leave_approve_flow->get_leave_flow_all_by_lhis_id($lhis_id)->result();
+		$this->M_hr_leave_history->lhis_id = $lhis_id;
+		$this->M_hr_leave_history_detail->lhde_lhis_id = $lhis_id;
+		$result['leave_topic'] = $this->M_hr_leave_history->get_by_key()->result();
+		$result['leave_detail'] = $this->M_hr_leave_history_detail->get_by_key()->result();
+		$result['leave_flow'] = $this->M_hr_leave_approve_flow->get_leave_flow_all_by_lhis_id($lhis_id)->result();
 		echo json_encode($result);
 	}
 	// get_leave_flow_by_lhis_id
