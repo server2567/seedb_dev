@@ -1,0 +1,23 @@
+
+# case 1 success
+-- แสดง dialog success
+$data['return_url'] = base_url() . 'index.php/Gear';
+$data['status_response'] = $this->config->item('status_response_success');
+
+# case 2 error about server db
+-- แสดง dialog error
+$data['status_response'] = $this->config->item('status_response_error');
+$data['message_dialog'] = "ชื่อระบบมีอยู่แล้ว กรุณาสร้างใหม่";
+
+# case 3 error some condition of input
+$data['status_response'] = $this->config->item('status_response_error');
+-- แสดง dialog error
+$data['message_dialog'] = "ชื่อระบบมีอยู่แล้ว กรุณาสร้างใหม่"; // (extend ) if want to show dialog error
+-- แสดง invalid input เมื่อมีการเช็คเงื่อนไขพิเศษนอกเหนือจากค่าว่าง
+$data['error_inputs'][] = (object) ['name' => 'error', 'error' => "Username หรือ Password ไม่ถูกต้อง"];
+$data['error_inputs'][] = (object) ['name' => 'username', 'error' => "username ไม่ถูกต้อง"];
+
+=============================================
+# return from controller to view(ajax, jquery.post)
+$result = array('data' => $data);
+echo json_encode($result);	// return to jQuery.post()

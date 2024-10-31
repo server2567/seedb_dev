@@ -1,0 +1,1 @@
+https://stackoverflow.com/questions/58329701/session-variable-is-reset-on-redirect-in-codeigniter-php
