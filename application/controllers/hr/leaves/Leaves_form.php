@@ -306,7 +306,7 @@ class Leaves_form extends Leaves_Controller
 		$lhis_replace_id = $this->input->post('leaves_replace_id');
 		$lhis_tell = $this->input->post('leaves_from');
 
-		pre($this->input->post()); die;
+		// pre($this->input->post()); die;
 		
 		if (isset($_FILES['leaves_upload_file']) && $_FILES['leaves_upload_file']['error'] === UPLOAD_ERR_OK) {
 			
@@ -333,7 +333,7 @@ class Leaves_form extends Leaves_Controller
 			}
 		
 			// Generate a unique file name with date and time
-			$file_new_name = date("dmYHis") . '_' . uniqid() . '.' . $original_file_name;
+			$file_new_name = date("dmYHis") . '_' . uniqid() . '.' . $original_file_name . "." . $file_mime_type;
 			$full_destination_path = $this->config->item('hr_upload_leaves') . $file_new_name;
 		
 			// Move the file to the destination folder
@@ -485,7 +485,25 @@ class Leaves_form extends Leaves_Controller
 	}
 	// check_timework_plan_for_leave
 
-
+	/*
+	* leaves_approve_flow
+	* แสดงเส้นทางอนุมัติการลา
+	* @input -
+	* $output -
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 24/10/2567
+	*/
+	function leaves_approve_flow($lhis_id)
+	{
+		$lhis_id = decrypt_id($lhis_id);
+		$data['view'] = $this->view;
+		$data['controller'] = $this->controller;
+		$this->M_hr_leave_history_detail->lhde_lhis_id = $lhis_id;
+		$data['leave_topic'] = $this->M_hr_leave_history->get_leave_history_by_lhis_id($lhis_id)->row();
+		$data['leave_detail'] = $this->M_hr_leave_history_detail->get_by_key()->result();
+		$data['leave_flow'] = $this->M_hr_leave_approve_flow->get_leave_flow_all_by_lhis_id($lhis_id)->result();
+		$this->load->view($this->view.'v_leaves_modal_approve_flow', $data);
+	}//end leaves_approve_flow
 
 }//end Leaves_form
 ?>
