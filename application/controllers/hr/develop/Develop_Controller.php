@@ -13,7 +13,7 @@ class Develop_Controller extends HR_Controller {
 	
 	protected $view;
 	protected $model;
-	protected $controllera; 
+	protected $controller; 
 
 	public function __construct()
 	{
