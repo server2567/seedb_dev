@@ -391,7 +391,7 @@ class M_hr_leave_history extends Da_hr_leave_history
       $sql = "SELECT 
 				lhis_status,
 				lhis_create_user,
-				CONCAT(pf.pf_name, ' ', ps.ps_name, ' ', ps.ps_lname) AS ps_name,
+				CONCAT(pf.pf_name, ' ', ps.ps_fname, ' ', ps.ps_lname) AS ps_name,
 				JSON_ARRAYAGG(
 					DISTINCT JSON_OBJECT(
 						'stde_name_th', 
@@ -417,7 +417,7 @@ class M_hr_leave_history extends Da_hr_leave_history
 			INNER JOIN 
 				".$this->hr_db.".hr_person AS ps ON ps.ps_id = us.us_ps_id
 			INNER JOIN 
-				".$this->hr_db.".hr_base_prefix AS pf ON pf.pf_name_abbr = ps.ps_prefix_abbr
+				".$this->hr_db.".hr_base_prefix AS pf ON pf.pf_name_abbr = ps.ps_pf_id
 			LEFT JOIN 
 				".$this->hr_db.".hr_structure_person AS stdp ON stdp.stdp_ps_id = ps.ps_id
 			LEFT JOIN 
@@ -425,7 +425,7 @@ class M_hr_leave_history extends Da_hr_leave_history
 			WHERE 
 				lhis_id = {$lhis_id}
 			GROUP BY 
-				lhis_status, lhis_create_user, pf.pf_name, ps.ps_name, ps.ps_lname;
+				lhis_status, lhis_create_user, pf.pf_name, ps.ps_fname, ps.ps_lname;
 			";
 		$query = $this->hr->query($sql);
 	}

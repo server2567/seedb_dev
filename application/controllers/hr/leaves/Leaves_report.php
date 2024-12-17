@@ -182,6 +182,9 @@ class Leaves_report extends Leaves_Controller
         }
         if($array_merge){
             $data['flow_approve'] = $array_merge;
+        }else{
+            $data['bypass_approve'] = $this->M_hr_leave_history->get_leave_history_bypass_detail($result->lhis_id)->row();
+            pre($data['bypass_approve']);
         }
         $result->day_last_used = $leave_used[0]->lhis_end_date;
         $result->day_used = $day_used;
