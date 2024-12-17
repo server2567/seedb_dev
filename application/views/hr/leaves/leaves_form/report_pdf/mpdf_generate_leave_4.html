@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            text-align: justify;
+            width: 100%;
+        }
+
+        h3 {
+            text-align: center;
+            font-size: 20pt;
+            margin-bottom: 0;
+        }
+
+        p {
+            margin: 5px 0;
+            font-size: 14pt;
+            text-align: justify;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        .signature {
+            margin-top: 20px;
+        }
+
+        .dotted-line {
+            border-bottom: 1px dotted black;
+            /* เส้น dotted */
+            padding-bottom: -10px;
+            /* ระยะห่างระหว่างข้อความกับเส้น */
+            display: inline-block;
+            /* ให้ข้อความอยู่ในบรรทัดเดียวกัน */
+        }
+    </style>
+</head>
+
+<body>
+    <p style="text-align: right;">เขียนที่ {write_at}</p>
+    <p style="text-align: right;">{LEAVE_DATE}</p>
+    <p style="text-align: justify;">เรื่อง &nbsp;&nbsp; ขออนุญาตลากิจได้รับค่าจ้าง</p>
+    <p>เรียน &nbsp;&nbsp; {for_who}</p>
+
+    <p>ข้าพเจ้า <span class="dotted-line">{ps_name}</span> {stucture_detail}</p>
+
+    <p>ขอลาลากิจได้รับค่าจ้าง เนื่องจาก <span class="dotted-line">{lhis_topic} </span></p>
+
+
+    <p>ตั้งแต่วันที่ <span class="dotted-line">{lhis_start_date}</span> ถึงวันที่ <span
+            class="dotted-line">{lhis_end_date} </span> รวม {lhis_num_day} {lhis_num_hour}
+        {lhis_num_minutes}
+    </p>
+    <p>ในระหว่างลาจะติดต่อข้าพเจ้าได้ที่ {lhis_address} โทรศัพท์ {ps_phone}</p>
+    <p style="text-align: right;">
+        ขอแสดงความนับถือ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </p>
+    <p style="text-align: right;">(ลงชื่อ) __________________________ ผู้ตรวจสอบ<br>
+        (________________________________)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+        <div style="page-break-inside: avoid;">
+            <table>
+                <tbody style="border: none;">
+                    <tr style="padding: 0px;border-bottom: none;">
+                        <td style="margin: 0px; border-bottom: none;">
+                            <h4 style="text-decoration: underline dotted;">
+                                สถิติการลาในปีปฏิทินนี้</h4>
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>ลามาแล้ว</th>
+                                        <th>ลาครั้งนี้</th>
+                                        <th>รวมเป็น</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="text-align: center;">&nbsp;</td>
+                                        <td style="text-align: center;">&nbsp;</td>
+                                        <td style="text-align: center;">&nbsp;</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br>
+                            <p>(ลงชื่อ) __________________________________ ผู้ตรวจสอบ</p>
+                            <p> &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(__________________________________)</p>
+                            <p>(ตำแหน่ง)<span
+                                >_________________________________________</span>
+                            </p>
+                            <p>วันที่ ______ เดือน ______________ พ.ศ. _______________</p>
+                        </td>
+                        <td style="margin: 0px;padding: 8px; text-align: left;width: 45%;">
+                            <p style="text-decoration: underline dotted;">ความเห็นผู้บังคับบัญชา</p>
+                            <h4>.................................................................................<br>.................................................................................
+                            </h4>
+                            <p>ลงชื่อ ___________________________________</p>
+                            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(___________________________________)</p>
+                            <p><span style="font-size: 12pt;">หัวหน้างาน/ศูนย์/แผนก/หอผู้ป่วย</span> __________________</p>
+                            <p>วันที่ ______ เดือน ___________ พ.ศ. _________</p>
+                        </td>
+                    </tr>
+                    <tr style="border-top: none;">
+                        <td style="border-top: none;">&nbsp;</td>
+                        <td style="padding: 8px;">
+                            <p style="text-decoration: underline dotted;">ผู้มีอำนาจอนุมัติการลา</p>
+                            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;○
+                                อนุญาต ○ ไม่อนุญาต</p>
+                            <p>ลงชื่อ ___________________________________</p>
+                            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(___________________________________)</p>
+                            <p>(ตำแหน่ง)<span
+                                >_________________________________</span>
+                            </p>
+                            <p>วันที่ ______ เดือน ____________ พ.ศ. _________</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+</body>
+
+</html>

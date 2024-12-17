@@ -82,6 +82,9 @@ class Services extends REST_Controller
 			if ($qu_psl->num_rows() > 0) { // หากเคยได้เข้าสู่ระบบผ่านไลน์
 				$row_lpt = $qu_psl->row();
 				$apm_que = $this->M_que_appointment->get_appointment_by_id($apm_id)->row();
+				$ntdp_in_out_obj = $this->db->query('SELECT COUNT(*) AS count FROM see_wtsdb.wts_notifications_department WHERE ntdp_apm_id = "'.$apm_id.'" AND ntdp_in_out = 1')->row();
+				$ntdp_in_out = $ntdp_in_out_obj->count;
+				// echo "ntdp_in_out : ".$ntdp_in_out; die();
 				
 				if(!empty($ntdp_loc_Id)){
 					$current_service_point_obj = $this->db->query('SELECT loc_name FROM see_wtsdb.wts_location WHERE loc_seq = "'.$ntdp_loc_Id.'"')->row();
@@ -98,7 +101,7 @@ class Services extends REST_Controller
 				}
 
 				$next_service_point_show = true;
-				if($ntdp_loc_Id == 11 && empty($ntdp_loc_ft_Id)){
+				if($ntdp_in_out > 0 && empty($ntdp_loc_ft_Id)){
 					$next_service_point_show = false;
 				}
 
@@ -109,347 +112,461 @@ class Services extends REST_Controller
 					$department = !empty($apm_que->stde_name_th) ? $apm_que->stde_name_th : 'ไม่ระบุแผนก';
 					$doctor_name = !empty($apm_que->ps_name) ? $apm_que->ps_name : 'ไม่ระบุชื่อแพทย์';
 
-					$flexDataJson = '
-					{
-						"type": "flex",
-						"altText": "แจ้งเตือนการจองคิวของคุณ",
-						"contents": {
-							"type": "bubble",
-							"body": {
-								"type": "box",
-								"layout": "vertical",
-								"contents": [
-									{
-										"type": "text",
-										"text": "นัดหมาย/จองคิว",
-										"weight": "bold",
-										"color": "#1DB446",
-										"size": "sm"
-									},
-									{
-										"type": "text",
-										"text": "หมายเลขคิว ' . $apm_que->apm_ql_code . '",
-										"weight": "bold",
-										"size": "xl",
-										"margin": "md"
-									},
-									{
-										"type": "separator",
-										"margin": "xxl"
-									},
-									{
-										"type": "box",
-										"layout": "vertical",
-										"margin": "xxl",
-										"spacing": "sm",
-										"contents": [
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
+					if ($ntdp_loc_Id == 1) {
+						$flexDataJson = '
+						{
+							"type": "flex",
+							"altText": "แจ้งเตือนการจองคิวของคุณ",
+							"contents": {
+								"type": "bubble",
+								"body": {
+									"type": "box",
+									"layout": "vertical",
+									"contents": [
+										{
+											"type": "text",
+											"text": "นัดหมาย/จองคิว",
+											"weight": "bold",
+											"color": "#1DB446",
+											"size": "sm"
+										},
+										{
+											"type": "text",
+											"text": "หมายเลขคิว ' . $apm_que->apm_ql_code . '",
+											"weight": "bold",
+											"size": "xl",
+											"margin": "md"
+										},
+										{
+											"type": "separator",
+											"margin": "xxl"
+										},
+										{
+											"type": "box",
+											"layout": "vertical",
+											"margin": "xxl",
+											"spacing": "sm",
+											"contents": [
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "สถานที่",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . $location . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "แผนก",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . $department . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"flex": 3,
+															"wrap": true
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "วันที่เข้ารับบริการ",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 5
+														},
+														{
+															"type": "text",
+															"text": "' . fullDateTH3($apm_que->apm_date) . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
 													{
 														"type": "text",
-														"text": "สถานที่",
+														"text": "เวลา",
 														"size": "sm",
-														"color": "#555555",
-														"flex": 2
+														"color": "#555555"
 													},
 													{
 														"type": "text",
-														"text": "' . $location . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"flex": 3
-													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "แผนก",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . $department . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"flex": 3,
-														"wrap": true
-													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "วันที่เข้ารับบริการ",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 5
-													},
-													{
-														"type": "text",
-														"text": "' . fullDateTH3($apm_que->apm_date) . '",
+														"text": "' . DateTime::createFromFormat("H:i", $apm_que->apm_time)->format("H:i") . ' น.",
 														"size": "sm",
 														"color": "#111111",
 														"align": "end",
 														"wrap": true,
-														"flex": 3
+														"flex": 4
 													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "จุดบริการปัจจุบัน",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 5
+														},
+														{
+															"type": "text",
+															"text": "' . $current_service_point . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												},												
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "จุดบริการถัดไป",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 5
+														},
+														{
+															"type": "text",
+															"text": "' . $next_service_point . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "separator",
+													"margin": "xxl"
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "VISIT",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . ($apm_que->apm_visit == null ? "-" : $apm_que->apm_visit) . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"flex": 3
+														}
+													],
+													"flex": 2,
+													"margin": "xxl"
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "HN",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . ($apm_que->pt_member == null ? "-" : $apm_que->pt_member) . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "ชื่อผู้ป่วย",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . $apm_que->pt_name . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "ว/ด/ป เกิด",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . getbirthDate($apm_que->ptd_birthdate) . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "อายุ",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . calAge3($apm_que->ptd_birthdate) . ' ปี",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "เพศ",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . ($apm_que->ptd_sex == "M" ? "ชาย" : "หญิง") . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												}
+											]
+										},
+										{
+											"type": "separator",
+											"margin": "xxl"
+										},
+										{
+											"type": "box",
+											"layout": "horizontal",
+											"margin": "md",
+											"contents": [
 												{
 													"type": "text",
-													"text": "เวลา",
-													"size": "sm",
-													"color": "#555555"
+													"text": "โรงพยาบาลจักษุสุราษฎร์",
+													"size": "xs",
+													"color": "#aaaaaa",
+													"flex": 0
 												},
 												{
 													"type": "text",
-													"text": "' . DateTime::createFromFormat("H:i", $apm_que->apm_time)->format("H:i") . ' น.",
-													"size": "sm",
-													"color": "#111111",
-													"align": "end",
-													"wrap": true,
-													"flex": 4
+													"text": "📞 077-276-999",
+													"color": "#aaaaaa",
+													"size": "xs",
+													"align": "end"
 												}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "จุดบริการปัจจุบัน",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 5
-													},
-													{
-														"type": "text",
-														"text": "' . $current_service_point . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"wrap": true,
-														"flex": 3
-													}
-												]
-											},';
-						// เงื่อนไขเพื่อไม่แสดงจุดบริการถัดไปหากตอนนี้เป็นจุดสุดท้าย และจุดถัดไปไม่ถูกส่งมา
-						if ($next_service_point_show) {
-							$flexDataJson .= '	
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "จุดบริการถัดไป",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 5
-													},
-													{
-														"type": "text",
-														"text": "' . $next_service_point . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"wrap": true,
-														"flex": 3
-													}
-												]
-											},';
-						}
-						$flexDataJson .= '
-											{
-												"type": "separator",
-												"margin": "xxl"
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "VISIT",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . ($apm_que->apm_visit == null ? "-" : $apm_que->apm_visit) . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"flex": 3
-													}
-												],
-												"flex": 2,
-												"margin": "xxl"
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "HN",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . ($apm_que->pt_member == null ? "-" : $apm_que->pt_member) . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"flex": 3
-													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "ชื่อผู้ป่วย",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . $apm_que->pt_name . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"wrap": true,
-														"flex": 3
-													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "ว/ด/ป เกิด",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . getbirthDate($apm_que->ptd_birthdate) . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"wrap": true,
-														"flex": 3
-													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "อายุ",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . calAge3($apm_que->ptd_birthdate) . ' ปี",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"wrap": true,
-														"flex": 3
-													}
-												]
-											},
-											{
-												"type": "box",
-												"layout": "horizontal",
-												"contents": [
-													{
-														"type": "text",
-														"text": "เพศ",
-														"size": "sm",
-														"color": "#555555",
-														"flex": 2
-													},
-													{
-														"type": "text",
-														"text": "' . ($apm_que->ptd_sex == "M" ? "ชาย" : "หญิง") . '",
-														"size": "sm",
-														"color": "#111111",
-														"align": "end",
-														"wrap": true,
-														"flex": 3
-													}
-												]
-											}
-										]
-									},
-									{
-										"type": "separator",
-										"margin": "xxl"
-									},
-									{
-										"type": "box",
-										"layout": "horizontal",
-										"margin": "md",
-										"contents": [
-											{
-												"type": "text",
-												"text": "โรงพยาบาลจักษุสุราษฎร์",
-												"size": "xs",
-												"color": "#aaaaaa",
-												"flex": 0
-											},
-											{
-												"type": "text",
-												"text": "📞 077-276-999",
-												"color": "#aaaaaa",
-												"size": "xs",
-												"align": "end"
-											}
-										]
+											]
+										}
+									]
+								},
+								"styles": {
+									"footer": {
+										"separator": true
 									}
-								]
-							},
-							"styles": {
-								"footer": {
-									"separator": true
 								}
 							}
-						}
-					}';
+						}';
+					}else{
+						$flexDataJson = '
+						{
+							"type": "flex",
+							"altText": "แจ้งเตือนการจองคิวของคุณ",
+							"contents": {
+								"type": "bubble",
+								"body": {
+									"type": "box",
+									"layout": "vertical",
+									"contents": [
+										{
+											"type": "text",
+											"text": "นัดหมาย/จองคิว",
+											"weight": "bold",
+											"color": "#1DB446",
+											"size": "sm"
+										},
+										{
+											"type": "text",
+											"text": "หมายเลขคิว ' . $apm_que->apm_ql_code . '",
+											"weight": "bold",
+											"size": "xl",
+											"margin": "md"
+										},
+										{
+											"type": "separator",
+											"margin": "xxl"
+										},
+										{
+											"type": "box",
+											"layout": "vertical",
+											"margin": "xxl",
+											"spacing": "sm",
+											"contents": [
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "แผนก",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 2
+														},
+														{
+															"type": "text",
+															"text": "' . $department . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"flex": 3,
+															"wrap": true
+														}
+													]
+												},
+												{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "จุดบริการปัจจุบัน",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 5
+														},
+														{
+															"type": "text",
+															"text": "' . $current_service_point . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												}';
+							// เงื่อนไขเพื่อไม่แสดงจุดบริการถัดไปหากตอนนี้เป็นจุดสุดท้าย และจุดถัดไปไม่ถูกส่งมา
+							if ($next_service_point_show) {
+								$flexDataJson .= '	
+												,{
+													"type": "box",
+													"layout": "horizontal",
+													"contents": [
+														{
+															"type": "text",
+															"text": "จุดบริการถัดไป",
+															"size": "sm",
+															"color": "#555555",
+															"flex": 5
+														},
+														{
+															"type": "text",
+															"text": "' . $next_service_point . '",
+															"size": "sm",
+															"color": "#111111",
+															"align": "end",
+															"wrap": true,
+															"flex": 3
+														}
+													]
+												}';
+							}
+							$flexDataJson .= '
+											]
+										}
+									]
+								},
+								"styles": {
+									"footer": {
+										"separator": true
+									}
+								}
+							}
+						}';
+					}
 
 					$message_line_data = array(
 						"detail" => $flexDataJson,

@@ -27,6 +27,10 @@ class Frontend extends Line_Controller
 		// Line Rich menu ID
 		$this->line_menu_main = $this->config->item('line_menu_main');
         $this->line_menu_login = $this->config->item('line_menu_login');
+
+        // ini_set('display_errors', 1);
+        // ini_set('display_startup_errors', 1);
+        // error_reporting(E_ALL);
 	}
     
     /*
@@ -228,6 +232,17 @@ class Frontend extends Line_Controller
 
         // Destroy all sessions
         $this->session->sess_destroy();
+        // $this->session->unset_userdata('line_using_menu');
+		// $this->session->unset_userdata('line_user_id');
+		// $this->session->unset_userdata('pt_id');
+		// $this->session->unset_userdata('pt_member');
+		// $this->session->unset_userdata('pt_identification');
+		// $this->session->unset_userdata('pt_passport');
+		// $this->session->unset_userdata('pt_peregrine');
+		// $this->session->unset_userdata('pt_prefix');
+		// $this->session->unset_userdata('pt_fname');
+		// $this->session->unset_userdata('pt_lname');
+
 
         redirect($this->config->item('line_dir').'Frontend/frontend_login','refresh');
     }//logout
@@ -304,7 +319,9 @@ class Frontend extends Line_Controller
 
 			$pt_id = $us_line->lpt_pt_id;
 			
-			if(!$this->session->userdata('pt_id')){
+            // if($this->session->userdata('pt_id') != $user->pt_id){
+            //     $this->session->set_userdata('pt_id', $user->pt_id);
+            // }
 				
                 // Set user data in session
                 $this->session->set_userdata('line_using_menu', '');
@@ -317,6 +334,11 @@ class Frontend extends Line_Controller
                 $this->session->set_userdata('pt_prefix', $user->pt_prefix);
                 $this->session->set_userdata('pt_fname', $user->pt_fname);
                 $this->session->set_userdata('pt_lname', $user->pt_lname);
+
+			if(!$this->session->userdata('pt_id')){
+                
+                
+                
 
                 // Validate the login credentials
                 $ip_address = $this->input->ip_address();
@@ -397,9 +419,16 @@ class Frontend extends Line_Controller
                 $this->session->set_userdata('line_using_menu', 'wts');
 				redirect($this->config->item('wts_dir').'frontend/User_scan_qrcode','refresh');
 			}
+            else if($system == 'qr_code'){  //จัดการการรอคอย
+                $this->session->set_userdata('line_using_menu', 'qr_code');
+                // echo $this->session->userdata('pt_id'); die;
+                // echo $us_line->lpt_pt_id; die;
+				// redirect($this->config->item('wts_dir').'frontend/User_scan_qrcode','refresh');
+                redirect($this->config->item('wts_dir').'frontend/User_check_que/que_show_new/'.$this->session->userdata('pt_id'),'refresh');
+			}
 			else if($system == 'rch'){  //ตารางแพทย์ออกตรวจ
                 $this->session->set_userdata('line_using_menu', 'rch');
-				redirect('https://surateyehospital.com/service/%E0%B8%95%E0%B8%B2%E0%B8%A3%E0%B8%B2%E0%B8%87%E0%B8%AD%E0%B8%AD%E0%B8%81%E0%B8%95%E0%B8%A3%E0%B8%A7%E0%B8%88%E0%B9%81%E0%B8%9E%E0%B8%97%E0%B8%A2%E0%B9%8C/','refresh');
+				redirect('https://seedb.aos.in.th/index.php/staff/Directory_profile','refresh');
 			}
             else if($system == 'que'){  //นัดหมาย/จองคิว
                 $this->session->set_userdata('line_using_menu', 'que');
@@ -486,11 +515,12 @@ class Frontend extends Line_Controller
             
                 if ($user_line_id_data->num_rows() == 0) {
                     // กรณีไม่มีรายการที่ตรงกับ pt_id แต่ตรงกับ line_user_id
-                    $this->M_line_patient->lpt_user_line_id = $line_user_id;
+                    $row = $user_line_id_data->row();
+                    $this->M_line_patient->lpt_id = $row->lpt_id;
                     $this->M_line_patient->lpt_status = "Y";
-                    $this->M_line_patient->lpt_create_user = $user->pt_id;
-                    $this->M_line_patient->lpt_create_date = get_datetime_db();
-                    $this->M_line_patient->insert();
+                    $this->M_line_patient->lpt_update_user = $user->pt_id;
+                    $this->M_line_patient->lpt_update_date = get_datetime_db();
+                    $this->M_line_patient->update();
                 } elseif ($user_line_id_data->num_rows() == 1) {
                     // กรณีมีข้อมูลที่ตรงกับ pt_id
                     $row = $user_line_id_data->row();

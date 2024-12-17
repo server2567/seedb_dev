@@ -1,9 +1,27 @@
 <style>.status_request { margin-top: -15px; color: #198754; } </style>
 <style>.reason_request { margin-top: -15px; color: #723924; } </style>
+<style>
+  @media (max-width: 600px) {
+    #patientStatusSection {
+      margin-top: -100px;
+      zoom: 130%;
+      width: 108%;
+      margin-left: -14px;
+    }
+    #patientStatusSection .row.g-4 {
+      margin-top: -30px;
+    }
+    #patientStatusSection .col-md-4 {
+      margin-top: 0px;
+    }
+    #patientStatusSection h5.mb-0 {
+      padding-left: 13px;
+    }
+  }
+</style>
 <div id="patientStatusSection">
-<h1 class="h3 mb-0 ">ข้อมูลส่วนตัว</h1>
-<div class="card-header bg-transparent border-bottom p-0 pb-3 mt-4 "></div>
-
+<h1 class="h3 mb-0 ">ข้อมูลผู้ป่วย</h1>
+<div class="card-header bg-transparent border-bottom p-0 pb-0 mt-4 "></div>
     <div class="card-body pt-3 px-0 pb-2">
       <div class="row g-4">
         <input type="hidden" id="pt_id_img" value="<?php echo complex_base64_encode($user->pt_id); ?>">
@@ -122,7 +140,7 @@
         <?php } ?>
 
         <div class="col-md-4">
-          <label class="form-label">สิทธิ์การรักษา <span class='text-danger'>*</span></label>
+          <label class="form-label">สิทธิ์การรักษา</label>
           <div class="input-group-md">
             <input type="text" name="ptd_rightname" id="ptd_rightname" class="form-control" value="<?php echo $user->ptd_rightname; ?>" placeholder="ชำระเงินสด" <?php if ($user_requests_1 && !is_null($user_requests_1->ptd_seq)) {
                                                                                                                                                                     echo 'disabled style="cursor: not-allowed;"';
@@ -265,7 +283,7 @@
         </div>
         <div class="card-body border-bottom pt-0 px-0 pb-1">
           <div class="card-header bg-transparent px-0">
-            <h5 class="mb-0">อัปเดตข้อมูล เพิ่มเติม <span class='text-danger'>*</span></h5>
+            <h5 class="mb-0">สถานภาพผู้ป่วย</h5>
           </div>
         </div>
         <div class="col-md-4">
@@ -350,7 +368,7 @@
             <div class="reason_request" data-id="<?php echo $user->pt_id; ?>" data-field="ptd_psst_id"  style="margin-top:0px;"></div>
           <?php } ?>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mt-3">
           <label class="form-label">กรุ๊ปเลือด</label>
           <select class="form-select" name="ptd_blood_id" id="ptd_blood_id" <?php if ($user_requests_2 && !is_null($user_requests_2->ptd_seq)) {
                                                                               echo 'disabled style="cursor: not-allowed;"';
@@ -464,7 +482,7 @@
             <div class="reason_request" data-id="<?php echo $user->pt_id; ?>" data-field="ptd_nation_id" style="margin-top:0px;"></div>
           <?php } ?>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mt-3">
           <label class="form-label">ศาสนา</label>
           <select class="form-select" name="ptd_reli_id" id="ptd_reli_id" <?php if ($user_requests_2 && !is_null($user_requests_2->ptd_seq)) {
                                                                             echo 'disabled style="cursor: not-allowed;"';
@@ -507,9 +525,9 @@
         </div>
         <div class="col-12 text-end">
           <?php if ($user_requests_2 && !is_null($user_requests_2->ptd_seq)) { ?>
-            <button class="btn btn-secondary mb-0">รอการเปลี่ยนแปลงข้อมูลเพิ่มเติม (เจ้าหน้ากำลังตรวจสอบ)</button><br><br>
+            <button class="btn btn-secondary mb-0">รอการเปลี่ยนแปลงข้อมูลสถานภาพ (เจ้าหน้ากำลังตรวจสอบ)</button><br><br>
           <?php } else { ?>
-            <a href="#" class="btn btn-success mb-0" id="btnSaveContact">บันทึกการเปลี่ยนแปลงข้อมูลเพิ่มเติม (ส่งข้อมูลให้เจ้าหน้าที่ตรวจสอบ)</a><br><br>
+            <a href="#" class="btn btn-success mb-0" id="btnSaveContact">บันทึกการเปลี่ยนแปลงข้อมูลสถานภาพ (ส่งข้อมูลให้เจ้าหน้าที่ตรวจสอบ)</a><br><br>
           <?php } ?>
           <span class="text-danger">ถ้ามีการแจ้งเปลี่ยนข้อมูลจะไม่สามารถแจ้งเปลี่ยนใหม่อีกครั้งได้ ต้องรอจนกว่าเจ้าหน้าที่จะทำการเปลี่ยนแปลงข้อมูล</span>
         </div>
@@ -517,7 +535,7 @@
     </div>
     <div class="card-body pt-0 px-0 pb-4">
       <div class="card-header border-bottom bg-transparent px-0">
-        <h5 class="mb-0">อัปเดตข้อมูล ที่อยู่ปัจจุบัน <span class='text-danger'>*</span></h5>
+        <h5 class="mb-0">ที่อยู่ปัจจุบัน </h5>
       </div>
       <div class="row g-4 mt-2">
         <div class="col-md-3">

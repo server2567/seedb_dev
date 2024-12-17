@@ -1,3 +1,4 @@
+<meta name="viewport" content="width=device-width, initial-scale=0.3">
 <style>
     .table {
         table-layout: fixed;
@@ -25,16 +26,52 @@
             font-size: 20px !important;
         }
     }
+    @media (max-width: 600px) {
+        .container-xxl, .container-xl, .container-lg, .container-md, .container-sm, .container {
+            max-width: 100%;
+        }
+        .header {
+          display: none !important;
+        }
+        .topbar2 {
+          top: 0px;
+        }
+        .col-md-12.nav_topbar {
+            display: none;
+        }
+        a.nav-link.nav-profile.d-flex.align-items-center.pe-0 {
+            display: none !important;
+        }
+        .card.bg-white {
+            margin-top: -150px !important;
+        }
+        .row.ps-lg3.mt-2 {
+            zoom: 1.2; /* ใช้สำหรับเบราว์เซอร์ที่รองรับ */
+            transform: scale(1.5); /* ใช้สำหรับ iOS*/
+            transform-origin: top left; /* ตั้งจุดเริ่มต้น */
+       }
+        .card-body.p-5 {
+            height: 100vh;
+        }
+
+    } 
 </style>
-<meta name="viewport" content="width=device-width, initial-scale=0.25, maximum-scale=0.25, user-scalable=no">
+
 <div class="row topbar">
     <div class="col-md-12 nav_topbar">
-        <a href="<?php echo $this->config->item('ums_webstie'); ?>"><i class="bi bi-globe-asia-australia"></i>&nbsp;<span class="font-14">เว็บไซต์หลัก</span></a>
         &nbsp;<i class="bi bi-caret-right text-warning"></i>&nbsp;
-        <a href="<?php echo $this->config->item('base_frontend_url') . 'index.php/que/frontend/Search_queuing_home'; ?>">
-            &nbsp;<i class="bi bi-person-bounding-box"></i>&nbsp;
-            <span class='font-16'>จัดการคิว และนัดหมายแพทย์</span>
-        </a>
+        <?php if (!in_array($ps_info->hire_is_medical, ['SM', 'T', 'A', 'N'])) : ?>
+            <a href="<?php echo $this->config->item('ums_webstie'); ?>"><i class="bi bi-globe-asia-australia"></i>&nbsp;<span class="font-14">เว็บไซต์หลัก</span></a>
+            <a href="<?php echo $this->config->item('base_frontend_url') . 'index.php/staff/Directory_profile'; ?>">
+                &nbsp;<i class="bi bi-person-bounding-box"></i>&nbsp;
+                <span class='font-16'>Staff Directory</span>
+            </a>
+        <?php else: ?>
+            <a href="<?php echo $this->config->item('base_frontend_url') . 'index.php/hr/profile/Profile_staff'; ?>">
+                &nbsp;<i class="bi bi-person-bounding-box"></i>&nbsp;
+                <span class='font-16'>Staff Profile</span>
+            </a>
+        <?php endif; ?>
         &nbsp;<i class="bi bi-caret-right text-warning"></i>&nbsp;
         &nbsp;<i class="bi bi-person-bounding-box text-white"></i>&nbsp;
         <span class='text-white font-16'>Profile</span>
@@ -60,12 +97,20 @@
                         <div class="ps-xl-5 ps-lg-3">
                             <h2 class="h3 mb-3"><?= $ps_info->ps_fullname ?></h2>
 
-                            <h2 class="h5 mb-3">ความเชี่ยวชาญ : <?php
+                            <h2 class="h5 mb-3"><?php
+                                                                echo $ps_info->hire_abbr;
                                                                 $spcl_positions = json_decode($ps_info->spcl_position, true);
+                                                                $num = 0;
                                                                 foreach ($spcl_positions as $key => $spcl) { ?>
                                     <?php if (is_string($spcl)) {
                                                                         $spcl = json_decode($spcl, true);
-                                                                    } ?>
+                                                                    } 
+                                                                    if($num == 0 && $spcl['spcl_name'] != ""){
+                                                                        echo " : ";
+                                                                    }
+                                                                    ?>
+
+                                                                    
                                     <?= (count($spcl_positions) >= 1 ? $key != (count($spcl_positions) - 1) ? $spcl['spcl_name'] . ',' : $spcl['spcl_name'] : '&nbsp;') ?><?php } ?></h2>
                             <h2 class="h5 mb-3"><?= $ps_info->pos_desc ?></h2>
                         </div>
@@ -167,10 +212,19 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <?php
+                                            $time_work_index = 0;
+                                            if (count($today_timework) > 0) {
+                                                foreach ($today_timework as $key => $value) {
+                                                    $time_work_index = $key;
+                                                    break;
+                                                }
+                                            }
+                                            ?>
                                             <div class="col-9 ps-1">
                                                 <div class="current-weeks">
                                                     <?php foreach ($doctor_timework_current as $key => $week) { ?>
-                                                        <div class="week-container" id="week-<?= $key ?>" style="<?= isset($today_timework[1]['week_of_month']) ? ($key === $today_timework[1]['week_of_month'] ? '' : 'display:none;') : ($key === $today_timework[1] ? '' : 'display:none;') ?>">
+                                                        <div class="week-container" id="week-<?= $key ?>" style="<?= isset($today_timework[$time_work_index]['week_of_month']) ? ($key === $today_timework[$time_work_index]['week_of_month'] ? '' : 'display:none;') : '' ?>">
                                                             <div class="d-flex mb-2 px-2">
                                                                 <?php if ($key != 1) : ?>
                                                                     <button class="btn btn-outline-success me-3 prev-week" data-week="<?= $key ?>">
@@ -277,7 +331,7 @@
                                                         <h6 class="mb-2 font-18">
                                                             <?php foreach ($person_department_topic as $key => $dp) { ?>
                                                                 <?php if (isset($days_count_previous[$dp->dp_id])) { ?>
-                                                                    <span class="badge badge-warning font-18 mt-2" <?= $dp->dp_id % 2 != 0 ? 'style="background: #006491;"' : 'style="background: #9d6c01;"' ?>> </span> <span class="font-14"> <?= $days_count_previous[$dp->dp_id] ?> วัน</span><br>
+                                                                    <span class="badge badge-warning font-18 mt-2" <?= $dp->dp_id % 2 != 0 ? 'style="background: #9d6c01;"' : 'style="background: #006491;"' ?>> </span> <span class="font-14"> <?= $days_count_previous[$dp->dp_id] ?> วัน</span><br>
                                                             <?php }
                                                             } ?>
                                                         </h6>
@@ -489,7 +543,18 @@
                                                 <i class="ri-medal-fill profile-badge text-info-emphasis font-30 me-4"></i>
                                             </div>
                                             <div class="profile-content font-18">
-                                                <div class="mt-2 font-22"><b>พ.ศ. <?= $key_reward ?></b></div>
+                                                <div class="mt-2 font-22">
+                                                    <b>
+                                                        <?php  
+                                                            if($key_reward != "ไม่ระบุ"){
+                                                                echo "พ.ศ. " . $key_reward;
+                                                            }
+                                                            else{
+                                                                echo "อื่น ๆ";
+                                                            }
+                                                        ?>
+                                                    </b>
+                                                </div>
                                                 <?php foreach ($reward_group as $key_info => $reward_info) : ?>
                                                     <div class="mt-2"><i class="bi-award pe-2 font-28 me-4"></i><?= $reward_info->rewd_name_th . ' ' . $reward_info->rewd_org_en ?></div>
                                                 <?php endforeach; ?>
@@ -511,7 +576,18 @@
                                                 <i class="ri-service-fill profile-badge text-info-emphasis font-30 me-4"></i>
                                             </div>
                                             <div class="profile-content font-18">
-                                                <div class="mt-2 font-22"><b>พ.ศ. <?= $external_year ?></b></div>
+                                                <div class="mt-2 font-22">
+                                                    <b>
+                                                        <?php  
+                                                            if($external_year != "ไม่ระบุ"){
+                                                                echo "พ.ศ. " . $external_year;
+                                                            }
+                                                            else{
+                                                                echo "อื่น ๆ";
+                                                            }
+                                                        ?>
+                                                    </b>
+                                                </div>
                                                 <div style="padding-left: 15px;">
                                                     <?php foreach ($ps_external as $external_id => $external_group) : ?>
                                                         <?php foreach ($external_group as $key => $external_info) : ?>
@@ -520,7 +596,7 @@
                                                                 <ul>
                                                                 <?php endif; ?>
                                                                 <li>
-                                                                    <?= $external_info->pexs_name_th . ' ณ ' . $external_info->place_name . '<b class="text-secondary"> (วันที่ ' . fullDateTH3($external_info->pexs_date) . ')</b>' ?>
+                                                                    <?= $external_info->pexs_name_th . ' ณ ' . $external_info->place_name . '<b class="text-secondary">' . ($external_info->pexs_date != "0000-00-00" ? '(วันที่ '.fullDateTH3($external_info->pexs_date).')' : "") . '</b>' ?>
                                                                 </li>
                                                             <?php endforeach; ?>
                                                                 </ul>

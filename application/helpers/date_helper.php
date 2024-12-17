@@ -1598,6 +1598,12 @@ function formatThaiDateTimeline($date, $time, $end_time = null)
 	if ($end_time) {
 		$formatted_end_time = date("H:i", strtotime($end_time));
 		// คำนวณระยะเวลา
+
+    // ตรวจสอบว่าเวลาเริ่มต้นและเวลาสิ้นสุดเท่ากันหรือไม่
+    if ($formatted_time === $formatted_end_time) {
+      return "เวลาที่เข้าจุดบริการ {$formatted_time} น.";
+    }
+
 		$start_datetime = new DateTime($date . ' ' . $formatted_time);
 		$end_datetime = new DateTime($date . ' ' . $formatted_end_time);
 		$interval = $start_datetime->diff($end_datetime);
@@ -1605,14 +1611,57 @@ function formatThaiDateTimeline($date, $time, $end_time = null)
 
 		// แสดงข้อความเมื่อ duration_minutes ไม่เป็น 0
 		if ($duration_minutes > 0) {
-			return "วันที่ {$date_num} {$month} พ.ศ. {$year} เวลาที่เข้าจุดบริการ {$formatted_time} น. <br> เวลาที่รอคอย ณ จุดบริการ <b>{$duration_minutes}</b> นาที ";
+			return "เวลาที่เข้าจุดบริการ {$formatted_time} - {$formatted_end_time} น. <br> เวลาที่รอคอย ณ จุดบริการ <b>{$duration_minutes}</b> นาที ";
+			// return "วันที่ {$date_num} {$month} พ.ศ. {$year} เวลาที่เข้าจุดบริการ {$formatted_time} - {$formatted_end_time} น. <br> เวลาที่รอคอย ณ จุดบริการ <b>{$duration_minutes}</b> นาที ";
 		}
 	}
 
 	// กรณีไม่มี end_time หรือ duration_minutes = 0
-	return "วันที่ {$date_num} {$month} พ.ศ. {$year} เวลาที่เข้าจุดบริการ {$formatted_time} น. <br>";
+	return "เวลาที่เข้าจุดบริการ {$formatted_time} น. <br>";
 }
 
+function formatThaiDateTimeline_strat($date, $time)
+{
+	$months = [
+		'01' => 'ม.ค.',
+		'02' => 'ก.พ.',
+		'03' => 'มี.ค.',
+		'04' => 'เม.ย.',
+		'05' => 'พ.ค.',
+		'06' => 'มิ.ย.',
+		'07' => 'ก.ค.',
+		'08' => 'ส.ค.',
+		'09' => 'ก.ย.',
+		'10' => 'ต.ค.',
+		'11' => 'พ.ย.',
+		'12' => 'ธ.ค.'
+	];
+
+	$date_num = date("j", strtotime($date));
+	$month = $months[date("m", strtotime($date))];
+	$year = date("Y", strtotime($date)) + 543;
+
+	// ตัดวินาทีออกจากเวลา
+	$formatted_time = date("H:i", strtotime($time));
+
+	if ($end_time) {
+		$formatted_end_time = date("H:i", strtotime($end_time));
+		// คำนวณระยะเวลา
+		$start_datetime = new DateTime($date . ' ' . $formatted_time);
+		$end_datetime = new DateTime($date . ' ' . $formatted_end_time);
+		$interval = $start_datetime->diff($end_datetime);
+		$duration_minutes = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
+
+		// แสดงข้อความเมื่อ duration_minutes ไม่เป็น 0
+		if ($duration_minutes > 0) {
+			return "เวลาที่เข้าจุดบริการ {$formatted_time} น.";
+			// return "วันที่ {$date_num} {$month} พ.ศ. {$year} เวลาที่เข้าจุดบริการ {$formatted_time} - {$formatted_end_time} น. <br> เวลาที่รอคอย ณ จุดบริการ <b>{$duration_minutes}</b> นาที ";
+		}
+}
+
+	// กรณีไม่มี end_time หรือ duration_minutes = 0
+	return "เวลาที่เข้าจุดบริการ {$formatted_time} <br>";
+}
 
 
 

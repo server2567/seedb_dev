@@ -1,23 +1,18 @@
 <style>
     /* ปรับขนาดฟอนต์ในส่วนหัวตาราง (thead) */
-    #person_info_list thead th {
+    /* #person_info_list thead th {
         font-size: 16px;
         font-weight: bold;
         text-align: center;
         /* Center align headers */
-    }
+    } */
+
+
 
     /* ปรับขนาดฟอนต์ในส่วนข้อมูลตาราง (tbody) */
     #person_info_list tbody td {
         font-size: 16px;
         /* ปรับขนาดฟอนต์ในข้อมูล */
-    }
-
-    #person_info_list {
-        table-layout: fixed;
-        /* Helps with consistent column widths */
-        width: 100%;
-        /* Full width */
     }
 
     /* Ensure header and cells align properly */
@@ -97,7 +92,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="select_status_id" class="form-label">ประเภทสายงาน</label>
+                                    <label for="select_status_id" class="form-label">ตำแหน่งปฏิบัติงาน</label>
                                     <select class="form-select select2 filter" onchange="filter_report()" class="form-select" id="filter_adline" name="filter[]">
                                         <option value="all" selected>ทั้งหมด</option>
                                         <?php foreach ($base_adline_list as $key => $value) : ?>
@@ -143,17 +138,17 @@
                     </h2>
                     <div id="collapseAdd" class="accordion-collapse collapse show" aria-labelledby="headingAdd">
                         <div class="accordion-body ">
-                            <div id="overflow">
-                                <table class="table table-striped table-bordered" id="person_info_list" width="auto">
+                            <div id="overflow" width="100%">
+                                <table class="table table-striped table-bordered" id="person_info_list">
                                     <thead>
                                         <tr>
 
-                                            <th rowspan="2" class="text-center" style="background-color: #0076ab; color: white;">#</th>
-                                            <th rowspan="2" class="text-center" style="background-color: #0076ab; color: white;">ประเภทการลา</th>
-                                            <th colspan="3" class="text-center" style="background-color: #0076ab; color: white;">จำนวนที่ลาได้</th>
-                                            <th colspan="3" class="text-center" style="background-color: #0076ab; color: white;">จำนวนลาที่ใช้ไป</th>
-                                            <th colspan="3" class="text-center" style="background-color: #0076ab; color: white;">จำนวนวันคงเหลือ</th>
-                                            <th rowspan="2" class="text-center" style="background-color: #0076ab; color: white;">จำนวนวันที่ยกยอดมา</th>
+                                            <th rowspan="2" class="text-center" width="5%" style="background-color: #0076ab; color: white;">#</th>
+                                            <th rowspan="2" class="text-center" width="15%" style="background-color: #0076ab; color: white;">ประเภทการลา</th>
+                                            <th colspan="3" class="text-center"width="15%" style="background-color: #0076ab; color: white;">จำนวนที่ลาได้</th>
+                                            <th colspan="3" class="text-center" width="15%"style="background-color: #0076ab; color: white;">จำนวนลาที่ใช้ไป</th>
+                                            <th colspan="3" class="text-center" width="15%"style="background-color: #0076ab; color: white;">จำนวนวันคงเหลือ</th>
+                                            <th rowspan="2" class="text-center"  width="15%" style="background-color: #0076ab; color: white;">จำนวนวันที่ยกยอดมา</th>
                                         </tr>
                                         <tr>
                                             <th>วัน</th>
@@ -235,12 +230,11 @@
                 text: '<i class="bi bi-file-earmark-excel"></i> Excel',
                 className: 'btn btn-success',
                 action: function(e, dt, node, config) {
-                    export_excel_person();
+                    export_excel_leave();
                 }
             }],
             ordering: false,
-            scrollX: true,
-            scrollY: '620px',
+            scrollY: '500px',
             columns: [{
                     data: 'sequence'
                 },
@@ -281,31 +275,31 @@
             columnDefs: [{
                 targets: 0,
                 className: 'text-center',
-                width: '50px'
+                width: '10px'
             }],
             drawCallback: function(settings) {
-                // ดึงข้อมูลที่โหลดแล้ว
                 var api = this.api();
-                var rows = api.rows({
-                    page: 'current'
-                }).data();
 
-                // เก็บค่า ps_name ที่จะใช้สำหรับ rowspan
+                // ดึงข้อมูลทั้งหมด
+                var rows = api.rows().data();
+                // การเพิ่มแถวที่มี colspan สำหรับแสดงชื่อบุคคล
                 let lastPsName = '';
-                let colspan = api.columns().count(); // จำนวนคอลัมน์ทั้งหมด
+                let colspan = api.columns().count();
 
                 rows.each(function(rowData, index) {
                     if (rowData.ps_name && rowData.ps_name !== lastPsName) {
                         // เพิ่มแถวใหม่ด้วยชื่อบุคคลที่มี colspan ครอบคลุมทุกคอลัมน์
                         $(api.row(index).node()).before(
                             `<tr class="table-primary">
-                            <td colspan="${colspan}"><strong>${rowData.ps_name}</strong></td>
-                        </tr>`
+                    <td colspan="${colspan}" style="background: #e0e0e0"><div class="row"><div class="col-6"><strong>${rowData.ps_name}</strong></div><div class="col-6 text-end"><a onclick="window.open('<?php echo base_url() ?>index.php/hr/report/Report_leave/get_overview_leave_person/${rowData.ps_id}/${rowData.dp_id}', '_blank')" class="btn btn-sm btn-info"><i class="bi bi-search"> </i></a></div></div></td>
+                </tr>`
                         );
                         lastPsName = rowData.ps_name; // อัพเดตชื่อ ps_name ล่าสุด
                     }
                 });
             }
+
+
         });
     }
 
@@ -313,7 +307,7 @@
         initializeDataTableTimeworkPreview()
     }
 
-    function export_excel_person(ps_id = null) {
+    function export_excel_leave(ps_id = null) {
         // สร้างตัวแปรสำหรับเก็บ filter ที่ผู้ใช้ป้อน
         var filter = {};
 
@@ -327,7 +321,7 @@
         var queryString = $.param(filter);
 
         // ตรวจสอบและแนบ g_id ลงใน URL หากมีค่า
-        var url = '<?php echo site_url($controller_dir . "export_excel_develop_person"); ?>' +
+        var url = '<?php echo site_url($controller_dir . "export_excel_leave"); ?>' +
             '/' + encodeURIComponent(queryString);
 
         // เปิดลิงก์ในหน้าต่างใหม่

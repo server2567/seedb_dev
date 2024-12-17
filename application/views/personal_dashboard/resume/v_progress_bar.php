@@ -77,12 +77,29 @@
         }
     </style>
 </head>
+<?php if ($profile_person['person_department_detail']) : ?>
+    <?php foreach ($profile_person['person_department_detail'] as $key => $row): ?>
+        <?php if ($row->hire_type == 2 && $row->pos_trial_day != null) : ?>
+            <div class="card" style="min-height: 150px; max-height: 250px;">
+                <div class="card-body">
+                    <section class="section dashboard">
+                        <div class="row">
+                            <br>
+                            <?php $data['trail_info'] = ['start_date' => $row->pos_work_start_date, 'trail_date' => $row->pos_trial_day] ?>
+                            <?php $this->load->view($this->config->item('pd_dir') . 'resume/v_progress_bar', $data['trail_info']); ?>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <body>
     <div class="progress-layout font-18">
         <div class=" row">
             <div class="col-md-12 col-12 mb-2">
-                ระยะเวลาทดลองงาน
+
             </div>
             <div class="col-md-6 col-6 text-start text-secondary" style="padding-left: 34px;">
                 วันที่เริ่มปฏิบัติงาน

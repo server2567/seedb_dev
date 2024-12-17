@@ -115,10 +115,10 @@ class Personal_dashboard_model extends seedb_model {
 								AND h2.hipos_start_date <= '$endDate' 
 								AND (h2.hipos_end_date >= '$startDate' OR h2.hipos_end_date IS NULL OR h2.hipos_end_date = '9999-12-31')
 					)
-					AND h1.hipos_pos_dp_id = {$dp_id}
-					AND ordt_dp_id = {$dp_id}
-					AND ord_active = 1
-					AND ord_ordt_id = {$order_id}
+					 AND h1.hipos_pos_dp_id = {$dp_id}
+					-- AND ordt_dp_id = {$dp_id}
+					-- AND ord_active = 1
+					-- AND ord_ordt_id = {$order_id}
 			GROUP BY h1.hipos_id
 			ORDER BY ord_seq ASC
 		";
@@ -314,7 +314,7 @@ class Personal_dashboard_model extends seedb_model {
 					SELECT 1
 					FROM ".$this->hr_db.".hr_base_hire
 					WHERE hr_base_hire.hire_id = history.hipos_pos_hire_id
-					AND hr_base_hire.hire_is_medical = 'N'
+					AND hr_base_hire.hire_is_medical = 'N' AND hr_base_hire.hire_active = 1
 				)";
 
 				break;
@@ -352,7 +352,10 @@ class Personal_dashboard_model extends seedb_model {
 		$sql .= "ORDER BY history.ord_seq ASC";
 		$query = $this->hr->query($sql);
 		// echo $this->hr->last_query();
-		
+		if($card_type == 'nurse'){
+        //   pre($query->result());
+				// pre($this->hr->last_query());
+		}
 		// Loop through the results to encrypt the ID and replace the placeholder
 		foreach ($query->result() as $row) {
 			$row->full_name = str_replace('PLACEHOLDER', encrypt_id($row->hipos_ps_id), $row->full_name);

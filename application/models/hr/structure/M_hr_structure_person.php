@@ -34,7 +34,7 @@ class M_hr_structure_person extends Da_hr_structure_person
 		$query = $this->hr->query($sql);
 		return $query;
 	}
-	function get_all_by_structure($dp_id = null, $id, $delete = 2)
+	function get_all_by_structure($dp_id = null, $id)
 	{
 		$sql = "SELECT 
     *,
@@ -51,7 +51,7 @@ LEFT JOIN hr_person_special_position AS pssp ON pssp.pssp_pos_id = pos.pos_spcl_
 LEFT JOIN hr_base_prefix AS pf ON pf.pf_id = ps.ps_pf_id
 LEFT JOIN hr_base_special_position AS spcl ON spcl.spcl_id = pssp.pssp_spcl_id
 LEFT JOIN hr_base_adline_position AS adline ON adline.alp_id = pos.pos_alp_id
-WHERE sp.stdp_stde_id = '$id' AND sp.stdp_active != '$delete'" . ($dp_id != null ? 'AND pos.pos_dp_id = ' . $dp_id : '') . "
+WHERE sp.stdp_stde_id = '$id' AND sp.stdp_active NOT IN (0,2)" . ($dp_id != null ? 'AND pos.pos_dp_id = ' . $dp_id : '') . "
 GROUP BY ps.ps_id ORDER BY CAST(sp.stdp_seq AS UNSIGNED) ASC";
 		$query = $this->hr->query($sql);
 		return $query;

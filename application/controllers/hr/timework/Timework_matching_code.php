@@ -9,7 +9,7 @@ class Timework_matching_code extends Timework_Controller
 		parent::__construct();
 		$this->load->model('ums/M_ums_department');
 		$this->load->model('hr/M_hr_order_person');
-		$this->load->model('hr/M_hr_matching_code');
+		$this->load->model('hr/timework/M_hr_matching_code');
 		$this->load->model('hr/M_hr_person');
 		$this->mn_active_url = "hr/timework/Timework_matching_code";
 	}

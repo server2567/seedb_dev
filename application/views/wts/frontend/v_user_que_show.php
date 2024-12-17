@@ -81,7 +81,7 @@ function reloadQueue() {
             queueShow.innerHTML = ''; // Clear the previous content
 
             // Check if the queue data exists
-            if (!data.que || !data.pre_que) {
+            if (!data.check_que) {
                 let emptyCard = document.createElement('div');
                 emptyCard.className = 'col-md-12';
                 emptyCard.innerHTML = `
@@ -92,6 +92,11 @@ function reloadQueue() {
                 queueShow.appendChild(emptyCard);
                 return;
             }
+            let remainingQueues = data.queue_list.length - 1; // Number of queues remaining
+            let estimatedMinutes = remainingQueues * 15; // Add 15 minutes per queue
+            let currentTime = new Date();
+            currentTime.setMinutes(currentTime.getMinutes() + estimatedMinutes);
+            let estimatedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             // Display the queue information
             let card = document.createElement('div');
@@ -112,12 +117,14 @@ function reloadQueue() {
                         <div>
                             ${data.pre_que[0].apm_ql_code == data.pt_que[0].apm_ql_code
                                 ? `<h2 class="text-success text-center" id="waiting-time">ถึงคิวของท่านแล้ว</h2>`
-                                : `<h2 class="text-success text-center" id="waiting-time">เหลือ ${data.queue_list.length-1} คิว</h2>`
+                                : `<h2 class="text-success text-center" id="waiting-time">เหลือ ${remainingQueues} คิว </h2>`
                             }
                             <h6 class="text-dark pt-4 text-center font-20" style="margin-top: 10px;">หมายเลขคิวของท่าน</h6>
                             <h1 class="text-center" id="pt-que-code">${data.pt_que[0].apm_ql_code}</h1>
-                            <h6 class="text-dark text-center pt-4 font-20" style="margin-top: 10px;">แพทย์ที่ทำการรักษา</h6>
+                            <h6 class="text-dark text-center pt-4 font-20" style="margin-top: 10px;">ชื่อแพทย์</h6>
                             <h4 class="text-center" id="ps">${data.pt_que[0].pf_name_abbr} ${data.pt_que[0].ps_fname} ${data.pt_que[0].ps_lname}</h4>
+                            <h6 class="text-dark text-center pt-4 font-20" style="margin-top: 10px;">เวลาที่คาดว่าจะถึงคิวของท่าน</h6>
+                            <h4 class="text-center text-info" id="estimated-time">${estimatedTime}</h4>
                         </div>
                     </div>
                 </div>
@@ -128,8 +135,8 @@ function reloadQueue() {
             console.error('Error fetching queue data:', error);
             let queueShow = document.querySelector('.queue-show');
             queueShow.innerHTML = `
-                <div class="card mb-0 text-center fw-bold">
-                    <h3>เกิดข้อผิดพลาดในการดึงข้อมูลคิว</h3>
+                <div class="card p-5 text-center fw-bold">
+                    <h3 class="text-danger">ไม่พบหมายเลขคิวที่ท่านกรอก กรุณาระบุใหม่อีกครั้ง</h3>
                 </div>
             `;
         });

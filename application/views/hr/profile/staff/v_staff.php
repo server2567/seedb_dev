@@ -1,4 +1,41 @@
-<div class="row justify-content-md-center mt-2" >
+<style>
+    .card.bg-card #profile_picture {
+        width: 100%;
+        height: 90%;
+        object-fit: cover;
+        /* ทำให้ภาพครอบคลุมเต็มพื้นที่ */
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .card.bg-card {
+        position: relative;
+        width: 100%;
+        border-radius: 0.25rem;
+        overflow: hidden;
+        padding-bottom: 150px;
+        /* Adjust based on your image height */
+    }
+
+    .card.content-card {
+        position: absolute;
+        bottom: -30px;
+        /* Adjust as needed */
+        left: 0;
+        right: 0;
+        z-index: 1;
+        background-color: #fff;
+        padding: 1rem;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        height: 250px;
+        /* Set a fixed height for the content card */
+        /* Add additional styles if needed */
+    }
+</style>
+<div class="row justify-content-md-center mt-2">
     <div class="col-12 col-sm-12 col-md-12 text-center">
         <h5 class="font-weight-600">ค้นหาเจ้าหน้าที่ของโรพยาบาลจักษุสุราษฎร์</h5>
         <hr class="style-two">
@@ -66,20 +103,37 @@
                     <?php if (count($staff_person) > 0) : ?>
                         <?php foreach ($staff_person as $key => $value) { ?>
                             <div class="col-6 col-sm-6 col-md-3 col-lg-3">
-                                <div class="card">
-                                    <img id="profile_picture" src="<?php echo site_url($this->config->item('hr_dir') . "getIcon?type=" . $this->config->item('hr_profile_dir') . "profile_picture&image=" . ($value->psd_picture != '' ? $value->psd_picture : "default.png")); ?>" height="300px">
-                                    <div class="card-body p-3">
-                                        <h5 class="card-title pb-0 pt-2 font-weight-600" style="min-height: 55px;"><?= $value->ps_fullname ?></h5>
-                                        <h6 class="card-title pt-0 pb-2 font-16" style="min-height: 45px;"> <?= $value->alp_name ?> <?php
-                                                                                                                                    $spcl_positions = json_decode($value->spcl_position, true);
-                                                                                                                                    foreach ($spcl_positions as $key => $spcl) { ?>
-                                                <?= (count($spcl_positions) >= 1 ? $key != (count($spcl_positions) - 1) ? $spcl['spcl_name'] . ',' :  $spcl['spcl_name'] : '&nbsp;') ?><?php } ?></h6>
-                                        <div class="text-container" style="min-height:42px" data-bs-toggle="tooltip" title="จักษุแพทย์ รักษาโรคตาทั่วไปเชี่ยวชาญการผ่าตัดต้อกระจก Subspecialty General Ophthalmology and Cataract">
-                                            <p class="card-text pb-0 font-14 text-dark">
-                                                <?= $value->pos_desc != '' ?  $value->pos_desc : '&nbsp;<br><br>' ?>
+                                <div class="card bg-card" style="height: 625px;">
+                                    <!-- Background Card with Image -->
+                                    <img id="profile_picture" class="card-img" src="<?php echo site_url($this->config->item('hr_dir') . "getIcon?type=" . $this->config->item('hr_profile_dir') . "profile_picture&image=" . ($value->psd_picture != '' ? $value->psd_picture : "default.png")); ?>" alt="Profile Picture">
+
+                                    <!-- Foreground Content Card -->
+                                    <div class="card content-card">
+                                        <div class="card-body p-2">
+                                            <div style="height: 160px;">
+                                                <h5 class="card-title pb-0 pt-2 font-weight-600"><?= $value->ps_fullname ?></h5>
+                                                <h6 class="card-title pt-0 pb-2 font-16" style="min-height: 45px;">
+                                                    <?= $value->alp_name ?>
+                                                    <?php
+                                                    $spcl_positions = json_decode($value->spcl_position, true);
+                                                    foreach ($spcl_positions as $key => $spcl) {
+                                                        if (is_string($spcl)) {
+                                                            $spcl = json_decode($spcl, true);
+                                                        }
+                                                        echo (count($spcl_positions) >= 1 ? $key != (count($spcl_positions) - 1) ? $spcl['spcl_name'] . ',' : $spcl['spcl_name'] : '&nbsp;');
+                                                    }
+                                                    ?>
+                                                </h6>
+                                                <div class="text-container" style="min-height:42px" data-bs-toggle="tooltip" title="จักษุแพทย์ รักษาโรคตาทั่วไปเชี่ยวชาญการผ่าตัดต้อกระจก Subspecialty General Ophthalmology and Cataract">
+                                                    <p class="card-text pb-0 font-14 text-dark">
+                                                        <?= $value->pos_desc != '' ? $value->pos_desc : '-' ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <p class="card-text btn btn-primary font-16 text-dark mb-2 mt-2 pt-2">
+                                                <a href="<?php echo site_url(); ?>/hr/frontend/profile/view_profile/<?= $value->ps_id ?>" style="color: white;">ข้อมูลแพทย์เพิ่มเติม...</a>
                                             </p>
                                         </div>
-                                        <p class="card-text btn btn-primary font-16 text-dark mb-2"><span style="color: white;">ข้อมูลแพทย์เพิ่มเติม...</span></p>
                                     </div>
                                 </div>
                             </div>

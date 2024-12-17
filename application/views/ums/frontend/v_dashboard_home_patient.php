@@ -50,7 +50,27 @@
   document.addEventListener('DOMContentLoaded', setPreviousPage);
 </script>
 <?php } ?>
-<section class="py-5 py-lg-4">
+<style>
+@media (max-width: 600px) {
+  #home_p {
+    margin-top: -110px;
+    zoom:120%;
+  }
+  #home_p .position-relative.d-flex.align-items-center.bg-info.bg-opacity-10.border.rounded.border-info.mb-4.p-3 {
+    flex-direction: column;
+  }
+  #home_p .position-relative.d-flex.align-items-center.bg-success.bg-opacity-10.border.rounded.border-success.mb-4.p-3 {
+    flex-direction: column;
+  }
+  #home_p .ms-auto.d-flex.flex-column {
+    display: block !important;
+  }
+  #home_p button.btn.btn-success.mb-0.mt-3 {
+    margin-top: 0px !important;
+  }
+}
+</style>
+<section class="py-5 py-lg-4" id="home_p">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-xl-12 col-lg-12 col-md-12 col-12">

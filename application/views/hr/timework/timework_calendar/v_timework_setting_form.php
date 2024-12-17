@@ -7,11 +7,11 @@
             <div class="accordion" id="accordionExample">
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingOne">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                            <i class="bi bi-postcard icon-menu font-20"></i>กำหนดเวลาการลงเวลาทำงาน
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettingForm" aria-expanded="false" aria-controls="collapseSettingForm">
+                            <i class="bi bi-postcard icon-menu font-20"></i>กำหนดช่วงเวลายื่นขออนุมัติตารางเวลาการทำงาน
                         </button>
                     </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample" style="">
+                    <div id="collapseSettingForm" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#headingOne" style="">
                         <div class="accordion-body">
                             <div class="row">
 
@@ -250,25 +250,50 @@ function get_timework_setting_detail_by_id(twst_id) {
         data: { twst_id: twst_id },
         dataType: 'json',
         success: function(data) {
-            data = JSON.parse(data);
+            // console.log(data);
+            // Get the collapse element
+            var collapseElement = document.getElementById('collapseSettingForm');
+            
+            // Check if the collapse instance exists and show it
+            if (collapseElement) {
+                var collapse = new bootstrap.Collapse(collapseElement, {
+                    show: true // This will open the collapse section
+                });
+            }
+
+            // If data is already an object, use it directly
+            const item = Array.isArray(data) ? data[0] : data;
+
+            const convertedStartDate = convertSettingToBuddhistDate(item.twst_start_date);
+            const convertedEndDate = convertSettingToBuddhistDate(item.twst_end_date);
 
             // Populate the form fields with the response data
-            $('#twst_id').val(data.twst_id);
-            $('#twst_month').val(data.twst_month);
-            $('#twst_year').val(data.twst_year);
-            $('#twst_is_medical').val(data.twst_is_medical).trigger('change');
-            $('#twst_start_date').val(data.twst_start_date);
-            $('#twst_start_time').val(data.twst_start_time);
-            $('#twst_end_date').val(data.twst_end_date);
-            $('#twst_end_time').val(data.twst_end_time);
-            $('#twst_status').val(data.twst_status);
-           
+            $('#twst_id').val(item.twst_id);
+            $('#twst_month').val(item.twst_month).trigger('change');
+            $('#twst_year').val(item.twst_year);
+            // if (item.twst_is_medical) { // Only if this field exists in the data
+            //     $('#twst_is_medical').val(item.twst_is_medical).trigger('change');
+            // }
+            $('#twst_start_date').val(convertedStartDate);
+            $('#twst_start_time').val(item.twst_start_time);
+            $('#twst_end_date').val(convertedEndDate);
+            $('#twst_end_time').val(item.twst_end_time);
+            $('#twst_status').val(item.twst_status);
         },
         error: function(xhr, status, error) {
             // console.log(xhr.responseText);
             alert('An error occurred while processing the request.');
         }
     });
+}
+
+function convertSettingToBuddhistDate(dateString) {
+    // Split the date string by '-' to get year, month, and day
+    const [year, month, day] = dateString.split('-');
+    // Convert the year to Buddhist calendar by adding 543
+    const buddhistYear = parseInt(year) + 543;
+    // Return the formatted date in "DD/MM/YYYY" format
+    return `${day}/${month}/${buddhistYear}`;
 }
 
 

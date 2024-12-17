@@ -13,7 +13,7 @@ class User_room_que extends UMS_Controller {
     $this->load->model('que/m_que_appointment');
     $this->load->model('ums/Genmod', 'genmod');
   }
-
+// dev
   public function department($name = "") {
     $data['stde_name'] = urldecode($name);
     $date = date('Y-m-d');
@@ -143,6 +143,7 @@ class User_room_que extends UMS_Controller {
 
   public function finance_medicine()
   {
+    // pre($this->session->userdata());
     $data['floor'] = 'finance_medicine';
     $text = '';
 
@@ -160,6 +161,37 @@ class User_room_que extends UMS_Controller {
     $this->output_frontend_public('wts/frontend/v_user_que_finance_medicine', $data);
   }
 
+  public function finance_medicine_clinic()
+  {
+    // pre($this->session->userdata());
+    $data['floor'] = 'finance_medicine';
+    $text = '';
+
+    $text = "";
+    $text .=  'ห้องการเงิน และห้องจ่ายยา';
+
+    $data['stde_name'] = $text;
+
+    $date = date('Y-m-d');
+
+    $data['room_que'] = $this->m_wts_queue_seq->get_waiting_que_by_finance_medicine_clinic($date)->result_array();
+
+    $data['priorities'] = $this->m_que_appointment->get_all_priority()->result_array(); //สถานะฉุกเฉิน เฝ้าระวัง
+
+    $this->output_frontend_clinic_public('wts/frontend/v_user_que_finance_medicine_clinic', $data);
+  }
+
+  public function get_finance_medicine_data()
+  {
+      $date = date('Y-m-d');
+      
+      // ดึงข้อมูลจากโมเดล
+      $room_que = $this->m_wts_queue_seq->get_waiting_que_by_finance_medicine($date)->result_array();
+      
+      
+      // ส่งผลลัพธ์ในรูปแบบ JSON
+      echo json_encode(['room_que' => $room_que]);
+  }
 
   public function floor_old($floor) {
     $data['floor'] = $floor;
@@ -167,7 +199,7 @@ class User_room_que extends UMS_Controller {
     if(isset($floor) && !empty($floor)) {
       $text = "ชั้นที่ ".$floor.' ';
       if($floor == 1) $text .=  'ภาคจักษุวิทยา (EYE) ';
-      if($floor == 'lasik') $text .=  'ศูนย์เลสิก (Lasik) ';
+      if($floor == 'lasik') $text .=  'ศูนย์เลสิค (Lasik) ';
     } else if(isset($stde_name) && !empty($stde_name)) 
     $text = $stde_name;
     $data['stde_name'] = $text;
@@ -225,13 +257,14 @@ class User_room_que extends UMS_Controller {
     // }
     // }
   }
+
   public function floor($floor) {
     $data['floor'] = $floor;
     $text = '';
     if(isset($floor) && !empty($floor)) {
       $text = "ชั้นที่ ".$floor.' ';
       if($floor == 1) $text .=  'ภาคจักษุวิทยา (EYE) ';
-      if($floor == 'lasik') $text .=  'ศูนย์เลสิก (Lasik) ';
+      if($floor == 'lasik') $text .=  'ศูนย์เลสิค (Lasik) ';
     } else if(isset($stde_name) && !empty($stde_name)) 
     $text = $stde_name;
     $data['stde_name'] = $text;
@@ -243,7 +276,7 @@ class User_room_que extends UMS_Controller {
           // $data['room_que'][$room['qus_psrm_id']] = $this->m_wts_queue_seq->get_waiting_que_by_room($date, $room['qus_psrm_id'], [2, 4, 11, 12])->result_array();
           // 20240905 Areerat - หากแพทย์ยังไม่เลือกห้อง จะต้องแสดงหน้าจอ frontend ด้วย
           $data['room_que'][$room['ps_id']] = $this->m_wts_queue_seq->get_waiting_que_by_doctor($date, $room['ps_id'], [2, 4, 11, 12])->result_array();
-      
+          // pre($data['room_que']);
           // เรียงลำดับ array โดยให้ apm_sta_id = 2 เป็นลำดับแรก และลำดับอื่นๆ ตาม apm_time
           // 20240904 Areerat - ให้เรียงลำดับตามการจัดลำดับใน [WTS] หน้าจอจัดการคิว
           // usort($data['room_que'][$room['qus_psrm_id']], function($a, $b) {
@@ -257,7 +290,7 @@ class User_room_que extends UMS_Controller {
           //     }
           // });
       }
-        //     $data['pre_que'] = $this->m_que_appointment->get_appointment_by_sta($date, 2)->result_array();
+        // $data['pre_que'] = $this->m_que_appointment->get_appointment_by_sta($date, 2)->result_array();
         // if($data['pre_que'] == NULL) {
         //   $data['pre_que'] = $this->m_que_appointment->get_appointment_by_sta($date, 4)->result_array();
         // }
@@ -286,6 +319,43 @@ class User_room_que extends UMS_Controller {
     // }
     // }
   }
+
+  public function clinic() {
+    $data['floor'] = 'clinic';
+    $text = '';
+    // $text = "ชั้นที่ 3 ";
+    // $text .=  'คลินิกบรรยงจักษุ';
+    
+    $data['stde_name'] = $text;
+    
+    $date = date('Y-m-d');
+    // $date = '2024-09-18';
+    $data['room'] = $this->m_wts_queue_seq->get_waiting_doctor_by_floor_clinic($date)->result_array();
+    // die(pre($data));
+    if(!empty($data['room'])) {
+      foreach ($data['room'] as $room) {
+          $data['room_que'][$room['ps_id']] = $this->m_wts_queue_seq->get_waiting_que_by_doctor_clinic($date, $room['ps_id'], [2, 4, 11, 12])->result_array();
+      }
+
+      // die(pre($data));
+      // get for show info
+      $data['priorities'] = $this->m_que_appointment->get_all_priority()->result_array();
+      $current_datetime = date('Y-m-d H:i:s');
+      $data['news'] = $this->genmod->getAll(
+        'see_umsdb',
+        'ums_news',
+        '*',
+        array(
+          'news_active !=' => 2,
+          'news_type' => 1,
+          'news_start_date <= ' => $current_datetime,
+          'news_stop_date >= ' => $current_datetime
+        )
+      );
+        $this->output_frontend_clinic_public('wts/frontend/v_user_floor_que', $data);
+    }
+  }
+  
   public function getQueueData($name = "") {
     $stde_name = urldecode($name); // Decode the URL-encoded name
 
@@ -520,16 +590,24 @@ public function get_room_queue_by_floor($floor) {
   $data['room_que'] = [];
 
   if (!empty($floor)) {
-
-      $data['room'] = $this->m_wts_queue_seq->get_waiting_doctor_by_floor($date, $floor)->result_array();
-       
+      if($floor == 'clinic'){
+        $data['room'] = $this->m_wts_queue_seq->get_waiting_doctor_by_floor_clinic($date)->result_array();
+      }else{
+        $data['room'] = $this->m_wts_queue_seq->get_waiting_doctor_by_floor($date, $floor)->result_array();
+      }
+      
       if(!empty($data['room'])) {
         $map_seq_room = [];
         $index = 0;
         foreach ($data['room'] as $room) {
           // $data['room_que'][$room['qus_psrm_id']] = $this->m_wts_queue_seq->get_waiting_que_by_room($date, $room['qus_psrm_id'], [2, 4, 11, 12])->result_array();
           // 20240905 Areerat - หากแพทย์ยังไม่เลือกห้อง จะต้องแสดงหน้าจอ frontend ด้วย
-          $data['room_que'][$room['ps_id']] = $this->m_wts_queue_seq->get_waiting_que_by_doctor($date, $room['ps_id'], [2, 4, 11, 12])->result_array();
+
+          $method = ($floor == 'clinic') 
+                ? 'get_waiting_que_by_doctor_clinic' 
+                : 'get_waiting_que_by_doctor';
+          $data['room_que'][$room['psrm_rm_id'] . '_' . $room['ps_id']] = $this->m_wts_queue_seq->$method($date, $room['ps_id'], [2, 4, 11, 12])->result_array();
+          
           // Check if an entry with the same 'qus_psrm_id' already exists
           $exists = false;
           foreach ($map_seq_room as $item) {
@@ -569,6 +647,7 @@ public function get_room_queue_by_floor($floor) {
         // }
       }
       }
+  // krsort($data['room_que']); 
   // pre($data);
   header('Content-Type: application/json');
   echo json_encode($data); // Ensure this line is executed after all processing
@@ -577,7 +656,6 @@ public function get_room_queue_by_floor_den($floor) {
   
   $data['floor'] = $floor;
 
-  
   $text = '';
   if(isset($floor) && !empty($floor)) {
     $text = "ชั้น ".$floor.' ';
@@ -591,9 +669,11 @@ public function get_room_queue_by_floor_den($floor) {
 
   $data['room_que'] = [];
 
+  // pre($floor); die();
   if (!empty($floor)) {
 
       $data['room'] = $this->m_wts_queue_seq->get_waiting_doctor_by_floor_den($date, $floor)->result_array();
+      // pre($data['room']); die();
 
       if(!empty($data['room'])) {
         $map_seq_room = [];

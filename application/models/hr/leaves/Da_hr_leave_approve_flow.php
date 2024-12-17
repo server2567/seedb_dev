@@ -48,6 +48,7 @@ class Da_hr_leave_approve_flow extends Hr_model
 				SET lafw_seq=?, lafw_ps_id=?, lafw_laps_id=?, lafw_lapg_id=?, lafw_lhis_id=?, lafw_status=?, lafw_last_id=?, lafw_comment=?, lafw_update_user=?, lafw_update_date=?
 				WHERE lafw_id=?";
         $this->hr->query($sql, array($this->lafw_seq, $this->lafw_ps_id, $this->lafw_laps_id, $this->lafw_lapg_id, $this->lafw_lhis_id, $this->lafw_status, $this->lafw_last_id, $this->lafw_comment, $this->lafw_update_user, $this->lafw_update_date, $this->lafw_id));
+        // echo $this->hr->last_query()."<br>";
     }
 
     function delete()
@@ -67,6 +68,22 @@ class Da_hr_leave_approve_flow extends Hr_model
 				FROM " . $this->hr_db . ".hr_leave_approve_flow
 				WHERE lafw_id=?";
         $query = $this->hr->query($sql, array($this->lafw_id));
+        if ($withSetAttributeValue) {
+            $this->row2attribute($query->row());
+        } else {
+            return $query;
+        }
+    }
+
+       /*
+	 * You have to assign primary key value before calling this function.
+	 */
+    function get_by_key_status($withSetAttributeValue = FALSE)
+    {
+        $sql = "SELECT *
+				FROM " . $this->hr_db . ".hr_leave_approve_flow
+				WHERE lafw_lhis_id=? AND lafw_status=?";
+        $query = $this->hr->query($sql, array($this->lafw_lhis_id, $this->lafw_status));
         if ($withSetAttributeValue) {
             $this->row2attribute($query->row());
         } else {

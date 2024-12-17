@@ -92,8 +92,8 @@ $(document).ready(function() {
                 if (response.status === 'error') {
                     Swal.fire({
                         icon: "error",
-                        title: "เลขนัดหมายไม่ถูกต้อง",
-                        text: "ไม่พบเลขนัดหมาย",
+                        title: "เลขคิวของท่านไม่ถูกต้อง",
+                        text: "หรือ ไม่พบเลขนัดหมาย",
                     });
                 } else if (response.status === 'success') {
                     setTimeout(function() {

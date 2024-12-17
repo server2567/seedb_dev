@@ -23,7 +23,10 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <label for="pexs_rwt_id" class="form-label required">วันที่</label>
-                                        <input type="text" class="form-control" id="pexs_date" name="pexs_date">
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control" id="pexs_date" name="pexs_date">
+                                            <span class="input-group-text"><input type="checkbox" class="form-check-input" id="check_pexs_date" name="check_pexs_date">ไม่ระบุ</span>
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="pexs_exts_id" class="form-label required">ประเภทบริการหน่วยงานภายนอก</label>
@@ -192,7 +195,7 @@ $(document).ready(function() {
                 data.forEach(function(row, index) {
                     var isFile = "";
 
-                    if(row.pexs_attach_file != "") {
+                    if(row.pexs_attach_file != "" && row.pexs_attach_file != null) {
                         isFile = `<button type="button" class="btn btn-primary" data-file-name="${row.pexs_attach_file}" 
                                         data-preview-path="<?php echo site_url($this->config->item('hr_dir').'Getpreview?path='.$this->config->item('hr_upload_profile_external_service').'&doc='); ?>${row.pexs_attach_file}" 
                                         data-download-path="<?php echo site_url($this->config->item('hr_dir').'Getdoc?path='.$this->config->item('hr_upload_profile_external_service').'&doc='); ?>${row.pexs_attach_file}&rename=${row.pexs_attach_file}"
@@ -258,6 +261,28 @@ $(document).ready(function() {
     loadPlaceOptions();
 
 });
+
+document.getElementById('check_pexs_date').addEventListener('change', function () {
+    const pexsDateInput = document.getElementById('pexs_date');
+    if (this.checked) {
+        pexsDateInput.disabled = true; // Disable the input field
+        pexsDateInput.value = "";     // Clear the text
+    } else {
+        pexsDateInput.disabled = false; // Enable the input field
+
+        // Get the current date
+        const now = new Date();
+
+        // Format the date in Thai format (day/month/year + 543)
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear() + 543;
+
+        // Set the formatted date
+        pexsDateInput.value = `${day}/${month}/${year}`;
+    }
+});
+
 
 function add_place_modal(){
     var formData = {};
@@ -333,7 +358,24 @@ function get_external_service_detail_by_id(pexs_id) {
                 $('#pexs_id').val(service.pexs_id);
                 $('#pexs_exts_id').val(service.pexs_exts_id).trigger('change');
                 $('#pexs_name_th').val(service.pexs_name_th);
-                $('#pexs_date').val(service.pexs_date);
+
+                if(service.pexs_date == "ไม่ระบุ"){
+                    const checkPexsDate = document.getElementById('check_pexs_date');
+                    const pexsDateInput = document.getElementById('pexs_date');
+
+                    // Set checkbox as checked
+                    checkPexsDate.checked = true;
+
+                    // Disable the input field
+                    pexsDateInput.disabled = true;
+
+                    // Clear the input field value
+                    pexsDateInput.value = "";
+                }
+                else{
+                    $('#pexs_date').val(service.pexs_date);
+                }
+                
                 $('#pexs_place_id').val(service.pexs_place_id).trigger('change');
 
                 // Display attached file if available
@@ -386,7 +428,7 @@ function profile_external_service_save_form() {
     var isValid = true;
 
      // List of fields to exclude from validation
-     var excludeFields = ["pexs_attach_file"];
+     var excludeFields = ["pexs_date", "pexs_attach_file"];
 
     // Validate regular form controls
     $('#profile_external_service_form .form-control').each(function() {

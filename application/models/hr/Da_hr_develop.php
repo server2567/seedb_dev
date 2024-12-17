@@ -18,7 +18,6 @@ class Da_hr_develop extends Hr_model
   public $dev_start_date;
   public $dev_date;
   public $dev_end_date;
-  public $dev_end_time;
   public $dev_hour;
   public $dev_place;
   public $dev_pv_id;
@@ -31,12 +30,17 @@ class Da_hr_develop extends Hr_model
   public $dev_allowance_vat;
   public $dev_accommodation_vat;
   public $dev_budget_type_other;
+  public $dev_budget_type_other_text;
   public $dev_budget_type_other_vat;
   public $dev_objecttive;
   public $dev_short_content;
   public $dev_benefits;
   public $dev_certificate;
   public $dev_status;
+  public $dev_budget_type;
+  public $dev_allowance_type;
+  public $dev_accommodation_type;
+  public $dev_budget_type_other_type;
   public $dev_type;
   public $dev_go_service_type;
   public $dev_organized_type;
@@ -63,7 +67,6 @@ class Da_hr_develop extends Hr_model
                 dev_desc,
                 dev_start_date,
                 dev_end_date,
-                dev_end_time,
                 dev_hour,
                 dev_place,
                 dev_country_id,
@@ -73,6 +76,7 @@ class Da_hr_develop extends Hr_model
                 dev_allowance,
                 dev_accommodation,
                 dev_budget_type_other,
+                dev_budget_type_other_text,
                  dev_budget_vat,
                 dev_allowance_vat,
                 dev_accommodation_vat,
@@ -81,13 +85,17 @@ class Da_hr_develop extends Hr_model
                 dev_short_content,
                 dev_benefits,
                 dev_status,
+                dev_budget_type,
+                dev_allowance_type,
+                dev_accommodation_type,
+                dev_budget_type_other_type,
                 dev_type,
                 dev_go_service_type,
                 dev_certificate,
                 dev_create_user,
                 dev_organized_type
             )
-            VALUES (?, ?, ?,?, ?,?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+            VALUES (?, ?, ?, ?,?, ?, ?,?,?,?,?,?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
     // ส่งข้อมูลที่ต้องการเพิ่มลงไปในคำสั่ง INSERT
     $this->hr->query($sql, array(
@@ -95,7 +103,6 @@ class Da_hr_develop extends Hr_model
       $this->dev_desc,
       $this->dev_start_date,
       $this->dev_end_date,
-      $this->dev_end_time,
       $this->dev_hour,
       $this->dev_place,
       $this->dev_country_id,
@@ -105,6 +112,7 @@ class Da_hr_develop extends Hr_model
       $this->dev_allowance,
       $this->dev_accommodation,
       $this->dev_budget_type_other,
+      $this->dev_budget_type_other_text,
       $this->dev_budget_vat,
       $this->dev_allowance_vat,
       $this->dev_accommodation_vat,
@@ -113,6 +121,10 @@ class Da_hr_develop extends Hr_model
       $this->dev_short_content,
       $this->dev_benefits,
       $this->dev_status,
+      $this->dev_budget_type,
+      $this->dev_allowance_type,
+      $this->dev_accommodation_type,
+      $this->dev_budget_type_other_type,
       $this->dev_type,
       $this->dev_go_service_type,
       $this->dev_certificate,
@@ -132,7 +144,6 @@ class Da_hr_develop extends Hr_model
                     dev_desc = ?,
                     dev_start_date = ?,
                     dev_end_date = ?,
-                    dev_end_time = ?,
                     dev_hour = ?,
                     dev_place = ?,
                     dev_country_id = ?,
@@ -142,6 +153,7 @@ class Da_hr_develop extends Hr_model
                 dev_allowance=?,
                 dev_accommodation=?,
                 dev_budget_type_other=?,
+                dev_budget_type_other_text=?,
                  dev_budget_vat=?,
                 dev_allowance_vat=?,
                 dev_accommodation_vat=?,
@@ -149,6 +161,10 @@ class Da_hr_develop extends Hr_model
                     dev_objecttive = ?,
                     dev_short_content = ?,
                     dev_benefits = ?,
+                    dev_budget_type = ?,
+                    dev_allowance_type = ?,
+                    dev_accommodation_type = ?,
+                    dev_budget_type_other_type = ?,
                     dev_type = ?,
                     dev_go_service_type = ?,
                     dev_certificate = ?,
@@ -161,7 +177,6 @@ class Da_hr_develop extends Hr_model
       $this->dev_desc,
       $this->dev_start_date,
       $this->dev_end_date,
-      $this->dev_end_time,
       $this->dev_hour,
       $this->dev_place,
       $this->dev_country_id,
@@ -171,6 +186,7 @@ class Da_hr_develop extends Hr_model
       $this->dev_allowance,
       $this->dev_accommodation,
       $this->dev_budget_type_other,
+      $this->dev_budget_type_other_text,
       $this->dev_budget_vat,
       $this->dev_allowance_vat,
       $this->dev_accommodation_vat,
@@ -178,6 +194,10 @@ class Da_hr_develop extends Hr_model
       $this->dev_objecttive,
       $this->dev_short_content,
       $this->dev_benefits,
+      $this->dev_budget_type,
+      $this->dev_allowance_type,
+      $this->dev_accommodation_type,
+      $this->dev_budget_type_other_type,
       $this->dev_type,
       $this->dev_go_service_type,
       $this->dev_certificate,

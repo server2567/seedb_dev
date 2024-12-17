@@ -127,7 +127,7 @@ class M_hr_timework_person_record extends Da_hr_timework_person_record {
                 FROM " . $this->hr_db . ".hr_timework_matching_code 
                 LEFT JOIN " . $this->hr_db . ".hr_person_position
                     ON mc_ps_id = pos_ps_id AND mc_dp_id = pos_dp_id
-                WHERE mc_code = {$mc_code} AND pos_ps_code = {$ps_pos_code}";
+                WHERE mc_code = {$mc_code} AND pos_ps_code LIKE '%{$ps_pos_code}%'";
 		$query = $this->hr->query($sql);
 		return $query;
 	}

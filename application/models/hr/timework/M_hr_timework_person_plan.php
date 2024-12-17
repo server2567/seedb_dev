@@ -70,7 +70,7 @@ class M_hr_timework_person_plan extends Da_hr_timework_person_plan {
             JSON_ARRAYAGG(DISTINCT JSON_OBJECT('admin_name', ad.admin_name)) AS admin_position,
             CASE 
                 WHEN hire.hire_is_medical = 'M' THEN 'สายการแพทย์'
-                WHEN hire.hire_is_medical = 'N' THEN 'สายพยาบาล'
+                WHEN hire.hire_is_medical = 'N' THEN 'สายการพยาบาล'
                 WHEN hire.hire_is_medical = 'SM' THEN 'สายสนับสนุนทางการแพทย์'
                 WHEN hire.hire_is_medical = 'T' THEN 'สายเทคนิคและบริการ'
                 WHEN hire.hire_is_medical = 'A' THEN 'สายบริหาร'
@@ -188,6 +188,10 @@ class M_hr_timework_person_plan extends Da_hr_timework_person_plan {
 		if($hire_type != "all"){
 			$cond .= " AND hire.hire_type = {$hire_type}";
 		}
+
+		if($hire_is_medical != "all"){
+			$cond .= " AND hire.hire_is_medical = '{$hire_is_medical}'";
+		}
 		
 		
 		$sql = "
@@ -211,7 +215,6 @@ class M_hr_timework_person_plan extends Da_hr_timework_person_plan {
             pos.pos_dp_id = {$dp_id} 
 			AND pos.pos_status = 1
 			AND pos.pos_active = 'Y'
-            AND hire.hire_is_medical = '{$hire_is_medical}'
            
 			{$cond}
 			
@@ -447,7 +450,8 @@ class M_hr_timework_person_plan extends Da_hr_timework_person_plan {
 						rm_name,
 						twpp_desc,
 						twpp_is_public,
-						twpp_status
+						twpp_status,
+						twpp_is_holiday
 
 
 				FROM " . $this->hr_db . ".hr_timework_person_plan
@@ -537,8 +541,222 @@ class M_hr_timework_person_plan extends Da_hr_timework_person_plan {
 	}
 	// update_status_to_approver
 
+	function get_all_timework_param_data_by_stde_id($stde_id, $public, $actor_type, $dp_id, $filter_start_date, $filter_end_date, $group_by)
+	{
+		
+		$cond = "";
 
+		if($actor_type == "medical"){
+			$cond = " AND stde_is_medical = 'Y'";
+		}
+		else{
+			$cond = " AND stde_is_medical != 'Y'";
+		}
+
+		$group_text = "";
+
+		if($group_by == "format"){
+			$group_text = "GROUP BY twpp_twac_id";
+		}
+		
+		$sql = "SELECT 	*
+				FROM " . $this->hr_db . ".hr_timework_person_plan
+                LEFT JOIN " . $this->hr_db . ".hr_timework_attendance_config
+                    ON twac_id = twpp_twac_id
+                LEFT JOIN " . $this->eqs_db . ".eqs_room
+                    ON rm_id = twpp_rm_id
+                LEFT JOIN " . $this->eqs_db . ".eqs_building
+                    ON rm_bd_id = bd_id
+				LEFT JOIN " . $this->hr_db . ".hr_person
+					ON ps_id = twpp_ps_id
+				LEFT JOIN " . $this->hr_db . ".hr_base_prefix 
+					ON ps_pf_id = pf_id
+				LEFT JOIN " . $this->hr_db . ".hr_structure_person
+					ON stdp_ps_id = ps_id
+				LEFT JOIN " . $this->hr_db . ".hr_structure_detail
+					ON stdp_stde_id = stde_id
+                WHERE 	
+						twpp_start_date >= '{$filter_start_date}'
+						AND twpp_end_date <= '{$filter_end_date}'
+						AND twpp_is_public = {$public}
+						AND twpp_is_holiday = 0
+						AND twpp_dp_id = {$dp_id}
+						AND stde_id = {$stde_id}
+						{$cond}
+				{$group_text}
+				ORDER BY twpp_start_time ASC, twpp_start_date ASC";
+		$query = $this->hr->query($sql);
+		// echo $this->hr->last_query();
+		return $query;
+	}
+
+	function get_structure_detail_by_actor_type($actor_type){
+		$cond = "";
+
+		// if($actor_type == "medical"){
+		// 	$cond = " AND stde_is_medical = 'Y'";
+		// }
+		// else{
+		// 	$cond = " AND stde_is_medical != 'Y'";
+		// }
+		$sql = "SELECT 	*
+				
+				FROM " . $this->hr_db . ".hr_structure_detail
+
+                WHERE 	
+						stde_active = 1
+						{$cond}
+				ORDER BY stde_level ASC";
+		$query = $this->hr->query($sql);
+		return $query;
+	}
+
+	function get_structure_detail_by_group_person($stuc_id){
+
+		$stuc_cond = "";
+		if($stuc_id != "all"){
+			$stuc_cond = " AND stde_stuc_id = {$stuc_id}";
+		}
+
+		$hr_is_medical = "";
+		if ($this->session->userdata('hr_hire_is_medical')) {
+			$hr_hire = $this->session->userdata('hr_hire_is_medical');
+			$hr_is_medical = " AND (";
+			foreach ($hr_hire as $key => $value) {
+				if ($key > 0) {
+					$hr_is_medical .= " OR ";
+				}
+				$hr_is_medical .= "hire_is_medical = " . $this->hr->escape($value['type']);
+			}
+			$hr_is_medical .= ')';
+		}
+
+		$sql = "SELECT 	stde_id,
+						stde_name_th
+				
+				FROM " . $this->hr_db . ".hr_structure_detail
+				LEFT JOIN " . $this->hr_db . ".hr_structure_person
+					ON stdp_stde_id = stde_id
+				LEFT JOIN " . $this->hr_db . ".hr_person
+					ON ps_id = stdp_ps_id
+				LEFT JOIN " . $this->hr_db . ".hr_person_position 
+					ON pos_ps_id = ps_id
+				LEFT JOIN " . $this->hr_db . ".hr_base_hire 
+					ON pos_hire_id = hire_id
+
+                WHERE 	
+						stde_active = 1
+						AND	stdp_active = 1 
+						AND stde_level >= 3
+						{$hr_is_medical}
+						{$stuc_cond}
+				GROUP BY stde_id
+				ORDER BY stde_level ASC";
+		$query = $this->hr->query($sql);
+		return $query;
+	}
+
+		/*
+	* get_all_timework_preview_report_list
+	* ข้อมูลการตารางวันทำงานรายการรายงานภาพรวม
+	* @input ps_id
+	* @output timework data by_person
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 2567-10-10
+	*/
+	function get_all_timework_date_by_twac_id($twac_id, $public, $actor_type, $dp_id, $filter_start_date, $filter_end_date)
+	{
+
+		if($actor_type == "medical"){
+			$hr_is_medical = " AND hire_is_medical = 'M'";
+		}
+		else{
+			$hr_is_medical = "";
+			if ($this->session->userdata('hr_hire_is_medical')) {
+				$hr_hire = $this->session->userdata('hr_hire_is_medical');
+				$hr_is_medical = " AND (";
+				foreach ($hr_hire as $key => $value) {
+					if ($key > 0) {
+						$hr_is_medical .= " OR ";
+					}
+					$hr_is_medical .= "hire_is_medical = " . $this->hr->escape($value['type']);
+				}
+				$hr_is_medical .= ')';
+			}
+		}
+
+		$sql = "SELECT 	pf_name_abbr, 
+						ps_fname,
+						ps_lname,
+						twpp_ps_id,
+						twpp_dp_id,
+						twpp_start_date,
+						twpp_end_date,
+						twpp_start_time,
+						twpp_end_time,
+						rm_name,
+						twpp_desc,
+						twpp_is_public,
+						twpp_status
+
+
+				FROM " . $this->hr_db . ".hr_timework_person_plan
+                LEFT JOIN " . $this->hr_db . ".hr_timework_attendance_config
+                    ON twac_id = twpp_twac_id
+                LEFT JOIN " . $this->eqs_db . ".eqs_room
+                    ON rm_id = twpp_rm_id
+                LEFT JOIN " . $this->eqs_db . ".eqs_building
+                    ON rm_bd_id = bd_id
+				LEFT JOIN " . $this->hr_db . ".hr_person
+					ON ps_id = twpp_ps_id
+				LEFT JOIN " . $this->hr_db . ".hr_base_prefix 
+					ON ps_pf_id = pf_id
+				LEFT JOIN " . $this->hr_db . ".hr_person_position 
+					ON pos_ps_id = ps_id
+				LEFT JOIN " . $this->hr_db . ".hr_base_hire 
+					ON pos_hire_id = hire_id
+                WHERE 	
+						twpp_start_date >= '{$filter_start_date}'
+						AND twpp_end_date <= '{$filter_end_date}'
+						AND twpp_is_public = {$public}
+						AND twpp_dp_id = {$dp_id}
+						AND twpp_status = 'S'
+						AND twac_id = {$twac_id}
+						$hr_is_medical
+				ORDER BY twpp_start_time ASC, twpp_start_date ASC";
+		$query = $this->hr->query($sql);
+		$results = $query->result(); // ใช้ result() แทน result_array()
+
+		$expanded_results = [];
+		foreach ($results as $row) {
+			// Convert string dates to DateTime for iteration
+			$start_date = new DateTime($row->twpp_start_date);
+			$end_date = new DateTime($row->twpp_end_date);
 	
+			// ลูปแสดงข้อมูลทุกๆวันในช่วงเวลา start_date ถึง end_date
+			for ($date = clone $start_date; $date <= $end_date; $date->modify('+1 day')) {
+				// สร้าง clone ของ object $row เพื่อไม่ให้เกิดการเปลี่ยนแปลงใน object ดั้งเดิม
+				$expanded_row = clone $row;
+				$expanded_row->twpp_display_date = $date->format('Y-m-d'); // กำหนดวันที่ในช่วงเวลา
+				$expanded_row->twpp_start_time = $row->twpp_start_time; // เวลาเริ่มต้น
+				$expanded_row->twpp_end_time = $row->twpp_end_time; // เวลาสิ้นสุด
+				$expanded_results[] = $expanded_row; // เพิ่มข้อมูลที่แยกวันเข้าไปใน array
+			}
+		}
+
+		// จัดเรียงข้อมูลตามวันที่และเวลาเริ่มต้น
+		usort($expanded_results, function($a, $b) {
+			if ($a->twpp_display_date === $b->twpp_display_date) {
+				// ถ้าวันเหมือนกัน ให้เรียงตามเวลาเริ่มต้น
+				return strcmp($a->twpp_start_time, $b->twpp_start_time);
+			}
+			// เรียงตามวันที่
+			return strcmp($a->twpp_display_date, $b->twpp_display_date);
+		});
+	
+		return $expanded_results;
+	}
+	// get_all_timework_preview_report_list
 
 
 	

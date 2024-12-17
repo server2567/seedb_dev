@@ -43,6 +43,19 @@ class Report_person extends Report_Controller
         $data['base_develop_type_list'] = $this->M_hr_develop_type->get_all_by_active('asc')->result();
         $data['base_admin_position_list'] = $this->M_hr_person->get_hr_base_admin_position_data()->result();
         $data['base_hire_list'] = $this->M_hr_hire->get_all_by_active()->result();
+        $hire_data = $this->session->userdata('hr_hire_is_medical');
+        $hire_name = ['N' => 'สายพยาบาล', 'SM' => 'สายสนับสนุนทางการแพทย์',  'A' => 'สายบริหาร','M'=>'สายบริหาร'];
+        $hire_arr = [];
+        foreach ($hire_data as $key => $hire) {
+            if(isset($hire_name[$hire['type']])){
+                $hire_arr[$hire['type']] = $hire_name[$hire['type']];
+            }
+        }
+        foreach ($data['base_hire_list'] as $key => $value) {
+            if ($hire_arr[$value->hire_is_medical]) {
+                $value->hire_name .= ' ' . $hire_arr[$value->hire_is_medical];
+            }
+        }
         $data['base_adline_list'] = $this->M_hr_adline_position->get_all_by_active()->result();
         $data['year_filter'] = $this->M_hr_develop->get_develop_year_filter()->result();
         $this->output('hr/report/v_report_overview_person_info', $data);
@@ -197,8 +210,8 @@ LEFT JOIN see_hrdb.hr_base_adline_position AS alp ON alp.alp_id = hipos.hipos_po
         if ($fitiler_adline != 'all') {
             $sql .= " AND hipos.hipos_pos_alp_id = '$fitiler_adline'";
         }
-        if($fitiler_admin != 'all'){
-            $sql .=" AND hipos.hipos_pos_admin_id = '$fitiler_admin'";
+        if ($fitiler_admin != 'all') {
+            $sql .= " AND hipos.hipos_pos_admin_id = '$fitiler_admin'";
         }
         $sql .= " AND hipos.hipos_pos_status = '$filter_status' GROUP BY hips.hips_ps_id ";
         $this->hr = $this->load->database('hr', TRUE);
@@ -452,7 +465,7 @@ LEFT JOIN see_hrdb.hr_base_adline_position AS alp ON alp.alp_id = hipos.hipos_po
                 if ($key > 0) {
                     $data['education'] .= $lineBreak;
                 }
-                $data['education'] .= '- '.$edu['level'] . ' ' . $edu['major'] . ' ' . $edu['degree'];
+                $data['education'] .= '- ' . $edu['level'] . ' ' . $edu['major'] . ' ' . $edu['degree'];
             }
             $sheet->setCellValue('A' . $row, $sequence++); // ลำดับ
             $sheet->setCellValue('B' . $row, $data['department'] == null ? '-' : $data['department']); // หน่วยงาน

@@ -24,7 +24,8 @@ class Control_leaves extends Leaves_Controller
 
 		// [20241007 Patcharapol Sirimaneechot]
 		// $this->controller .= "Profile_official/";
-		$this->load->model('hr/Da_hr_leave');
+		// $this->load->model('hr/M_hr_leave_control');
+		$this->load->model($this->model.'M_hr_leave_control');
 	}
 
 	/*
@@ -45,12 +46,13 @@ class Control_leaves extends Leaves_Controller
 		// [20241007 Patcharapol Sirimaneechot]
 		$data['controller_dir'] = $this->controller;
 
-		$data['leave_control'] = $this->Da_hr_leave->get_all_leave_control();
+		$data['leave_control'] = $this->M_hr_leave_control->get_all_leave_control();
 
-		$data['leave'] = $this->Da_hr_leave->get_all_leave();
-		$data['hire_is_medical'] = $this->Da_hr_leave->get_all_hire_is_medical();
+		$data['leave'] = $this->M_hr_leave_control->get_all_leave();
 
 		$this->output($this->view.'v_control_leave_list', $data);
+
+
 	}
 
 	// function get_leave_control_by_condition($hire_is_medical_id, $leave_id) {
@@ -62,7 +64,11 @@ class Control_leaves extends Leaves_Controller
 		$data['hire_is_medical_id'] = $hire_is_medical_id;
 		$data['leave_id'] = $leave_id;
 		
-		$result = $this->Da_hr_leave->get_leave_control_by_condition($hire_is_medical_id, $leave_id, $hire_type);
+		$result = $this->M_hr_leave_control->get_leave_control_by_condition($hire_is_medical_id, $leave_id, $hire_type);
+
+		foreach($result as $key=>$row){
+			$result[$key]['ctrl_id'] = encrypt_id($row['ctrl_id']);
+		}
 		
 		$data['result'] = $result;
 		echo json_encode($data);
@@ -110,7 +116,7 @@ class Control_leaves extends Leaves_Controller
 	// 	$data['view'] = $this->view;
 	// 	$data['controller'] = $this->controller;
 	// 	$data['action'] = "แก้ไขข้อมูลควบคุมวันลา";
-	// 	$data['leave_type'] = $this->Da_hr_leave->get_all_leave_type();
+	// 	$data['leave_type'] = $this->M_hr_leave_control->get_all_leave_type();
 
 	// 	$this->output($this->view.'v_control_leave_form', $data);
 	// }//end leaves_input
@@ -127,8 +133,8 @@ class Control_leaves extends Leaves_Controller
 	function control_leave_delete($id)
 	{
 		$data['session_mn_active_id'] = 300045; // set session_mn_active_id / breadcrumb
-		
-		$result = $this->Da_hr_leave->delete_leave_control($id);
+		$id = decrypt_id($id);
+		$result = $this->M_hr_leave_control->delete_leave_control($id);
 		
 		if ($result) {
 			echo true;
@@ -141,7 +147,7 @@ class Control_leaves extends Leaves_Controller
 	// {
 	// 	$data['session_mn_active_id'] = 300045; // set session_mn_active_id / breadcrumb
 		
-	// 	$result = $this->Da_hr_leave->delete_leave_control($id);
+	// 	$result = $this->M_hr_leave_control->delete_leave_control($id);
 		
 	// 	if ($result) {
 	// 		redirect(site_url() . "/" . $this->controller . "control_leaves");
@@ -168,12 +174,44 @@ class Control_leaves extends Leaves_Controller
 		$data['controller_dir'] = $this->controller;
 		$data['action'] = "เพิ่มข้อมูลควบคุมวันลา";
 		$data['action_code'] = "add";
-		$data['leave'] = $this->Da_hr_leave->get_all_leave();
-		$data['hire_is_medical'] = $this->Da_hr_leave->get_all_hire_is_medical();
+		$data['leave'] = $this->M_hr_leave_control->get_all_leave();
+		// $data['hire_is_medical'] = $this->M_hr_leave_control->get_all_hire_is_medical();
 
 		// $this->output($this->view.'v_control_leave_form', $data);
 		$this->output($this->view.'v_control_leave_form_common', $data);
 	}//end control_leave_add
+
+
+	/*
+	* get_data_for_edit_page
+	* รับข้อมูลพื้นฐานที่ใช้สำหรับหน้าแก้ไขข้อมูลสิทธิ์ลารายบุคคลของบุคลากรเป้าหมาย
+	* @input -
+	* $output -
+	* @author Patcharapol Sirimaneechot
+	* @Create Date 2567-10-25
+	*/
+	function get_data_for_edit_page() {
+		$budget_year = $this->input->post('budget_year');
+		$user_id = $this->input->post('user_id');
+
+		$start_date_cal = $this->input->post('start_date_cal');
+		$end_date_cal = $this->input->post('end_date_cal');
+
+		// // die("$budget_year, $user_id");
+
+		$data['target_user_leave_summary'] = $this->M_hr_leave_summary->get_target_user_leave_summary($budget_year, $user_id);
+
+		$data['base_info'] = $this->M_hr_leave_summary->get_base_info_for_cal_work_age($budget_year, $user_id);
+	
+		// $data['budget_year'] = $budget_year;
+		// $data['user_id'] = $user_id;
+
+		// return json_encode($data);
+
+		// echo "HI";
+		echo json_encode($data);
+	}
+
 
 	/*
 	* control_leave_update
@@ -193,9 +231,9 @@ class Control_leaves extends Leaves_Controller
 		$data['controller_dir'] = $this->controller;
 		$data['action'] = "แก้ไขข้อมูลควบคุมวันลา";
 		$data['action_code'] = "update";
-		$data['leave'] = $this->Da_hr_leave->get_all_leave();
-		$data['leave_control'] = $this->Da_hr_leave->get_leave_control($id);
-		$data['hire_is_medical'] = $this->Da_hr_leave->get_all_hire_is_medical();
+		$data['leave'] = $this->M_hr_leave_control->get_all_leave();
+		$data['leave_control'] = $this->M_hr_leave_control->get_leave_control(decrypt_id($id));
+		// $data['hire_is_medical'] = $this->M_hr_leave_control->get_all_hire_is_medical();
 
 		//substring ctrl_start_age
 		$data['leave_control'][0]['ctrl_start_age_y'] = substr($data['leave_control'][0]['ctrl_start_age'], 0, 2);
@@ -255,6 +293,8 @@ class Control_leaves extends Leaves_Controller
 		
 		$data['ctrl_time_per_year'] = $this->input->post('ctrl_time_per_year');
 		$data['ctrl_day_per_year'] = $this->input->post('ctrl_day_per_year');
+		$data['ctrl_hour_per_year'] = $this->input->post('ctrl_hour_per_year');
+		$data['ctrl_minute_per_year'] = $this->input->post('ctrl_minute_per_year');
 		$data['ctrl_date_per_time'] = $this->input->post('ctrl_date_per_time');
 		$data['ctrl_pack_per_year'] = $this->input->post('ctrl_pack_per_year');
 		$data['ctrl_money'] = $this->input->post('ctrl_money');
@@ -266,11 +306,13 @@ class Control_leaves extends Leaves_Controller
 		// check unlimited day
 		if(strlen($data['ctrl_time_per_year']) == 0) {$data['ctrl_time_per_year'] = -99; }
 		if(strlen($data['ctrl_day_per_year']) == 0) {$data['ctrl_day_per_year'] = -99; }
+		if(strlen($data['ctrl_hour_per_year']) == 0) {$data['ctrl_hour_per_year'] = -99; }
+		if(strlen($data['ctrl_minute_per_year']) == 0) {$data['ctrl_minute_per_year'] = -99; }
 		if(strlen($data['ctrl_date_per_time']) == 0) {$data['ctrl_date_per_time'] = -99; }
 		if(strlen($data['ctrl_day_before']) == 0) {$data['ctrl_day_before'] = -99; }
 		if(strlen($data['ctrl_day_after']) == 0) {$data['ctrl_day_after'] = -99; }
 
-		$result = $this->Da_hr_leave->store_leave_control($data);
+		$result = $this->M_hr_leave_control->store_leave_control($data, $this->session->userdata('us_id'));
 		// echo $result;
 
 		if ($result) {
@@ -327,6 +369,8 @@ class Control_leaves extends Leaves_Controller
 		
 		$data['ctrl_time_per_year'] = $this->input->post('ctrl_time_per_year');
 		$data['ctrl_day_per_year'] = $this->input->post('ctrl_day_per_year');
+		$data['ctrl_hour_per_year'] = $this->input->post('ctrl_hour_per_year');
+		$data['ctrl_minute_per_year'] = $this->input->post('ctrl_minute_per_year');
 		$data['ctrl_date_per_time'] = $this->input->post('ctrl_date_per_time');
 		$data['ctrl_pack_per_year'] = $this->input->post('ctrl_pack_per_year');
 		$data['ctrl_money'] = $this->input->post('ctrl_money');
@@ -338,11 +382,13 @@ class Control_leaves extends Leaves_Controller
 		// check unlimited day
 		if(strlen($data['ctrl_time_per_year']) == 0) {$data['ctrl_time_per_year'] = -99; }
 		if(strlen($data['ctrl_day_per_year']) == 0) {$data['ctrl_day_per_year'] = -99; }
+		if(strlen($data['ctrl_hour_per_year']) == 0) {$data['ctrl_hour_per_year'] = -99; }
+		if(strlen($data['ctrl_minute_per_year']) == 0) {$data['ctrl_minute_per_year'] = -99; }
 		if(strlen($data['ctrl_date_per_time']) == 0) {$data['ctrl_date_per_time'] = -99; }
 		if(strlen($data['ctrl_day_before']) == 0) {$data['ctrl_day_before'] = -99; }
 		if(strlen($data['ctrl_day_after']) == 0) {$data['ctrl_day_after'] = -99; }
-
-		$result = $this->Da_hr_leave->store_updated_leave_control($id, $data);
+		$id = decrypt_id($id);
+		$result = $this->M_hr_leave_control->store_updated_leave_control($id, $data, $this->session->userdata('us_id'));
 		// echo $result;
 
 		if ($result) {

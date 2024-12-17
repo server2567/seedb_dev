@@ -36,7 +36,7 @@ class Home extends Personal_dashboard_Controller
 					return $develop->devb_id == $dev->dev_go_service_type;
 				});
 				// ดึงชื่อจากอาร์เรย์ที่กรองแล้ว
-				$dev->dev_server_type_name = !empty($filtered_develop) ? $filtered_develop[0]->devb_name : '';
+				$dev->dev_server_type_name = !empty($filtered_develop) ? array_values($filtered_develop)[0]->devb_name : '';
 			}
 			$data['dev_sum_hour'] = $dev_sum_hour;
 			$data['view_dir'] = $this->view;
@@ -729,7 +729,13 @@ class Home extends Personal_dashboard_Controller
 		$data['person_external_service_list'] = $this->M_hr_person_external_service->get_all_external_service_data($ps_id)->result();
 		foreach ($data['person_external_service_list'] as $key => $row) {
 			$row->pexs_id = encrypt_id($row->pexs_id);
-			$row->pexs_date = abbreDate2($row->pexs_date);
+			
+			if($row->pexs_date != "0000-00-00"){
+				$row->pexs_date = abbreDate2($row->pexs_date);
+			}
+			else{
+				$row->pexs_date = "ไม่ระบุ";
+			}
 		}
 
 		// person reward
@@ -737,7 +743,8 @@ class Home extends Personal_dashboard_Controller
 		$data['person_reward_list'] = $this->M_hr_person_reward->get_year_reward($ps_id)->result();
 
 		foreach ($data['person_reward_list'] as $key => $row) {
-			$row->reward_detail = $this->M_hr_person_reward->get_reward_by_year($row->rewd_year);
+			$row->reward_detail = $this->M_hr_person_reward->get_reward_by_year($ps_id, $row->rewd_year);
+			$row->rewd_year = ($row->rewd_year != 0 ? $row->rewd_year : "ไม่ระบุ");
 			if ($row->reward_detail->num_rows() > 0) {
 				foreach ($row->reward_detail->result() as $rewd) {
 					$rewd->rewd_date = ($rewd->rewd_date == "0000-00-00" ? date('d/m/Y', strtotime($rewd->rewd_end_date . ' +543 years')) : date('d/m/Y', strtotime($rewd->rewd_date . ' +543 years')));

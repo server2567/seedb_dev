@@ -74,7 +74,7 @@ class M_hr_order_person_type extends Da_hr_order_person_type
 				LEFT JOIN " . $this->hr_db . ".hr_base_education_level as edulv
 					ON psed.edu_edulv_id = edulv.edulv_id
 				WHERE ps.ps_status != '$ps_status' {$hr_is_medical} AND pos.pos_dp_id = '$dp_id'  AND psed.edu_highest = '$highest' AND pos.pos_active != '$delete'  or (psed.edu_ps_id IS NULL {$hr_is_medical} AND ps.ps_status != '$ps_status'  AND pos.pos_dp_id = '$dp_id' AND pos.pos_active != '$delete' )
-				GROUP BY ps.ps_id ORDER BY ps.ps_fname ASC;";
+				GROUP BY ps.ps_id ORDER BY ps.ps_id ASC;";
 			
 		$query = $this->hr->query($sql);
 		return $query;

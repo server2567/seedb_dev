@@ -417,7 +417,7 @@
 
         // Validate regular form controls
         $('#profile_official_form_' + dp_id + ' .form-control').each(function() {
-            var fieldName = $(this).attr('name');            
+            var fieldName = $(this).attr('name');
             if (!excludeFields.includes(fieldName)) {
 
                 if ($(this).val() === '' || $(this).val() === null) {
@@ -435,9 +435,9 @@
         $('#profile_official_form_' + dp_id + ' .form-select').each(function() {
             var fieldName = $(this).attr('name');
             var fieldValue = $(this).val();
-            if(fieldName == 'pos_trail_day_'+dp_id){
+            if (fieldName == 'pos_trail_day_' + dp_id) {
                 console.log(fieldValue);
-                
+
             }
             if (fieldValue === '' || fieldValue === null) {
                 isValid = false;
@@ -551,13 +551,14 @@
         }
     }
 
-    function changeHire(hire_id, dp_id) {
-        if (hire_id == 23) {
+    function changeHire(hire_id, dp_id, hire_type) {
+        if (hire_type == 2) {
             $("#div_pos_trial_day_" + dp_id).show();
         } else {
-            $("#div_pos_trial_day_" + dp_id).hide()
+            $("#div_pos_trial_day_" + dp_id).hide();
         }
     }
+
 
     function addMonthNavigationListeners2() {
         const calendar = document.querySelector('.flatpickr-calendar');

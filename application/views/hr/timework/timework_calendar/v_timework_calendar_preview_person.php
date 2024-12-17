@@ -539,13 +539,13 @@
                             className: 'btn btn-secondary', // ปรับแต่งปุ่ม Print
                             title: 'รายการข้อมูล'
                         },
-                        {
-                            extend: 'excel',
-                            text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
-                            titleAttr: 'Excel',
-                            className: 'btn btn-success', // ปรับแต่งปุ่ม Excel
-                            title: 'รายการข้อมูล'
-                        },
+                        // {
+                        //     extend: 'excel',
+                        //     text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
+                        //     titleAttr: 'Excel',
+                        //     className: 'btn btn-success', // ปรับแต่งปุ่ม Excel
+                        //     title: 'รายการข้อมูล'
+                        // },
                         {
                             extend: 'pdf',
                             text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF',
@@ -570,13 +570,13 @@
                                 export_print_person();
                             }
                         },
-                        {
-                            text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
-                            className: 'btn btn-success btn-custom', // ปรับแต่งปุ่ม Excel
-                            action: function () {
-                                export_excel_person();
-                            }
-                        },
+                        // {
+                        //     text: '<i class="bi bi-file-earmark-excel-fill"></i> Excel',
+                        //     className: 'btn btn-success btn-custom', // ปรับแต่งปุ่ม Excel
+                        //     action: function () {
+                        //         export_excel_person();
+                        //     }
+                        // },
                         {
                             text: '<i class="bi bi-file-earmark-pdf-fill"></i> PDF',
                             className: 'btn btn-danger btn-custom', // ปรับแต่งปุ่ม PDF
@@ -640,12 +640,18 @@
                             </div>
                         `;
 
+                        var time_text = row.twpp_start_time_text + " - " + row.twpp_end_time_text;
+
+                        if(row.twpp_is_holiday == 1){
+                            time_text = "(OFF)";
+                        }
+
                         // Return data to push into array
                         return_data.push({
                             "seq": seq, // ลำดับ
                             "button": button, // ปุ่มดำเนินการ
                             "work_details": (row.rm_name != null ? row.rm_name : "") + " " + (row.twpp_desc != "" ? row.twpp_desc : ""), // ประเภทการทำงาน
-                            "work_date": row.twpp_start_date_text + " " + row.twpp_start_time_text + " - " + row.twpp_end_time_text // เวลาเริ่ม-สิ้นสุด
+                            "work_date": row.twpp_start_date_text + " " + time_text // เวลาเริ่ม-สิ้นสุด
                            
                         });
                     });

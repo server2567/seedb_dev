@@ -33,7 +33,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="select_status_id" class="form-label">ประเภทสายงาน</label>
+                                    <label for="select_status_id" class="form-label">ตำแหน่งปฏิบัติงาน</label>
                                     <select class="form-select select2 filter" onchange="filter_dev()" class="form-select" id="filter_adline" name="filter[]">
                                         <option value="all" selected>ทั้งหมด</option>
                                         <?php foreach ($base_adline_list as $key => $value) : ?>

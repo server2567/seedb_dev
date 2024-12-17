@@ -1504,7 +1504,6 @@ class Notification_result extends AMS_Controller
             if (!in_array($visitor_ip, $allowed_ips)) 
                 return $this->error();
         }
-
         // 2 check แผนก
         $stde_name = urldecode($stde_name);
         $this->load->model('hr/structure/m_hr_structure_detail');
@@ -1517,13 +1516,11 @@ class Notification_result extends AMS_Controller
         $result_apm = $this->m_que_appointment->check_visit_and_stde_id($apm_visit, $result_stde[0]['stde_id'])->result_array();
         if(empty($result_apm)) // case คิวผู้ป่วย not found
             return $this->error();
-
         // 4 check examination result
         $this->load->model('ams/m_ams_notification_result');
         $result_ntr = $this->m_ams_notification_result->get_ntr_by_apm_id($result_apm[0]['apm_id'])->result_array();
         if(empty($result_ntr)) // case คิวผู้ป่วย not found
             return $this->error();
-            
         // 5 encrypt ntr_id
         $ntr_id = encrypt_id($result_ntr[0]['ntr_id']);
 

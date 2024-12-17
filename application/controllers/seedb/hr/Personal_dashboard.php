@@ -128,7 +128,6 @@ class Personal_dashboard extends SEEDB_HR_Controller
 		// Modify the query based on card type to fetch detailed data
 		$result['chart'] = $this->Personal_dashboard_model->get_HRM_chart_1($dp_id, $year_type, $year)->result();
 		$hire_type = $this->Personal_dashboard_model->get_hr_base_hire_group_data()->result();
-		
 		foreach($hire_type as $key=>$hire){
 			$person_list = $this->Personal_dashboard_model->get_HRM_chart_1_person_detail($dp_id, $year_type, $year, $hire->hire_is_medical)->result();
 			

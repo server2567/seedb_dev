@@ -1,5 +1,9 @@
-<!-- pro -->
+<!-- dev -->
 <style>
+  html {
+      zoom: 80%;
+  }
+
   #priority-text {
     font-size:25px;
   }
@@ -49,64 +53,6 @@
     left: 190px;
   }
 </style>
-<?php if (isset($session_view) && $session_view == 'frontend') { ?>
-  <div class="row topbar toggle-sidebar-btn" style="display: none;">
-    <div class="col-md-12 nav_topbar">
-      <a href="<?php echo $this->config->item('ums_webstie'); ?>">
-        <i class="bi bi-globe-asia-australia"></i>&nbsp;
-        <span class="font-14">เว็บไซต์หลัก</span>
-      </a>
-      &nbsp;<i class="bi bi-caret-right text-warning"></i>&nbsp;
-      <a href="<?php echo site_url(); ?>/ums/frontend/Dashboard_home_patient">
-        <i class="bi bi-house-door"></i>&nbsp;
-        <span class='font-16'>หน้าหลัก</span>
-      </a>
-      &nbsp;<i class="bi bi-caret-right text-warning"></i>&nbsp;
-      <a href="<?php echo site_url(); ?>/ums/frontend/Dashboard_home_patient/news_all">
-        <i class="bi bi-card-checklist"></i>&nbsp;
-        <span class='font-16'>หน้าตรวจสอบคิวของแผนก</span>
-      </a>
-    </div>
-  </div>
-<?php } else { ?>
-  <div class="row topbar toggle-sidebar-btn" style="display: none;">
-    <div class="col-md-12 nav_topbar">
-      <a href="<?php echo site_url() . '/personal_dashboard/Personal_dashboard_Controller' ?>">
-        <span class='font-16'>หน้า PD</span>
-      </a>
-      &nbsp;<i class="bi bi-caret-right text-warning"></i>&nbsp;
-      <a id="prevPageLink" href="#">
-        <span id="prevPageText" class='font-16'>จัดการข้อมูลผู้ลงทะเบียน / ผู้ป่วย</span>
-      </a>
-      &nbsp;<i class="bi bi-caret-right text-warning"></i>&nbsp;
-      <i class="bi bi-person-circle text-white"></i>&nbsp;
-      <span class='font-16 text-white'>หน้าข้อมูลส่วนตัวผู้ลงทะเบียน / ผู้ป่วย</span>
-    </div>
-  </div>
-  <script>
-    function setPreviousPage() {
-      var prevPage = document.referrer;
-      var prevPageText = 'จัดการข้อมูลผู้ลงทะเบียน / ผู้ป่วย'; // Default text
-
-      if (prevPage.includes('personal_dashboard/Personal_dashboard_Controller')) {
-        prevPageText = 'หน้าหลัก (PD)';
-      } else if (prevPage.includes('some_other_page')) {
-        prevPageText = 'หน้าอื่นๆ'; // Adjust this condition and text based on your needs
-      }
-
-      var prevPageLink = document.getElementById('prevPageLink');
-      var prevPageTextElement = document.getElementById('prevPageText');
-
-      if (prevPageLink && prevPageTextElement) {
-        prevPageLink.href = prevPage;
-        prevPageTextElement.textContent = prevPageText;
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', setPreviousPage);
-  </script>
-<?php } ?>
-
 <style>
   .nav_topbar {
     height: 50px;	
@@ -144,7 +90,6 @@
   margin-bottom: -1px; /* Space between the announcement section and the footer */
 }
 
-
 .que-animation {
   white-space: nowrap;
   position: absolute;
@@ -152,7 +97,7 @@
   animation: scroll-left 15s linear infinite;
 }
 .announce-slide-left {
-  animation: slideLeft 20s linear infinite;
+  animation: slideLeft 25s linear infinite;
   white-space: nowrap;
   overflow: hidden;
   text-align: left;
@@ -223,6 +168,21 @@
   #main {
     min-height: 67vh !important;
   }
+
+  .announce-section {
+    padding-bottom: 10px; /* Add padding to separate it from the rest of the footer */
+  }
+
+  #footer {
+    position: relative; /* Ensure footer's position context is defined */
+    width:101%;
+  }
+  .container{
+    max-width : 100%;
+  }
+  .font-18 {
+    font-size: 30px !important;
+  }
 </style>
 
 <?php
@@ -248,9 +208,7 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
 
 <div class="row mt-0" style="margin-top: -40px !important;
     z-index: 9999;
-    /* position: absolute; */
-        position: fixed;
-
+    position: absolute; 
     right: 0;
     margin-right: 20px;">
   <h2 class="text-center">
@@ -258,8 +216,44 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
     <span id="current-time"></span>
   </h2>
 </div>
+<div class="row" style="position: absolute; top: 30px; z-index: 1000; width:100%;">
+    <div class="col-12">
+        <div class="marquee-container">
+        <p style="padding-bottom: 0px; padding-left:7%;">ขณะนี้อยู่ในช่วงทดสอบระบบคิว ขออภัยในความไม่สะดวก</p>
+        </div>
+    </div>
+</div>
+<style>
+.marquee-container {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    /* background-color: #ffedb3; Light background color */
+    color: #d9534f; /* Text color */
+    font-size: 18px;
+    font-weight: bold;
+    padding-top: 10px;
+    
+}
+footer#footer {
+    display: none;
+  }
+/* .marquee-container p {
+    display: inline-block;
+    padding-left: 20%;
+    animation: marquee 10s linear infinite;
+} */
 
-<div class="row g-3 mt-3 queue-container" style='zoom:90%;margin-top: -50px !important;'>
+@keyframes marquee {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+</style>
+<div class="row g-3 mt-3 queue-container" style='zoom:80%;margin-top: -100px !important; height:90vh;'>
   <?php 
   $colorSchemes = [
     1 => ['background-color' => '#603601', 'color' => '#FFF', 'border' => '4px solid #603601;'], 
@@ -288,6 +282,18 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
   let priorities = <?php echo json_encode(!empty($priorities) ? $priorities : []); ?>;
 
   $(document).ready(function() {
+    const floor = <?php echo json_encode($floor); ?>;
+    // console.log("floor : ", floor);
+    // console.log("topbar_head : ", $('#topbar_head img').attr('src'));
+
+    if (floor === 'clinic') {
+        // เปลี่ยนรูปภาพ
+        $('#topbar_head img').attr('src', 'https://dev-seedb.aos.in.th/assets/img/logo.png');
+        
+        // เปลี่ยนข้อความ
+        $('#topbar_head .font-24').text('คลินิกบรรยงจักษุ');
+    }
+
     // Select all elements with the class 'col-md-3 mt-2 d-none d-lg-block'
     const elements = document.querySelectorAll('.col-md-3.mt-2.d-none.d-lg-block');
 
@@ -303,6 +309,7 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
     setTimeout(function() {
         show_queue_more();
         show_announce();
+        // show_custom_announcement();
     }, 500); // Adjust the time as needed to wait for the operations to complete
   });
 
@@ -338,14 +345,14 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
   function isMultiline(element) {
     const lineHeight = parseFloat(window.getComputedStyle(element).lineHeight);
     const elementHeight = element.clientHeight;
-    console.log("Element height:", elementHeight, "Line height:", lineHeight);
+    // console.log("Element height:", elementHeight, "Line height:", lineHeight);
     return elementHeight > lineHeight;
   }
 
   function show_queue_more() {
   // Condition for adding the class
   if (queue_more.length > 0) {
-    console.log(queue_more);
+    // console.log(queue_more);
     // Select elements
     const copyright = document.querySelector('.copyright');
     const credits = document.querySelector('.credits');
@@ -387,7 +394,7 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
       // If not, create a new one
       if (!newdiv) {
         newdiv = document.createElement('div');
-        newdiv.classList.add('col-md-3', 'queue-more', 'text-white', 'font-30');
+        newdiv.classList.add('col-md-3', 'queue-more', 'text-white', 'font-40');
         newdiv.setAttribute('data-psrm-id', psrmId); // Add custom attribute to identify the group
         rowDiv.appendChild(newdiv);
       }
@@ -406,7 +413,7 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
           prefix += "<span class='text-danger badge-priority-footer'>**</span> ";
         }
 
-        return prefix + 'คิวที่ ' + item['apm_ql_code'];
+        return prefix + '' + item['apm_ql_code'];
       }).join(", ");
 
       // Update innerHTML
@@ -447,21 +454,21 @@ $formattedDate = str_replace(date('Y'), $year, $formattedDate);
 setInterval(show_queue_more, 15000);
 
   function updateTime() {
-    const now = new Date();
-    const options = { 
-      year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit', 
-      timeZone: 'Asia/Bangkok'
-    };
-    const formatter = new Intl.DateTimeFormat('th-TH', options);
-    document.getElementById('current-time').textContent = ` ${formatter.format(now)}`;
-  }
-  updateTime();
-  setInterval(updateTime, 1000);
+      const now = new Date();
+      const options = { 
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', 
+        timeZone: 'Asia/Bangkok'
+      };
+      const formatter = new Intl.DateTimeFormat('th-TH', options);
+    document.getElementById('current-time').textContent = ` ${formatter.format(now)} น.`;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
 
-</script>
+  </script>
 
-<script>
+  <script>
   function show_announce() {
   // Check if there are any announcements in the queue_announce array
     // Select the footer
@@ -525,7 +532,7 @@ function updateQueue() {
   fetch('<?php echo site_url('wts/frontend/User_room_que/get_room_queue_by_floor/' . $floor); ?>')
     .then(response => response.json())
     .then(data => {
-      console.log("Received room_que data:", data.room_que); // Check the order here
+      // console.log("Received room_que data:", data); // Check the order here
       // Clear the current queue
       let queueContainer = document.querySelector('.queue-container');
       queueContainer.innerHTML = '';
@@ -534,6 +541,7 @@ function updateQueue() {
       queue_more = [];
       queueItems = []; // Reset queueItems on each update
       queue_announce = [];
+      
       // Check if there are any items in the queue
       if (Object.keys(data.room_que).length === 0) {
         let emptyCard = document.createElement('div');
@@ -558,20 +566,32 @@ function updateQueue() {
             return acc;
         }, {});
         
-        const customOrder = [5, 3, 9, 1];
+        // const customOrder = [5, 3, 9, 1];
 
-        // Sort the entries based on the custom order
-        const sortedEntries = Object.entries(data.room_que).sort((a, b) => {
-            const roomIdA = parseInt(a[0]); // Room ID for entry A
-            const roomIdB = parseInt(b[0]); // Room ID for entry B
+        // // Sort the entries based on the custom order
+        // const sortedEntries = Object.entries(data.room_que).sort((a, b) => {
+        //     const roomIdA = parseInt(a[0]); // Room ID for entry A
+        //     const roomIdB = parseInt(b[0]); // Room ID for entry B
 
-            // Use the index of the room ID in the custom order array for comparison
-            return customOrder.indexOf(roomIdA) - customOrder.indexOf(roomIdB);
-        });
+        //     // Use the index of the room ID in the custom order array for comparison
+        //     return customOrder.indexOf(roomIdA) - customOrder.indexOf(roomIdB);
+        // });
 
-          console.log("data:", data.announce);
+        // const sortedEntries = Object.keys(data.room_que)
+        // .sort((a, b) => {
+        //     // หา psrm_rm_id มากที่สุดในแต่ละห้อง
+        //     const maxA = data.room_que[a].length > 0 ? Math.max(...data.room_que[a].map(item => parseInt(item.psrm_rm_id))) : -Infinity;
+        //     const maxB = data.room_que[b].length > 0 ? Math.max(...data.room_que[b].map(item => parseInt(item.psrm_rm_id))) : -Infinity;
+        //     return maxB - maxA; // เรียงจากมากไปน้อย
+        // })
+        // .map(key => [key, data.room_que[key]]);
+        
+        const sortedKeys = Object.keys(data.room_que).sort((a, b) => b - a);
+        // console.log("sortedKeys : ",sortedKeys)
+        const sortedEntries = sortedKeys.map(key => [key, data.room_que[key]]);
+        // console.log("sortedEntries:", sortedEntries);
+
           data.announce.forEach(item => {
-            console.log("item : ", item);
               if (item.qus_announce) {
                   queue_announce.push({
                       rm_name: item.rm_name,
@@ -583,7 +603,6 @@ function updateQueue() {
                   });
               }
           });
-          console.log("queue_announce :",queue_announce);
         // Render sorted queue data
         const entries = Object.entries(data.room_que);
        // Clear the queue container before rendering
@@ -596,7 +615,7 @@ function updateQueue() {
           let leftBorderStyle = `border-left: 2px solid ${colors['background-color']};`;
           
           let card = document.createElement('div');
-          card.className = 'col-md-3 p-0';
+          card.className = 'col p-0';
           // Loop through the array using jQuery
           var firstMatch = null;
           $.each(room, function(index, entry) {
@@ -612,21 +631,24 @@ function updateQueue() {
           queueItems.push(...room);
           if (room[0]) { // && room[0]?.psd_picture && room[0]?.pf_name_abbr
             let card = document.createElement('div');
-            card.className = 'col-md-3 p-0';
+            card.className = 'col p-0';
+            // room.sort((a, b) => parseInt(a.apm_ql_code) - parseInt(b.apm_ql_code));
+
+
           card.innerHTML = `
-            <div class="card mb-0">
-              <div class="card-header text-center fw-bold d-flex align-items-center justify-content-center" style="font-size: 44px; <?php echo $floor == '2' ? 'min-height: 320px;' : '' ?> background-color: ${colors['background-color']}; color: ${colors['color']};">
+            <div class="card mb-0" style="height:156vh; zoom:90%;">
+              <div class="card-header text-center fw-bold d-flex align-items-center justify-content-center p-0" style="font-size: 44px; <?php //echo $floor == '2' ? 'min-height: 200px;' : '' ?> background-color: ${colors['background-color']}; color: ${colors['color']};">
                 <div class="card-icon rounded-circle d-flex align-items-center justify-content-center" style="color: #9b2500; background: #fbd4c7;">
                   <img id="profile_picture" class="rounded-circle" src="<?php echo site_url($this->config->item('hr_dir') . "getIcon_que?type=" . $this->config->item('hr_profile_dir') . "profile_picture&image="); ?>${room[0]?.psd_picture ? room[0].psd_picture : "default.png"}">
                 </div>
-                <div class="ps-4 text-center">
+                <div class="ps-0 text-center">
                 <?php if ($floor == 2): ?>
                   <div class="col-12" style="font-size: 35px;">
                     ${firstMatch != null ? firstMatch.stde_name_th ?? '' : ""}
                   </div>
                 <?php endif; ?>
                   <span style="font-size: 40px;">${firstMatch != null ? firstMatch.rm_name ?? "-" : "-"}</span><br>
-                  <div class="col-12" style="font-size: 30px;">
+                  <div class="col-12" style="font-size: 35px;">
                     ${room[0]?.pf_name_abbr || ''}${room[0]?.ps_fname || ''}
                   </div>
                 </div>
@@ -636,7 +658,7 @@ function updateQueue() {
                   <table class="table table-borderless mb-0" style="font-size: 45px; width: 100%; table-layout: fixed;">
                     <thead>
                       <tr>
-                        <th class="text-center" style="font-size: 30px;">ปกติ</th>
+                        <th class="text-center" style="font-size: 50px;">ปกติ</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -645,15 +667,18 @@ function updateQueue() {
                         if (item.qus_app_walk != null) {
                           if (item.qus_app_walk && item.qus_app_walk === 'W') {
                             isShow = true;
+                            // console.log("if : ",item.apm_ql_code);
                           } 
                         } else {
-                          if (item.apm_app_walk === 'W' && (item.apm_pri_id === 2 || item.apm_pri_id === 5)) {
+                          // console.log("else : ",item.apm_ql_code);
+                          if (item.apm_app_walk === 'W' && (item.apm_pri_id === '2' || item.apm_pri_id === '5')) {
+                            // console.log("else if : ",item.apm_ql_code);
                             isShow = true;
                           }
                         }
 
                         if (isShow) {
-                          if (count_walkin > 6) {
+                          if (count_walkin >= 10) {
                             queue_more.push({ apm_ql_code: item.apm_ql_code, apm_pri_id: item.apm_pri_id, apm_sta_id:item.apm_sta_id, index: index })
                             isShow = false;
                           } else 
@@ -666,9 +691,16 @@ function updateQueue() {
                       }).map(item => `
                         <tr class="text-center" style="width: 50%;">
                           <td class="p-0">
-                            <div ${item.apm_pri_id == 1 || item.apm_pri_id == 2 ? 'class="que-type"' : ''} data-content="${item.apm_ql_code}" style="width: 100%; height: 100%;">
-                              ${item.apm_sta_id == 2 ? "<i class='bi-caret-right-fill icon-see-doctor'></i> " : ""}
-                              <span class="que-text">${item.apm_ql_code}</span>
+                            <div ${item.apm_pri_id == 1 || item.apm_pri_id == 2 || item.apm_pri_id == 6 || item.apm_sta_id == 11 || item.apm_sta_id == 12 ? 'class="que-type"' : ''} 
+                              data-content="${item.apm_ql_code}" 
+                              style="width: 100%; height: 100%; font-size:70px;" title="${item.apm_pt_id}">
+                              ${(item.apm_sta_id == 2)
+                                ? `<i class='bi-caret-right-fill icon-see-doctor' 
+                                  style='margin-left: -70px;'></i>` 
+                                : ""}
+                              <span class="que-text" style="color: ${item.apm_sta_id == 11 || item.apm_sta_id == 12 ? '#603601' : ''}; ${item.apm_ql_code.startsWith('I-') ? 'font-size: 40px;' : ''}">
+                                ${item.apm_ql_code}
+                              </span>
                             </div>
                           </td>
                         </tr>
@@ -680,7 +712,7 @@ function updateQueue() {
                   <table class="table table-borderless mb-0" style="font-size: 45px; width: 100%; table-layout: fixed;">
                     <thead>
                       <tr>
-                        <th class="text-center" style="font-size: 30px;">นัดหมาย</th>
+                        <th class="text-center text-primary-emphasis" style="font-size: 50px;">นัดหมาย</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -697,7 +729,7 @@ function updateQueue() {
                         }
 
                         if (isShow) {
-                          if (count_appointment > 6) {
+                          if (count_appointment >= 6) {
                             queue_more.push({ apm_ql_code: item.apm_ql_code, apm_pri_id: item.apm_pri_id, apm_sta_id:item.apm_sta_id, qus_psrm_id: item.qus_psrm_id })
                             isShow = false;
                           } else 
@@ -710,9 +742,16 @@ function updateQueue() {
                       }).map(item => `
                         <tr class="text-center" style="width: 50%;">
                           <td class="p-0">
-                            <div ${item.apm_pri_id == 1 || item.apm_pri_id == 2 ? 'class="que-type"' : ''} data-content="${item.apm_ql_code}" style="width: 100%; height: 100%;">
-                              ${item.apm_sta_id == 2 ? "<i class='bi-caret-right-fill icon-see-doctor'></i> " : ""}
-                              <span class="que-text">${item.apm_ql_code}</span>
+                            <div ${item.apm_pri_id == 1 || item.apm_pri_id == 2 || item.apm_pri_id == 6 || item.apm_sta_id == 11 || item.apm_sta_id == 12 ? 'class="que-type text-primary-emphasis"' : ''} 
+                              data-content="${item.apm_ql_code}" 
+                              style="width: 100%; height: 100%; font-size:70px;" title="${item.apm_pt_id}">
+                              ${(item.apm_sta_id == 2)
+                                ? `<i class='bi-caret-right-fill icon-see-doctor' 
+                                  style='margin-left: -70px;'></i>` 
+                                : ""}
+                              <span class="que-text" style="color: ${item.apm_sta_id == 11 || item.apm_sta_id == 12 ? '#603601' : '#052C65'}; ${item.apm_ql_code.startsWith('I-') ? 'font-size: 40px;' : ''}">
+                                ${item.apm_ql_code}
+                              </span>
                             </div>
                           </td>
                         </tr>
@@ -726,7 +765,7 @@ function updateQueue() {
          
           queueContainer.appendChild(card);
         } else {
-          console.log("No data available to display for this room.");
+          // console.log("No data available to display for this room.");
         }
         });
       }
@@ -741,6 +780,7 @@ setInterval(updateQueue, 5000);
 function changeText() {
   // Access elements with 'que-type' class
   var elements = document.getElementsByClassName('que-type');
+  // console.log("elements : ",elements)
 
   if (elements.length > 0) {
     for (var i = 0; i < elements.length; i++) {
@@ -750,11 +790,10 @@ function changeText() {
 
         // Find the corresponding queue item from queueItems based on apm_ql_code
         var item = queueItems.find(q => q.apm_ql_code === element.getAttribute('data-content'));
-        console.log('Queue Item:', item);
+        // console.log('Queue Item:', item);
 
         if (item) {  // Only apply to items with apm_pri_id == 1
           // Add the fade-out class
-          
           textElement.classList.add('fade-out');
 
           // Wait for fade-out to complete (0.5s = 500ms)
@@ -762,23 +801,63 @@ function changeText() {
             // Toggle between apm_ql_code and "ฉุกเฉิน"
             var currentContent = textElement.textContent.trim();
 
-            if (item.apm_pri_id == 1) {  // Emergency case
+            if ((item.apm_pri_id == 1 || item.apm_pri_id == 2 || item.apm_pri_id == 6) && (item.apm_sta_id == 11 || item.apm_sta_id == 12)) {  
+              // Combined condition for Priority 1, 2, or 6 + Status 11 or 12
               if (currentContent === item.apm_ql_code) {
-
+                if (item.apm_pri_id == 1) {
+                  textElement.textContent = 'ฉุกเฉิน';
+                  textElement.style.color = "red"; // Custom color for emergency
+                } else if (item.apm_pri_id == 2) {
+                  textElement.textContent = 'เฝ้าระวัง';
+                  textElement.style.color = "#ff9800"; // Custom color for surveillance
+                } else if (item.apm_pri_id == 6) {
+                  textElement.textContent = 'ผ่าตัด';
+                  textElement.style.color = "#872400"; // Custom color for surgery
+                }
+              } else if (currentContent === 'ฉุกเฉิน' || currentContent === 'เฝ้าระวัง' || currentContent === 'ผ่าตัด') {
+                textElement.textContent = item.sta_show;
+                textElement.style.color = "#603601"; // Custom color for sta_show
+              } else if (currentContent === item.sta_show) {
+                textElement.textContent = item.sta_show_en;
+                textElement.style.color = "#603601"; // Custom color for sta_show_en
+              } else {
+                textElement.textContent = item.apm_ql_code;
+                textElement.style.color = "black"; // Reset to default color
+              }
+            } else if (item.apm_pri_id == 1) {  // Emergency case
+              if (currentContent === item.apm_ql_code) {
                 textElement.textContent = 'ฉุกเฉิน';
                 textElement.style.color = "red"; // Change text color to red for emergency
               } else {
                 textElement.textContent = item.apm_ql_code;
-                textElement.style.color = "black"; // Change text color back to black
+                textElement.style.color = "black"; // Reset to default color
               }
             } else if (item.apm_pri_id == 2) {  // Surveillance case
-              
               if (currentContent === item.apm_ql_code) {
                 textElement.textContent = 'เฝ้าระวัง';
-                textElement.style.color = "#ce9b00"; // Change text color to orange for surveillance
+                textElement.style.color = "#ff9800"; // Change text color to orange for surveillance
               } else {
                 textElement.textContent = item.apm_ql_code;
-                textElement.style.color = "black"; // Change text color back to black
+                textElement.style.color = "black"; // Reset to default color
+              }
+            } else if (item.apm_pri_id == 6) {  // Surgery case
+              if (currentContent === item.apm_ql_code) {
+                textElement.textContent = 'ผ่าตัด';
+                textElement.style.color = "#872400"; // Custom color for surgery
+              } else {
+                textElement.textContent = item.apm_ql_code;
+                textElement.style.color = "black"; // Reset to default color
+              }
+            } else if (item.apm_sta_id == 11 || item.apm_sta_id == 12) {  // Specific status 11 or 12 without Priority
+              if (currentContent === item.apm_ql_code) {
+                textElement.textContent = item.sta_show;
+                textElement.style.color = "#603601"; // Custom color for sta_show
+              } else if (currentContent === item.sta_show) {
+                textElement.textContent = item.sta_show_en;
+                textElement.style.color = "#603601"; // Custom color for sta_show_en
+              } else {
+                textElement.textContent = item.apm_ql_code;
+                textElement.style.color = "black"; // Reset to default color
               }
             }
 
@@ -801,4 +880,56 @@ function changeText() {
 
 // Change text every 3 seconds
 setInterval(changeText, 2000);
+
+// function show_custom_announcement() {
+//   // Select the footer
+//   const footer = document.querySelector('#footer');
+
+//   // Check if the custom announce section already exists
+//   let customAnnounceDiv = document.querySelector('.custom-announce-section');
+//   if (!customAnnounceDiv) {
+//     // Create a new div for the custom announcement if it doesn't exist
+//     customAnnounceDiv = document.createElement('div');
+//     customAnnounceDiv.classList.add('row', 'custom-announce-section');
+
+//     // Insert the custom announce section right before the footer
+//     footer.parentNode.insertBefore(customAnnounceDiv, footer);
+//   }
+
+//   // Clear previous content
+//   customAnnounceDiv.innerHTML = '';
+
+//   // Create a new div for the custom announcement content
+//   let customAnnounceItem = document.createElement('div');
+//   customAnnounceItem.classList.add('col-md-12', 'custom-announce-item');
+  
+//   // Inline CSS for custom styling
+//   customAnnounceItem.style.color = '#ffffff'; // สีข้อความ
+//   customAnnounceItem.style.fontSize = '30px'; // ขนาดฟอนต์
+//   customAnnounceItem.style.textShadow = '2px 2px 4px #000000'; // เงาของข้อความ
+//   customAnnounceItem.style.padding = '10px'; // ระยะห่างภายใน
+//   customAnnounceItem.style.backgroundColor = '#795548'; // พื้นหลังโปร่งแสง
+//   customAnnounceItem.style.textAlign = 'center'; // จัดข้อความให้อยู่กลาง
+//   customAnnounceItem.style.marginTop = '10px'; // ระยะห่างจากด้านบน
+
+//   // Create animated div for sliding effect
+//   let animatedText = document.createElement('div');
+//   animatedText.classList.add('announce-slide-left');
+//   animatedText.innerHTML = 'ขณะนี้อยู่ในช่วงทดสอบระบบคิว ขออภัยในความไม่สะดวก';
+
+//   // Add the animated text inside the custom announcement item
+//   customAnnounceItem.appendChild(animatedText);
+
+//   // Append the custom announcement item to the custom announcement section
+//   customAnnounceDiv.appendChild(customAnnounceItem);
+// }
+
+  // Call show_custom_announcement once to display the message
+  // setInterval(show_custom_announcement, 20000);
+</script>
+<script>
+  // รีโหลดหน้าเว็บทุก ๆ 5 วินาที
+  setInterval(function() {
+    location.reload();
+  }, 300000);
 </script>

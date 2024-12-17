@@ -46,12 +46,14 @@
                                     <div class="row">
                                         <div class="col-md-3 text-end"> <label for="pos_hire_id_<?php echo $dp_id; ?>" class="form-label required">ประเภทบุคลากร</label></div>
                                         <div class="col-md-8">
-                                            <select class="form-select select2" data-placeholder="-- กรุณาเลือกประเภทบุคลากร --" onchange="changeHire(value,<?= $dp_id ?>)" name="pos_hire_id_<?php echo $dp_id; ?>" id="pos_hire_id_<?php echo $dp_id; ?>" required>
+                                            <select class="form-select select2" data-placeholder="-- กรุณาเลือกประเภทบุคลากร --" onchange="changeHire(value, <?= $dp_id ?>, this.options[this.selectedIndex].getAttribute('data-hire-type'))" name="pos_hire_id_<?php echo $dp_id; ?>" id="pos_hire_id_<?php echo $dp_id; ?>" required>
                                                 <option value="">-- เลือกประเภทบุคลากร --</option>
                                                 <?php
                                                 foreach ($base_hire_list as $key => $row) {
                                                 ?>
-                                                    <option value="<?php echo $row->hire_id; ?>" <?php echo (isset($row_position[$dp_id]) && $row_position[$dp_id]->pos_hire_id == $row->hire_id ? "selected" : ""); ?>><?php echo $row->hire_name . " " . $row->hire_is_medical_label; ?></option>
+                                                    <option value="<?php echo $row->hire_id; ?>" data-hire-type="<?php echo $row->hire_type; ?>" <?php echo (isset($row_position[$dp_id]) && $row_position[$dp_id]->pos_hire_id == $row->hire_id ? "selected" : ""); ?>>
+                                                        <?php echo $row->hire_name . " " . $row->hire_is_medical_label; ?>
+                                                    </option>
                                                 <?php
                                                 }
                                                 ?>
@@ -430,6 +432,15 @@
                                             <label class="form-check-label" for="pos_active_<?php echo $dp_id; ?>" id="text_pos_active_<?php echo $dp_id; ?>"><?php echo (isset($row_position[$dp_id]) && $row_position[$dp_id]->pos_active == "Y" ? "เปิดใช้งาน" : "ปิดใช้งาน"); ?></label>
                                         </div>
                                         <div class="col-md-3"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <div class="row">
+                                        <div class="col-md-3 text-end"> <label for="pos_public_display_<?php echo $dp_id; ?>" class="form-label">Public Profile</label></div>
+                                        <div class="col-md-6 form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="pos_public_display_<?php echo $dp_id; ?>" name="pos_public_display_<?php echo $dp_id; ?>" title="<?php echo (isset($row_position[$dp_id]) && $row_position[$dp_id]->pos_public_display == "Y" ? "คลิกเพื่อเปิดใช้งาน" : "คลิกเพื่อปิดใช้งาน"); ?>" data-toggle="tooltip" data-bs-placement="top" onclick="change_text_display(<?php echo $dp_id; ?>)" <?php echo (isset($row_position[$dp_id]) && $row_position[$dp_id]->pos_public_display == 1 ? "checked" : ""); ?>>
+                                            <label class="form-check-label" for="pos_public_display_<?php echo $dp_id; ?>" id="text_pos_public_display_<?php echo $dp_id; ?>"><?php echo (isset($row_position[$dp_id]) && $row_position[$dp_id]->pos_public_display == "1" ? "แสดง" : "ไม่แสดง"); ?></label>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mt-3 mb-3 col-md-12">
@@ -985,6 +996,18 @@
         }
     }
 
+    function change_text_display(dp_id) {
+        var checkbox = document.getElementById("pos_public_display_" + dp_id);
+        var label = document.getElementById("text_pos_public_display_" + dp_id);
+
+        if (checkbox.checked) {
+            label.textContent = "แสดง";
+            checkbox.setAttribute("title", "คลิกเพื่อปิดใช้งาน");
+        } else {
+            label.textContent = "ไม่แสดง";
+            checkbox.setAttribute("title", "คลิกเพื่อเปิดใช้งาน");
+        }
+    }
     document.addEventListener("DOMContentLoaded", function() {
         flatpickr("#pos_work_start_date_<?php echo $dp_id; ?>", {
             dateFormat: 'd/m/Y',

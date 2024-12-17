@@ -129,14 +129,16 @@
                         ชื่อบุคลากร :
                     </div>
                     <div class="col-8 mb-2">
-                        <select id="person" class="form-control select2" onchange="Personpostion(<?= isset($std_info) ? $std_info->dp_id : null ?>,$('#person').val())" placeholder="เลือกบุคคล">
-                            <option value="0" disabled selected>เลือกบุคลากร</option>
-                            <?php if (isset($ps_info)) : ?>
-                                <?php foreach ($ps_info as $value) : ?>
-                                    <option value="<?= $value->ps_id ?>"><?= $value->pf_name_abbr ?> <?= $value->ps_fname . ' ' . $value->ps_lname ?></option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
+                        <div id="person">
+                            <select id="person_opt" class="form-control select2" onchange="Personpostion(<?= isset($std_info) ? $std_info->dp_id : null ?>,$('#person_opt').val())" placeholder="เลือกบุคคล">
+                                <option value="0" disabled selected>เลือกบุคลากร</option>
+                                <?php if (isset($ps_info)) : ?>
+                                    <?php foreach ($ps_info as $value) : ?>
+                                        <option value="<?= $value->ps_id ?>"><?= $value->pf_name_abbr ?> <?= $value->ps_fname . ' ' . $value->ps_lname ?></option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
                     </div>
                     <div class="col-12">
                         <div id="stuc_position" class="row">
@@ -156,7 +158,7 @@
             <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">ยกเลิก</button>
                 <div id="submitPerson">
-                    <button id="addPerson" name="newAdd" type="button" class="btn btn-success" onclick="addPerson($('#person').val(),$('#person option:selected').text(),$('#stdp_po_id').val(),$('#admin_position').val(),$('#adline_position').val(),$('#special_position').val())">บันทึก</button>
+                    <button id="addPerson" name="newAdd" type="button" class="btn btn-success" onclick="addPerson($('#person_opt').val(),$('#person_opt option:selected').text(),$('#stdp_po_id').val(),$('#admin_position').val(),$('#adline_position').val(),$('#special_position').val())">บันทึก</button>
                 </div>
             </div>
         </div>
@@ -257,8 +259,8 @@
                                         } else {
                                             test_color = "#198754";
                                         }
-                                    var stdp_po_id = `<p style="color:${test_color}">  ${result.stpo_name} </p>`
-                                    }else{
+                                        var stdp_po_id = `<p style="color:${test_color}">  ${result.stpo_name} </p>`
+                                    } else {
                                         var stdp_po_id = `<p style="color:#198754">  - </p>`
                                     }
                                     addPerson(person.stdp_id, person.full_name, stdp_po_id, admin_position, person.alp_name, spcl_position, seq.seq.replaceAll('.', '-'), person.stdp_id)
@@ -330,11 +332,11 @@
             stdp_info = data.stdp_info
             base_structure_position = data.base_structure_position
             stdp_info.forEach(element => {
-                $('#person').empty();
+                $('#person_opt').empty();
                 var newOption = new Option(`${element.pf_name_abbr} ${element.ps_fname} ${element.ps_lname}`, "1", true, true);
                 document.getElementById('addpermodal').innerHTML = 'แก้ไขตำแหน่งในโครงสร้างบุคลากรของ' + element.stde_name_th
-                $('#person').append(newOption);
-                $('#person').attr('disabled', true);
+                $('#person_opt').append(newOption);
+                $('#person_opt').attr('disabled', true);
                 $('#admin_position').val(element.admin_name)
                 $('#adline_position').val(element.alp_name)
                 $('#special_position').val(element.spcl_name)
@@ -750,19 +752,15 @@
     }
 
     function clearInput() {
-        $('#person').attr('disabled', false);
+        $('#person_opt').attr('disabled', false);
         $('#admin_position').html('')
         $('#adline_position').html('')
         $('#special_position').html('')
         stuc_position = document.getElementById('stuc_position')
         stuc_position.innerHTML = ''
-        $('#person').val(0);
-        $('#person').select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $('#addPersonModal')
-        });
+        $('#person_opt').val(0);
         person = document.getElementById('person')
-        person.innerHTML = `<select id="person" class="form-control select2" onchange="Personpostion(<?= isset($std_info) ? $std_info->dp_id : null ?>,$('#person').val())" placeholder="เลือกบุคคล">
+        person.innerHTML = `<select id="person_opt" class="form-control select2" onchange="Personpostion(<?= isset($std_info) ? $std_info->dp_id : null ?>,$('#person_opt').val())" placeholder="เลือกบุคคล">
                             <option value="0" disabled selected>เลือกบุคลากร</option>
                             <?php if (isset($ps_info)) : ?>
                                 <?php foreach ($ps_info as $value) : ?>
@@ -770,8 +768,12 @@
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>`
+        $('#person_opt').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#addPersonModal')
+        });
         button_person_positon = document.getElementById('submitPerson')
-        button_person_positon.innerHTML = `<button id="addPerson" name="newAdd" type="button" class="btn btn-success" onclick="addPerson($('#person').val(),$('#person option:selected').text(),$('#stdp_po_id').val(),$('#admin_position').val(),$('#adline_position').val(),$('#special_position').val())">บันทึก</button>`
+        button_person_positon.innerHTML = `<button id="addPerson" name="newAdd" type="button" class="btn btn-success" onclick="addPerson($('#person_opt').val(),$('#person_opt option:selected').text(),$('#stdp_po_id').val(),$('#admin_position').val(),$('#adline_position').val(),$('#special_position').val())">บันทึก</button>`
     }
 
     function createTable() {

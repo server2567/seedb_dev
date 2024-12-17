@@ -29,6 +29,7 @@ class Da_hr_person_position extends Hr_model
     public $pos_work_start_date;
     public $pos_work_end_date;
     public $pos_active;
+    public $pos_public_display;
     public $pos_create_user;
     public $pos_create_date;
     public $pos_update_user;
@@ -50,14 +51,14 @@ class Da_hr_person_position extends Hr_model
         $sql = "INSERT INTO " . $this->hr_db . ".hr_person_position (
             pos_ps_id, pos_dp_id, pos_desc, pos_ps_code, 
             pos_hire_id, pos_admin_id, pos_alp_id, pos_spcl_id,
-            pos_retire_id, pos_status, pos_count_work, pos_out_desc, pos_attach_file, pos_work_start_date, 
+            pos_retire_id, pos_status, pos_public_display,pos_count_work, pos_out_desc, pos_attach_file, pos_work_start_date, 
             pos_work_end_date, pos_active, pos_create_user, 
             pos_create_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?)";
         $this->hr->query($sql, array(
             $this->pos_ps_id, $this->pos_dp_id, $this->pos_desc,
             $this->pos_ps_code, $this->pos_hire_id, $this->pos_admin_id,
-            $this->pos_alp_id, $this->pos_spcl_id, $this->pos_retire_id, $this->pos_status, $this->pos_count_work, $this->pos_out_desc, $this->pos_attach_file,
+            $this->pos_alp_id, $this->pos_spcl_id, $this->pos_retire_id, $this->pos_status, $this->pos_public_display,$this->pos_count_work, $this->pos_out_desc, $this->pos_attach_file,
             $this->pos_work_start_date, $this->pos_work_end_date,
             $this->pos_active, $this->pos_create_user,
             $this->pos_create_date
@@ -71,7 +72,7 @@ class Da_hr_person_position extends Hr_model
         $sql = "UPDATE " . $this->hr_db . ".hr_person_position
                 SET pos_desc=?, 
                     pos_ps_code=?, pos_hire_id=?, pos_admin_id=?, 
-                    pos_alp_id=?, pos_spcl_id=?, pos_retire_id=?, pos_status=?, pos_count_work=?, pos_out_desc=?, pos_attach_file=?,
+                    pos_alp_id=?, pos_spcl_id=?, pos_retire_id=?, pos_status=?, pos_public_display=?,pos_count_work=?, pos_out_desc=?, pos_attach_file=?,
                     pos_work_start_date=?, pos_work_end_date=?, 
                     pos_active=?,
                     pos_update_user=?, pos_update_date=?
@@ -79,7 +80,7 @@ class Da_hr_person_position extends Hr_model
         $this->hr->query($sql, array(
             $this->pos_desc,
             $this->pos_ps_code, $this->pos_hire_id, $this->pos_admin_id,
-            $this->pos_alp_id, $this->pos_spcl_id, $this->pos_retire_id, $this->pos_status, $this->pos_count_work, $this->pos_out_desc, $this->pos_attach_file,
+            $this->pos_alp_id, $this->pos_spcl_id, $this->pos_retire_id, $this->pos_status, $this->pos_public_display,$this->pos_count_work, $this->pos_out_desc, $this->pos_attach_file,
             $this->pos_work_start_date, $this->pos_work_end_date,
             $this->pos_active, $this->pos_update_user,
             $this->pos_update_date, $this->pos_id, $this->pos_ps_id, $this->pos_dp_id

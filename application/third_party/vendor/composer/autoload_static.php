@@ -59,6 +59,10 @@ class ComposerStaticInitded042dd708f98737f33160b8e0bac14
         array (
             'Complex\\' => 8,
         ),
+        'A' => 
+        array (
+            'AgileBM\\ZKLib\\' => 14,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -154,6 +158,10 @@ class ComposerStaticInitded042dd708f98737f33160b8e0bac14
         'Complex\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
+        ),
+        'AgileBM\\ZKLib\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/agile-bm/zk-lib/src',
         ),
     );
 

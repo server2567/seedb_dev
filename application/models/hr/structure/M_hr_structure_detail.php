@@ -118,4 +118,16 @@ class M_hr_structure_detail extends Da_hr_structure_detail
 		$query = $this->hr->query($sql,array($stde,$active));
 		return $query;
 	}
+	function get_name_th_by_dp_id($dp_id,$stde_is_medical)
+	{
+		if($stde_is_medical == 'M'){
+			$stde_is_medical = 'Y';
+		}
+		$sql = "SELECT stde_id,stde_name_th,stde_stuc_id
+				FROM " . $this->hr_db . ".hr_structure_detail
+				INNER JOIN hr_structure on stuc_id = stde_stuc_id
+				WHERE stuc_dp_id = '$dp_id' AND stde_is_medical = '$stde_is_medical'";
+		$query = $this->hr->query($sql);
+		return $query;
+	}
 } // end class M_hr_prefix

@@ -100,8 +100,8 @@
                                 <div class="col-md-6" id="div_filter_select_public">
                                     <label for="filter_select_public" class="form-label">ประเภทตารางแพทย์ออกตรวจ</label>
                                     <select class="form-select select2" id="filter_select_public" name="filter_select_public">
-                                        <option value="0" selected>ตารางแพทย์ออกตรวจภายใน (In)</option>
-                                        <option value="1">ตารางแพทย์ออกตรวจภายนอก (Public)</option>
+                                        <option value="0" selected>ตารางแพทย์ออกตรวจสำหรับรพ. (In)</option>
+                                        <option value="1">ตารางแพทย์ออกตรวจแบบสาธารณะ (Public)</option>
                                     </select>
                                 </div>
                             </form>
@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
             event_calendar.destroy();
             initializeCalendar();
             get_eqs_building_list();
+            $('[data-bs-toggle="tooltip"]').tooltip();
         });
     }
    
@@ -167,6 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Apply the function to both add and edit room selectors
     handleRoomSelect('#checkbox_add_rm_id', '#add_rm_id');
     handleRoomSelect('#checkbox_edit_rm_id', '#edit_rm_id');
+
+    handleIsHolidaySelect('#checkbox_add_is_holiday', '#add_twac_id', 'add');
+    handleIsHolidaySelect('#checkbox_edit_is_holiday', '#edit_twac_id' , 'edit');
 
     $('[data-bs-toggle="tooltip"]').tooltip();
 
@@ -362,15 +366,19 @@ function getEvents() {
                         start: `${row.twpp_start_date} ${row.twpp_start_time}`,
                         end: `${row.twpp_end_date} ${row.twpp_end_time}`,
                         resourceId: row.twpp_ps_id,
-                        title: `(${row.twac_name_th}) ${row.rm_name ? row.rm_name : ''}`,
-                        color: row.twac_color,
+                        title: row.twpp_is_holiday == 0 
+                            ? `(${row.twac_name_th}) ${row.rm_name ? row.rm_name : ''}` 
+                            : `OFF ${row.rm_name ? row.rm_name : ''}`,
+                        color: row.twpp_is_holiday == 0 ? row.twac_color : "#0d6efd",
+                        allDay: row.twpp_is_holiday == 1 ? true : false,
                         extendedProps: {
                             twpp_rm_id: row.twpp_rm_id,
                             twpp_dp_id: row.twpp_dp_id,
                             twac_id: row.twpp_twac_id,
                             twpp_desc: row.twpp_desc,
                             twpp_status: row.twpp_status,
-                            twpp_is_public: row.twpp_is_public
+                            twpp_is_public: row.twpp_is_public,
+                            twpp_is_holiday: row.twpp_is_holiday
                         }
                     };
                 });
@@ -408,6 +416,62 @@ function handleRoomSelect(checkboxSelector, selectSelector) {
         }
     });
 }
+
+// ฟังก์ชันสำหรับจัดการการเปิด/ปิดใช้งาน select รูปแบบการลงเวลางาน และการเพิ่ม/ลบตัวเลือก "วันหยุด (OFF)"
+function handleIsHolidaySelect(checkboxSelector, selectSelector, type) {
+    $(checkboxSelector).on('change', function() {
+        const isHolidaySelect = $(selectSelector);
+        const checkRoomSelect = $('#checkbox_'+type+'_rm_id');
+        const roomSelect = $('#'+type+'_rm_id');
+
+        if (this.checked) {
+            // ปิดการใช้งาน select และเพิ่มตัวเลือก "วันหยุด (OFF)"
+            isHolidaySelect.prop('disabled', true);
+
+            // ตรวจสอบว่าตัวเลือก "วันหยุด (OFF)" มีอยู่แล้วหรือไม่ เพื่อป้องกันการเพิ่มซ้ำ
+            if (isHolidaySelect.find('option[value="0"]').length === 0) {
+                isHolidaySelect.append('<option value="0">วันหยุด (OFF)</option>');
+            }
+
+            isHolidaySelect.val('0'); // เลือกตัวเลือก "วันหยุด (OFF)"
+            $("#"+type+"_plan_start_time").val("00:00");
+            $("#"+type+"_plan_end_time").val("23:59");
+
+            checkRoomSelect.prop('checked', true); // Sets the checkbox as checked
+
+            roomSelect.prop('disabled', true);
+
+            // ตรวจสอบว่าตัวเลือก "ไม่ระบุ" มีอยู่แล้วหรือไม่ เพื่อป้องกันการเพิ่มซ้ำ
+            if (roomSelect.find('option[value="0"]').length === 0) {
+                roomSelect.append('<option value="0">ไม่ระบุ</option>');
+            }
+
+            roomSelect.val('0'); // เลือกตัวเลือก "ไม่ระบุ"
+
+        } else {
+            // เปิดการใช้งาน select และลบตัวเลือก "วันหยุด (OFF)"
+            isHolidaySelect.prop('disabled', false);
+            isHolidaySelect.find('option[value="0"]').remove();
+            var twac_id = $("#"+type+"_twac_id").val();
+            
+
+            if(type=="edit"){
+                var ps_id = $("#edit_plan_ps_id").val();
+                get_timework_attendance_config_list(ps_id);
+            }
+            else{
+                get_time_attendance_config(twac_id, type);
+            }
+
+            checkRoomSelect.prop('checked', false); // Sets the checkbox as checked
+            roomSelect.prop('disabled', false);
+            roomSelect.find('option[value="0"]').remove();
+
+            
+        }
+    });
+}
+
 
 // Function to configure the view settings of the calendar
 function getViewSettings() {
@@ -472,6 +536,9 @@ function handleDateClick(info) {
     } else {
         $('#add_plan_ps_id').val('').trigger('change');
     }
+    $('#checkbox_add_is_holiday').prop('checked', false); // Uncheck the checkbox
+    $('#add_twac_id').prop('disabled', false);
+    $('#add_rm_id').prop('disabled', false);
 
     get_timework_attendance_config_list(info.resource.id);
 
@@ -518,6 +585,10 @@ function handleSelect(info) {
         $('#add_plan_ps_id').val('').trigger('change');
     }
 
+    $('#checkbox_add_is_holiday').prop('checked', false); // Uncheck the checkbox
+    $('#add_twac_id').prop('disabled', false);
+    $('#add_rm_id').prop('disabled', false);
+
     get_timework_attendance_config_list(info.resource.id);
 
     setDefaultDate('add', startDate, endDate);
@@ -542,8 +613,19 @@ function handleEventClick(info) {
     // เซ็ตค่าเริ่มต้นใน modal จากเหตุการณ์ที่ถูกคลิก
     const startDate = selectedEvent.start ? formatDateToBuddhist(new Date(selectedEvent.start)) : '';
     const startTime = selectedEvent.start ? formatTime(new Date(selectedEvent.start)) : '';
-    const endDate = selectedEvent.end ? formatDateToBuddhist(new Date(selectedEvent.end)) : startDate;
-    const endTime = selectedEvent.end ? formatTime(new Date(selectedEvent.end)) : startTime;
+    
+    let endDate;
+    if (selectedEvent.allDay) {
+        // Subtract 1 day from the end date if it's an all-day event
+        endDate = selectedEvent.end 
+            ? formatDateToBuddhist(new Date(new Date(selectedEvent.end).setDate(new Date(selectedEvent.end).getDate() - 1)))
+            : startDate;
+    } else {
+        // Keep the original logic if it's not an all-day event
+        endDate = selectedEvent.end 
+            ? formatDateToBuddhist(new Date(selectedEvent.end))
+            : startDate;
+    }    const endTime = selectedEvent.end ? formatTime(new Date(selectedEvent.end)) : startTime;
     
     var [twac_id, twac_start_time, twac_end_time, twac_name_th, twac_color] = selectedEvent.extendedProps.twac_id.split('<>'); // แยกด้วยตัวขีด '-'
     
@@ -593,6 +675,34 @@ function handleEventClick(info) {
         roomSelect.prop('disabled', false);
     }
 
+    // ตรวจสอบว่าค่า twac_id เท่ากับ 0 หรือไม่
+    if (selectedEvent.extendedProps.twac_id == 0) {
+
+        // ถ้า twac_id เป็น 0 ให้ติ๊กถูก checkbox และเพิ่มตัวเลือก "ไม่ระบุ" ใน select
+        $('#checkbox_edit_is_holiday').prop('checked', true); // Check the checkbox
+
+        const twacSelect = $('#edit_twac_id');
+        // ตรวจสอบว่ามีตัวเลือก "ไม่ระบุ" อยู่หรือไม่ ถ้าไม่มีก็เพิ่มเข้าไป
+        if (twacSelect.find('option[value="0"]').length === 0) {
+            twacSelect.append('<option value="0">ไม่ระบุ</option>');
+        }
+
+        // เซ็ตค่า select ให้เป็น "0"
+        twacSelect.val('0').trigger('change');
+        // ปิดการใช้งาน select เนื่องจาก checkbox ถูกติ๊ก
+        twacSelect.prop('disabled', true);
+
+        $("#edit_plan_start_time").val("00:00");
+        $("#edit_plan_end_time").val("23:59");
+        
+    } else {
+        // ถ้า twac_id เป็น 0 ให้ติ๊กถูก checkbox และเพิ่มตัวเลือก "ไม่ระบุ" ใน select
+        const twacSelect = $('#edit_twac_id');
+        twacSelect.prop('disabled', false);
+        $('#checkbox_edit_is_holiday').prop('checked', false); // Check the checkbox
+        get_timework_attendance_config_list(selectedEvent.resourceIds[0], selectedEvent.extendedProps.twac_id);
+    }
+
     // ตรวจสอบว่าค่า twpp_is_public เท่ากับ 0 หรือไม่
     if (selectedEvent.extendedProps.twpp_is_public == 0) {
         $('#checkbox_edit_is_public').prop('checked', false); // Uncheck the checkbox
@@ -606,7 +716,7 @@ function handleEventClick(info) {
     document.getElementById('saveChangesButton').onclick = saveEventChanges;
     document.getElementById('deleteEventButton').onclick = deleteEvent;
 
-    get_timework_attendance_config_list(selectedEvent.resourceIds[0], selectedEvent.extendedProps.twac_id);
+    
 
     $('#editEventModal').modal('show');
 }
@@ -645,6 +755,7 @@ function handleEventDrop(info) {
     const edit_dp_id = event.extendedProps.twpp_dp_id; // หน่วยงาน (ดึงจากข้อมูลเพิ่มเติมของ event หรือ DOM)
     const edit_rm_id = event.extendedProps.twpp_rm_id; // ห้อง/สถานที่ (ดึงจากข้อมูลเพิ่มเติมของ event หรือ DOM)
     const edit_is_public = event.extendedProps.twpp_is_public; // เผยแพร่ข้อมูลสู่สาธารณะ (ดึงจากข้อมูลเพิ่มเติมของ event หรือ DOM)
+    const edit_is_holiday = event.extendedProps.twpp_is_holiday; // วันหยุด
 
     // เวลาเริ่มต้นและเวลาสิ้นสุดใหม่หลังจากลาก
     const startDateTime = formatDateTime(info.event.start); // ใช้ฟังก์ชันช่วยในการแปลงวันที่และเวลา
@@ -674,7 +785,8 @@ function handleEventDrop(info) {
             twpp_dp_id: edit_dp_id, // หน่วยงาน
             twpp_rm_id: edit_rm_id, // ห้อง/สถานที่
             twpp_status: twpp_status, // สถานะการทำงาน,
-            twpp_is_public: edit_is_public
+            twpp_is_public: edit_is_public,
+            twpp_is_holiday: edit_is_holiday
         },
         success: function(data) {
             // ตรวจสอบ response จากเซิร์ฟเวอร์
@@ -729,6 +841,7 @@ function handleEventResize(info) {
     const edit_rm_id = event.extendedProps.twpp_rm_id; // ห้อง/สถานที่ (ดึงจากข้อมูลเพิ่มเติมของ event หรือ DOM)
     const twpp_status = event.extendedProps.twpp_status; // สถานะการทำงาน
     const edit_is_public = event.extendedProps.twpp_is_public; // เผยแพร่ข้อมูลสู่สาธารณะ (ดึงจากข้อมูลเพิ่มเติมของ event หรือ DOM)
+    const edit_is_holiday = event.extendedProps.twpp_is_holiday; // วันหยุด
 
     // console.log("event", event);
     // console.log("event.extendedProps", event.extendedProps);
@@ -757,7 +870,8 @@ function handleEventResize(info) {
             twpp_dp_id: edit_dp_id, // หน่วยงาน
             twpp_rm_id: edit_rm_id, // ห้อง/สถานที่
             twpp_status: twpp_status, // สถานะการทำงาน,
-            twpp_is_public: edit_is_public
+            twpp_is_public: edit_is_public,
+            twpp_is_holiday: edit_is_holiday
         },
         success: function(data) {
             // ตรวจสอบ response จากเซิร์ฟเวอร์
@@ -954,17 +1068,34 @@ function get_timework_attendance_config_list(ps_id, twac_id=""){
             // Parse the returned data
             data = JSON.parse(data);
 
-            // Clear old options (ใช้ class แทน id)
+            // Clear old options
             $('.twac-select').empty();
             count_list = data.length;
-            // Populate options and make the first one selected
-            data.forEach(function(row, index) {
-                var name_th = row.twac_name_th + (row.twac_name_abbr_th ? " (" + row.twac_name_abbr_th + ")" : "");
-                const selected = index === 0 || twac_id == row.twac_id ? 'selected' : ''; // select the first option
+
+            // Create a map to store groups by twac_is_ot_name
+            const groups = {};
+
+            // Loop through data and create groups
+            data.forEach(function(row) {
+                var groupName = row.twac_is_ot_name;
+                var name_th = row.twac_name_th + (row.twac_start_time ? " (" + row.twac_start_time.substring(0, 5) + "-" + row.twac_end_time.substring(0, 5) + ")" : "");
+
+                // Create the optgroup if it doesn't exist
+                if (!groups[groupName]) {
+                    groups[groupName] = $(`<optgroup label="${groupName}"></optgroup>`);
+                }
+
+                // Determine if the option should be selected
+                const selected = twac_id == row.twac_id ? 'selected' : '';
+
+                // Create option element
                 const option = `<option value="${row.twac_id}<>${row.twac_start_time}<>${row.twac_end_time}<>${row.twac_name_th}<>${row.twac_color}" ${selected}>${name_th}</option>`;
-                
+
+                // Append option to the respective group
+                groups[groupName].append(option);
+
                 // Initialize flatpickr for start and end time for the first option
-                if(index == 0){
+                if (row.twac_id == data[0].twac_id) { // Check if it's the first item
                     flatpickr(`#add_plan_start_time`, {
                         enableTime: true,
                         noCalendar: true,
@@ -981,14 +1112,17 @@ function get_timework_attendance_config_list(ps_id, twac_id=""){
                         defaultDate: row.twac_end_time
                     });
                 }
-                
-                // Append option to both add and edit select elements
-                $('.twac-select').append(option);
+            });
+
+            // Append each group to the select element
+            Object.values(groups).forEach(group => {
+                $('.twac-select').append(group);
             });
 
             // Trigger the change event to load time configs (if needed)
             $('#add_twac_id').trigger('change');
             $('#edit_twac_id').trigger('change');
+
         },
         error: function(xhr, status, error) {
             dialog_error({
@@ -1002,6 +1136,7 @@ function get_timework_attendance_config_list(ps_id, twac_id=""){
 }
 
 function get_time_attendance_config(value, type) {
+  
     // แยกค่าจาก value ที่ส่งเข้ามา
     const [twac_id, twac_start_time, twac_end_time, twac_name_th] = value.split('<>'); // แยกด้วยตัวขีด '-'
 
@@ -1209,9 +1344,14 @@ function saveEvent() {
     const add_dp_id = document.getElementById('fillter_select_dp_id').value;
     const add_rm_id = document.getElementById('add_rm_id').value;
     var add_is_public = 0;
+    var add_is_holiday = 0;
 
     if ($('#checkbox_add_is_public').is(':checked')) {
         add_is_public = 1;
+    }
+
+    if ($('#checkbox_add_is_holiday').is(':checked')) {
+        add_is_holiday = 1;
     }
 
     if (!startTimeElement || !endTimeElement || !add_twac_id || !add_dp_id || !add_rm_id) {
@@ -1257,7 +1397,13 @@ function saveEvent() {
 
         var [twac_id, twac_start_time, twac_end_time, twac_name_th, twac_color] = $('#add_twac_id').val().split('<>'); // แยกด้วยตัวขีด '-'
         select_add_rm_text = (add_rm_id == 0 ? '' : select_add_rm_text);
-        var title = "(" + twac_name_th + ") " + select_add_rm_text;
+
+        if(add_is_holiday == 0){
+            var title = "(" + twac_name_th + ") " + select_add_rm_text;
+        }
+        else{
+            var title = "OFF " + select_add_rm_text;
+        }
         
 
         $.ajax({
@@ -1273,7 +1419,8 @@ function saveEvent() {
                 twpp_dp_id: add_dp_id,
                 twpp_rm_id: add_rm_id,
                 twpp_status: twpp_status,
-                twpp_is_public : add_is_public
+                twpp_is_public : add_is_public,
+                twpp_is_holiday: add_is_holiday
             },
             success: function(data) {
                 // Parse the returned data
@@ -1286,14 +1433,16 @@ function saveEvent() {
                         end: endDateTime,
                         resourceId: add_ps_id,
                         title: title,
-                        color: twac_color,
+                        color: add_is_holiday == 0 ? twac_color : "#0d6efd",
+                        allDay: add_is_holiday == 1 ? true : false,
                         extendedProps: {
                             twpp_rm_id: add_rm_id,
                             twpp_dp_id: add_dp_id,
                             twac_id: add_twac_id,
                             twpp_desc: add_desc,
                             twpp_status: twpp_status,
-                            twpp_is_public: add_is_public
+                            twpp_is_public: add_is_public,
+                            twpp_is_holiday: add_is_holiday
                         }
                     });
                 } else {
@@ -1335,9 +1484,14 @@ function saveEventChanges() {
     const edit_rm_id = document.getElementById('edit_rm_id').value; // ห้อง/สถานที่
 
     var edit_is_public = 0;
+    var edit_is_holiday = 0;
 
     if ($('#checkbox_edit_is_public').is(':checked')) {
         edit_is_public = 1;
+    };
+
+    if ($('#checkbox_edit_is_holiday').is(':checked')) {
+        edit_is_holiday = 1;
     };
 
     // console.log(startTimeElement.value, endTimeElement.value, edit_twac_id, edit_dp_id, edit_rm_id);
@@ -1405,6 +1559,13 @@ function saveEventChanges() {
     select_edit_rm_text = (edit_rm_id == 0 ? '' : select_edit_rm_text);
     var title = "(" + twac_name_th + ") " + select_edit_rm_text;
 
+    if(edit_is_holiday == 0){
+        var title = "(" + twac_name_th + ") " + select_edit_rm_text;
+    }
+    else{
+        var title = "OFF " + select_edit_rm_text;
+    }
+
     // console.log(startTimeElement.value, endTimeElement.value, edit_twac_id, edit_dp_id, edit_rm_id);
     // console.log("startYearCE",startYearCE);
     // console.log("startYearCE",startYearCE);
@@ -1427,7 +1588,8 @@ function saveEventChanges() {
             twpp_dp_id: edit_dp_id, // หน่วยงาน
             twpp_rm_id: edit_rm_id, // ห้อง/สถานที่
             twpp_status: twpp_status,
-            twpp_is_public: edit_is_public
+            twpp_is_public: edit_is_public,
+            twpp_is_holiday: edit_is_holiday
         },
         success: function(data) {
             // ตรวจสอบ response จากเซิร์ฟเวอร์
@@ -1442,14 +1604,16 @@ function saveEventChanges() {
                     end: new Date(endDateTime),
                     resourceId: edit_ps_id,
                     title: title,
-                    color: twac_color,
+                    color: edit_is_holiday == 0 ? twac_color : "#0d6efd",
+                    allDay: edit_is_holiday == 1 ? true : false,
                     extendedProps: {
                         twpp_rm_id: edit_rm_id,
                         twpp_dp_id: edit_dp_id,
                         twac_id: twac_id,
                         twpp_desc: edit_desc,
                         twpp_status: twpp_status,
-                        twpp_is_public: edit_is_public
+                        twpp_is_public: edit_is_public,
+                        twpp_is_holiday: edit_is_holiday
                     }
                 });
 
@@ -1510,6 +1674,12 @@ function validateEventInputs(resourceId, startDate, endDate, startTime, endTime,
                         <label class="form-label required" for="add_plan_date">รูปแบบการลงเวลาทำงาน</label>
                         <select class="form-control twac-select select2" id="add_twac_id" name="add_twac_id" onchange="get_time_attendance_config(this.value, 'add')">
                         </select>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="checkbox_add_is_holiday" name="checkbox_add_is_holiday">
+                            <label class="form-check-label" for="checkbox_add_is_holiday">
+                                วันหยุด (OFF)
+                            </label>
+                        </div>
                     </div>
                     
                     <div class="col-md-4">
@@ -1584,6 +1754,12 @@ function validateEventInputs(resourceId, startDate, endDate, startTime, endTime,
                     <label class="form-label required" for="edit_twac_id">รูปแบบการลงเวลาทำงาน</label>
                     <select class="form-control twac-select select2" id="edit_twac_id" name="edit_twac_id" onchange="get_time_attendance_config(this.value, 'edit')">
                     </select>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="checkbox_edit_is_holiday" name="checkbox_edit_is_holiday">
+                        <label class="form-check-label" for="checkbox_edit_is_holiday">
+                            วันหยุด (OFF)
+                        </label>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label required" for="edit_plan_end_time_label">เวลา</label>

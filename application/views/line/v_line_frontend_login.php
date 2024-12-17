@@ -45,9 +45,9 @@
                         <input type="text" class="form-control mb-0" name="Username" id="signinInput" placeholder="1209700000000 / ME02154 / 0209700000000">
                     </div>
                     <div class="mb-3 mt-4">
-                        <label for="formSignUpPassword" class="form-label">รหัสผ่าน <span class="text-danger">*</span></label>
+                        <label for="formSignUpPassword" class="form-label">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
                         <div class="password-field position-relative input-group-lg">
-                          <input type="password" class="form-control mb-0 fakePassword" name="Password" id="formSignUpPassword">
+                          <input type="text" class="form-control mb-0 fakePassword" name="Password" id="formSignUpPassword">
                           <span><i class="bi bi-eye-slash passwordToggler"></i></span>
                         </div>
                     </div>
@@ -63,9 +63,9 @@
                     <!-- <div class="d-grid mb-5">
                       <a href="<?php echo site_url(); ?>/Gear/frontend_register" class="btn btn-success btn-lg">ลงทะเบียน</a>
                     </div> -->
-                    <div class="d-grid mb-5">
+                    <!-- <div class="d-grid mb-5">
                       <a href="javascript:void(0);" onclick="access_frontend_register_page()" class="btn btn-success btn-lg">ลงทะเบียน</a>
-                  </div>
+                  </div> -->
                   </form> 
               </div>
             </div>

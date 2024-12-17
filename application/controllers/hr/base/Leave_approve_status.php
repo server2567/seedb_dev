@@ -9,7 +9,7 @@ class Leave_approve_status extends Base_Controller
 		parent::__construct();
 
 		// [20240730 Areerat Pongurai] Specify 'url' because this location of file is 2+ level folder
-		$this->mn_active_url = "hr/base/Leave_appove";
+		$this->mn_active_url = "hr/base/Leave_approve_status";
 	}
 	/*
 	* index

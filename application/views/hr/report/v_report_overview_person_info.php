@@ -88,7 +88,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="select_admin_id" class="form-label">ปรเภทบุคลากร</label>
+                                    <label for="select_admin_id" class="form-label">ประเภทบุคลากร</label>
                                     <select class="form-select select2 filter" onchange="filter_report()" name="filter[]" id="filter_hire">
                                         <option value="all" selected>ทั้งหมด</option>
                                         <?php foreach ($base_hire_list as $key => $value) : ?>
@@ -97,7 +97,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="select_status_id" class="form-label">ประเภทสายงาน</label>
+                                    <label for="select_status_id" class="form-label">ตำแหน่งปฏิบัติงาน</label>
                                     <select class="form-select select2 filter" onchange="filter_report()" class="form-select" id="filter_adline" name="filter[]">
                                         <option value="all" selected>ทั้งหมด</option>
                                         <?php foreach ($base_adline_list as $key => $value) : ?>
@@ -148,16 +148,16 @@
                                     <thead>
                                         <tr>
 
-                                            <th rowspan="2" class="text-center" style="background-color: #0076ab; color: white;">ที่</th>
+                                            <th rowspan="2" class="text-center" style="background-color: #0076ab; color: white;">#</th>
                                             <th colspan="2" class="text-center" style="background-color: #0076ab; color: white;">หน่วยงานต้นสังกัด</th>
-                                            <th colspan="14" class="text-center" style="background-color: #0076ab; color: white;">ข้อมูลพื้นฐานบุคคล</th>
-                                            <th colspan="8" class="text-center" style="background-color: #0076ab; color: white;">ข้อมูลที่อยู่ของบุคลากร (ตามสำเนาทะเบียนบ้าน)</th>
+                                            <th colspan="15" class="text-center" style="background-color: #0076ab; color: white;">ข้อมูลพื้นฐานบุคคล</th>
+                                            <th colspan="7" class="text-center" style="background-color: #0076ab; color: white;">ข้อมูลที่อยู่ของบุคลากร (ที่อยู่ปัจจุบัน)</th>
                                             <th class="text-center" style="background-color: #0076ab; color: white;">ข้อมูลการศึกษา</th>
                                         </tr>
                                         <tr>
                                             <th>หน่วยงานต้นสังกัด</th>
                                             <th>ประเภทบุคลากร</th>
-                                            <th>ประเภทสายงาน</th>
+                                            <th>ตำแหน่งปฏิบัติงาน</th>
                                             <th>ตำแหน่งในการบริหารงาน</th>
                                             <th>รหัสประจำตัวประชาชน</th>
                                             <th>คำนำหน้าชื่อ/ยศ</th>

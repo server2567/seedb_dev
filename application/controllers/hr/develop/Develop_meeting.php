@@ -88,6 +88,9 @@ class Develop_meeting extends Develop_Controller
             $admin_name = json_decode($row->admin_position, true);
             if ($admin_name) {
                 foreach ($admin_name as $value) {
+                    if (is_string($value)) {
+                        $value = json_decode($value, true);
+                    }
                     if ($value['admin_name']) {
                         $array[] = $value['admin_name'];
                     }
@@ -108,7 +111,7 @@ class Develop_meeting extends Develop_Controller
         $data['status_response'] = $this->config->item('status_response_show');
         $data['base_country_list'] = $this->M_hr_person->get_hr_base_country_data()->result();
         $data['base_province_list'] = $this->M_hr_person->get_hr_base_province_data()->result();
-        $data['base_develop_type_list'] = $this->M_hr_develop_type->get_all_by_active('asc')->result();
+        $data['base_develop_type_list'] = $this->M_hr_develop_type->get_all_by_active('asc', '(0,2)')->result();
         $data['develop_heading'] = $this->M_hr_develop_heading->get_heading_list()->result();
         foreach ($data['develop_heading'] as $key => $devh) {
             $devh->devh_list = json_decode($devh->devh_list, true);
@@ -123,6 +126,9 @@ class Develop_meeting extends Develop_Controller
             $admin_name = json_decode($row->admin_position, true);
             if ($admin_name) {
                 foreach ($admin_name as $value) {
+                    if (is_string($value)) {
+                        $value = json_decode($value, true);
+                    }
                     if ($value['admin_name']) {
                         $array[] = $value['admin_name'];
                     }
@@ -141,7 +147,6 @@ class Develop_meeting extends Develop_Controller
         $this->M_hr_develop->dev_desc = $post_data['dev_desc'];
         $this->M_hr_develop->dev_start_date = $post_data['dev_start_date'];
         $this->M_hr_develop->dev_end_date = $post_data['dev_end_date'];
-        $this->M_hr_develop->dev_end_time = $post_data['dev_end_time'];
         $this->M_hr_develop->dev_hour = $post_data['dev_hour'];
         $this->M_hr_develop->dev_place = $post_data['dev_place'];
         $this->M_hr_develop->dev_country_id = $post_data['dev_country_id'];
@@ -151,6 +156,7 @@ class Develop_meeting extends Develop_Controller
         $this->M_hr_develop->dev_allowance = $post_data['dev_allowance'];
         $this->M_hr_develop->dev_accommodation = $post_data['dev_accommodation'];
         $this->M_hr_develop->dev_budget_type_other = $post_data['dev_budget_type_other'];
+        $this->M_hr_develop->dev_budget_type_other_text = $post_data['dev_budget_type_other_text'];
         $this->M_hr_develop->dev_budget_vat = $post_data['dev_budget_vat'];
         $this->M_hr_develop->dev_allowance_vat = $post_data['dev_allowance_vat'];
         $this->M_hr_develop->dev_accommodation_vat = $post_data['dev_accommodation_vat'];
@@ -160,6 +166,10 @@ class Develop_meeting extends Develop_Controller
         $this->M_hr_develop->dev_benefits = $post_data['dev_benefits'];
         $this->M_hr_develop->dev_type = $post_data['dev_type'];
         $this->M_hr_develop->dev_status = 1;
+        $this->M_hr_develop->dev_budget_type = $post_data['dev_budget_type'];
+        $this->M_hr_develop->dev_allowance_type = $post_data['dev_allowance_type'];
+        $this->M_hr_develop->dev_accommodation_type = $post_data['dev_accommodation_type'];
+        $this->M_hr_develop->dev_budget_type_other_type = $post_data['dev_budget_type_other_type'];
         $this->M_hr_develop->dev_go_service_type = $post_data['service_type'];
         $this->M_hr_develop->dev_certificate = $post_data['dev_certi'];
         $this->M_hr_develop->dev_create_user = $this->session->userdata('us_id');
@@ -350,8 +360,8 @@ class Develop_meeting extends Develop_Controller
             $data['status_response'] = $this->config->item('status_response_success');
         }
         foreach ($result as $key => $value) {
-           $value->dev_start_date = fullDateTH3($value->dev_start_date);
-           $value->dev_id = encrypt_id($value->dev_id);
+            $value->dev_start_date = fullDateTH3($value->dev_start_date);
+            $value->dev_id = encrypt_id($value->dev_id);
         }
         $data['result'] = $result;
         $result = array('data' => $data);
@@ -372,6 +382,8 @@ class Develop_meeting extends Develop_Controller
         $doc_info = $this->M_hr_develop->get_develop_document_info('hr_develop')->row();
         $doc_detail_info = $this->M_hr_develop->get_develop_info_by_id($dev_id)->row();
         $doc_detail_info->dev_person = json_decode($doc_detail_info->dev_person);
+        // pre(count($doc_detail_info->dev_person));
+        // die;
         $html = file_get_contents($html_file_path);
         $header = file_get_contents($header_path);
         $footer = file_get_contents($footer_path);
@@ -411,12 +423,10 @@ class Develop_meeting extends Develop_Controller
     </table>
     <table style="padding-bottom:0px;margin-bottom:0px;">
         <tr>
-            <td width="11.5%"><b>วันที่ :</b></td>
+            <td width="8%"><b>วันที่ :</b></td>
             <td width="20%" style="border-bottom: 1px solid black;">{dev_start_date}</td>
-            <td width="8%"><b>ถึงวันที่ :</b></td>
-            <td width="20%" style="border-bottom: 1px solid black;">{dev_end_date}</td>
-            <td width="5%"><b>เวลา :</b></td>
-            <td width="22%" style="border-bottom: 1px solid black;">{dev_end_time}</td>
+            <td width="2%"><b>ถึงวันที่ :</b></td>
+            <td width="25%" style="border-bottom: 1px solid black;">{dev_end_date}</td>
         </tr>
     </table>
     <table style="padding-bottom:0px;margin-bottom:0px;">
@@ -444,6 +454,11 @@ class Develop_meeting extends Develop_Controller
             <td width="20%"><b>ประกาศนียบัตร :</b></td>
             <td width="15%">{certiHave} มี</td>
             <td width="15%">{certiNone} ไม่มี</td>
+        </tr>
+        <tr>
+            <td width="15%"><b>ประเภทการพัฒนา :</b></td>
+            <td width="25%">{devTypeIn} อยู่ในแผนฝึกอบรมประจำปี</td>
+            <td width="25%">{devTypeOut} อยู่นอกแผนฝึกอบรมประจำปี</td>
         </tr>
         <tr>
          <td width="5%"><b>ประเภท :</b></td>';
@@ -475,70 +490,75 @@ class Develop_meeting extends Develop_Controller
             }
             $header_d1_d2 .= '<td></td></tr>'; // ปิดแถวสุดท้ายและเพิ่ม `<td>` ว่างสำหรับคอลัมน์ที่ 5
         }
-        $header_d2 = '</table>
+        $header_d2_1 = '</table>
         </div>
         <div class="form-container" id="header-d2" style="padding-bottom:9px">
             <div>
                 <b>วัตถุประสงค์ :</b>
             </div>
-            <div>{dev_purpose}</div>
-            <div>
+            <div>{dev_purpose}</div>';
+        $header_d2_2 = ' <div>
                 <b>ประโยชน์ที่คาดว่าจะได้รับ :</b>
             </div>
             <div>{dev_benefits}</div>
         </div>';
-        function calculate_mt2($header, $header_detatil, $mt)
+        function calculate_mt2($header_d2, $base_length, $mt)
         {
-            // หาความยาวของ string
-            $header_length = strlen($header . $header_detatil);
-            // pre($header_length);
+            // pre($mt);
             // die;
+            // หาความยาวของ string
+            $header_length = strlen($header_d2);
             // กำหนดค่าพื้นฐานสำหรับ $mt
             // กำหนดช่วงเริ่มต้นที่ 3954 และเพิ่มทีละ 618
-            $base_length = 3869;
-            $increase_step = 990;
-            $increase_mt = 6.5;
+            $increase_step = 109;
+            $increase_mt = 6;
             // ตรวจสอบว่าความยาวของ string เกินช่วงเริ่มต้นหรือไม่
             if ($header_length > $base_length) {
                 // หาความต่างจากช่วงเริ่มต้น
                 $extra_length = $header_length - $base_length;
-                // หาจำนวนรอบ 618 ที่ต้องเพิ่มค่า mt (ใช้ ceil เพื่อให้ค่าเต็มขั้นถัดไป)
-                $increase_steps = ceil($extra_length / $increase_step);
-                // pre($header_length);
+                // pre($extra_length);
                 // die;
-                // คำนวณค่า $mt ตามจำนวนก้าวที่เพิ่มขึ้น
-                $mt = $mt - ($increase_steps * $increase_mt);
+                // หาจำนวนรอบ 618 ที่ต้องเพิ่มค่า mt (ใช้ ceil เพื่อให้ค่าเต็มขั้นถัดไป)
+                if ($extra_length != $increase_step) {
+                    $increase_steps = floor($extra_length / $increase_step);
+                    // คำนวณค่า $mt ตามจำนวนก้าวที่เพิ่มขึ้น
+                    $mt = $mt + ($increase_steps * $increase_mt);
+                }
             }
             // pre($mt);
             // die;
             // ส่งค่า $mt ที่คำนวณแล้วออกมา
             return $mt;
         }
-        function calculate_mt($header, $header_d1_d2)
+        function calculate_mt($header_d1_d2)
         {
             // หาความยาวของ string
-            $header_length = strlen($header . $header_d1_d2);
+            $header_length = strlen($header_d1_d2);
+
             // pre($header_length);
             // die;
             // กำหนดค่าพื้นฐานสำหรับ $mt
-            $mt = 101.5;
+            $mt = 117;
 
             // กำหนดช่วงเริ่มต้นที่ 3954 และเพิ่มทีละ 618
-            $base_length = 4298;
-            $increase_step = 145;
-            $base_mt = 101.5;
-            $increase_mt = 6.5;
-
+            $base_length = 3825;
+            $increase_step = 250;
+            $base_mt = 117;
+            $increase_mt = 5;
             // ตรวจสอบว่าความยาวของ string เกินช่วงเริ่มต้นหรือไม่
             if ($header_length > $base_length) {
                 // หาความต่างจากช่วงเริ่มต้น
                 $extra_length = $header_length - $base_length;
-
+                //  pre($extra_length);
+                //  die;
+                // pre($extra_length);
+                // die;
                 // หาจำนวนรอบ 618 ที่ต้องเพิ่มค่า mt (ใช้ ceil เพื่อให้ค่าเต็มขั้นถัดไป)
-                $increase_steps = ceil($extra_length / $increase_step);
-
-                // คำนวณค่า $mt ตามจำนวนก้าวที่เพิ่มขึ้น
-                $mt = $base_mt + ($increase_steps * $increase_mt);
+                if ($extra_length != $increase_step) {
+                    $increase_steps = floor($extra_length / $increase_step);
+                    // คำนวณค่า $mt ตามจำนวนก้าวที่เพิ่มขึ้น
+                    $mt = $base_mt + ($increase_steps * $increase_mt);
+                }
             }
             // pre($mt);
             // die;
@@ -569,9 +589,20 @@ class Develop_meeting extends Develop_Controller
             // ภายนอกโรงพยาบาล
             $doc_temp = "OUT-" . $formatted_date . '-';
         }
+        $person_cum = count( $doc_detail_info->dev_person);
+        function check_budget_type($cost, $type, $person_cum)
+        {
+            if ($type == 2) {
+                if ($person_cum == 0) {
+                    $person_cum = 1;
+                }
+                $cost = $cost * $person_cum;
+            }
+            return $cost;
+        }
         $time_object = new DateTime($doc_detail_info->dev_end_time);
-        $doc_detail_info->dev_budget_type_other = 0;
-        $doc_detail_info->dev_budget_type_other_vat = 0;
+
+
         // ดึงเฉพาะชั่วโมงและนาที
         $formatted_time = $time_object->format('H:i') . ' น.';
         $header_d1_d2 = str_replace('{dev_topic}', $doc_temp . $doc_detail_info->dev_topic, $header_d1_d2);
@@ -589,14 +620,32 @@ class Develop_meeting extends Develop_Controller
         $html = str_replace('{dev_accommodation_vat}', number_format($doc_detail_info->dev_accommodation_vat, 2, '.', ','), $html);
         $html = str_replace('{dev_budget_type_other}', number_format($doc_detail_info->dev_budget_type_other, 2, '.', ','), $html);
         $html = str_replace('{dev_budget_type_other_vat}', number_format($doc_detail_info->dev_budget_type_other_vat, 2, '.', ','), $html);
-        $summary = floatval($doc_detail_info->dev_budget) +
-            floatval($doc_detail_info->dev_allowance) +
-            floatval($doc_detail_info->dev_accommodation) +
-            floatval($doc_detail_info->dev_budget_type_other);
-        $summary_vat = floatval($doc_detail_info->dev_budget_vat) +
-            floatval($doc_detail_info->dev_allowance_vat) +
-            floatval($doc_detail_info->dev_accommodation_vat) +
-            floatval($doc_detail_info->dev_budget_type_other_vat);
+        $html = str_replace('{dev_budget_type}', $doc_detail_info->dev_budget_type == 1 ? 'ต่อครั้ง' : 'ต่อคน', $html);
+        $html = str_replace('{dev_allowance_type}', $doc_detail_info->dev_allowance_type == 1 ? 'ต่อครั้ง' : 'ต่อคน', $html);
+        $html = str_replace('{dev_accommodation_type}', $doc_detail_info->dev_accommodation_type == 1 ? 'ต่อครั้ง' : 'ต่อคน', $html);
+        $html = str_replace('{dev_budget_type_other_type}', $doc_detail_info->dev_budget_type_other_type == 1 ? 'ต่อครั้ง' : 'ต่อคน', $html);
+        $html = str_replace(
+            '{dev_budget_type_other_text}',
+            $doc_detail_info->dev_budget_type_other_text != '' ? '
+            <table style="width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px;">
+                <tr>
+                    <td style="width: 10%; padding-left: 20px; text-align: left; font-size: 12pt; word-wrap: break-word; word-break: break-word; white-space: normal; overflow-wrap: break-word;">
+                        <b>' . nl2br(htmlspecialchars($doc_detail_info->dev_budget_type_other_text)) . '</b>
+                    </td>
+                    <td style="width: 90%; text-align: left;">&nbsp;</td>
+                </tr>
+            </table>
+            ' : '',
+            $html
+        );
+        $summary = floatval(check_budget_type($doc_detail_info->dev_budget,$doc_detail_info->dev_budget_type,$person_cum)) +
+            floatval(check_budget_type($doc_detail_info->dev_allowance,$doc_detail_info->dev_allowance_type,$person_cum)) +
+            floatval(check_budget_type($doc_detail_info->dev_accommodation,$doc_detail_info->dev_accommodation_type,$person_cum)) +
+            floatval(check_budget_type($doc_detail_info->dev_budget_type_other,$doc_detail_info->dev_budget_type_other_type,$person_cum));
+        $summary_vat = floatval(check_budget_type($doc_detail_info->dev_budget_vat,$doc_detail_info->dev_budget_type,$person_cum)) +
+            floatval(check_budget_type($doc_detail_info->dev_allowance_vat,$doc_detail_info->dev_allowance_type,$person_cum)) +
+            floatval(check_budget_type($doc_detail_info->dev_accommodation_vat,$doc_detail_info->dev_accommodation_type,$person_cum)) +
+            floatval(check_budget_type($doc_detail_info->dev_budget_type_other_vat,$doc_detail_info->dev_budget_type_other_type,$person_cum));
         $summary_vat = number_format($summary_vat, 2, '.', ',');
         $summary = number_format($summary, 2, '.', ',');
         $html = str_replace(
@@ -610,6 +659,13 @@ class Develop_meeting extends Develop_Controller
             $summary_vat,
             $html
         );
+        if ($doc_detail_info->dev_type == 1) {
+            $header_d1_d2 = str_replace('{devTypeIn}', '<span style="font-family: DejaVu Sans;">&#9745;</span>',  $header_d1_d2);
+            $header_d1_d2 = str_replace('{devTypeOut}', '<span style="font-family: DejaVu Sans;">&#9744;</span>',  $header_d1_d2);
+        } else {
+            $header_d1_d2 = str_replace('{devTypeIn}', '<span style="font-family: DejaVu Sans;">&#9744;</span>',  $header_d1_d2);
+            $header_d1_d2 = str_replace('{devTypeOut}', '<span style="font-family: DejaVu Sans;">&#9745;</span>',  $header_d1_d2);
+        }
         if ($doc_detail_info->dev_organized_type == 1) {
             $header_d1_d2 = str_replace('{trainIn}', '<span style="font-family: DejaVu Sans;">&#9745;</span>',  $header_d1_d2);
             $header_d1_d2 = str_replace('{trainOut}', '<span style="font-family: DejaVu Sans;">&#9744;</span>',  $header_d1_d2);
@@ -631,15 +687,16 @@ class Develop_meeting extends Develop_Controller
         // The header-d1 and header-d2 will appear in all pages by including them in the header content
         $purpose = $doc_detail_info->dev_objecttive != null ||  $doc_detail_info->dev_objecttive != '' ? $doc_detail_info->dev_objecttive : '-';
         $benefits = $doc_detail_info->dev_benefits != null ||  $doc_detail_info->dev_benefits != '' ? $doc_detail_info->dev_benefits : '-';
-        $header_d2 = str_replace('{dev_purpose}', nl2br($purpose), $header_d2);
-        $header_d2 = str_replace('{dev_benefits}', nl2br($benefits), $header_d2);
+        $header_d2_1 = str_replace('{dev_purpose}', nl2br($purpose), $header_d2_1);
+        $header_d2_2 = str_replace('{dev_benefits}', nl2br($benefits), $header_d2_2);
+        // pre($header_d2_2);
+        // die;
+        $stack_header =  $header_d1_d2 . $header_d2_1 . $header_d2_2;
         // pre(strlen($header.$header_d1_d2));
         // die;
-        $stack_header =  $header_d1_d2 . $header_d2;
-        // pre(strlen($header.$header_d1_d2));
-        // die;
-        $mt = calculate_mt($header, $stack_header);
-        // $mt = calculate_mt2($header, $header_d1_d2, $mt);
+        $mt = calculate_mt($header_d1_d2);
+        $mt = calculate_mt2($header_d2_1, 226, $mt);
+        $mt = calculate_mt2($header_d2_2, 166, $mt);
         $mpdf = new \Mpdf\Mpdf([
             'default_font' => 'sarabun',
             'format' => 'A4',

@@ -386,16 +386,47 @@ public function check_pt_id_requests_3($pt_id) {
     return $query;
   }  
 
-  public function get_notifications_department($apm_id){
+  public function get_notifications_department_old($apm_id){
     $sql = "SELECT * FROM $this->wts_db.wts_notifications_department 
     LEFT JOIN $this->wts_db.wts_location ON ntdp_loc_Id = loc_id
     LEFT JOIN see_eqsdb.eqs_room ON ntdp_loc_ft_Id = rm_his_id
-    WHERE ntdp_apm_id = '".$apm_id."' AND ntdp_date_end IS NOT NULL ORDER BY ntdp_seq DESC , ntdp_in_out DESC";
+    WHERE ntdp_apm_id = '".$apm_id."' AND ntdp_date_end IS NOT NULL ORDER BY ntdp_id DESC , ntdp_in_out DESC";
     $query = $this->db->query($sql);
     
     return $query;
   }
 
+  public function get_notifications_department($apm_id){
+    $sql = "SELECT 
+                t1.ntdp_id,
+                t1.ntdp_seq,
+                t1.ntdp_apm_id,
+                t1.ntdp_date_start,
+                t1.ntdp_time_start AS original_time_start,
+                IF(t1.ntdp_seq = 2, t2.ntdp_time_start, t1.ntdp_time_start) AS ntdp_time_start,
+                t1.ntdp_time_finish,
+                t1.ntdp_in_out,
+                t1.ntdp_date_end,
+                t1.ntdp_time_end,
+                t1.ntdp_loc_Id,
+                t1.ntdp_loc_ft_Id,
+                t1.ntdp_function,
+                loc.loc_name,
+                room.rm_name
+            FROM see_wtsdb.wts_notifications_department AS t1
+            LEFT JOIN see_wtsdb.wts_notifications_department AS t2 
+                ON t1.ntdp_apm_id = t2.ntdp_apm_id AND t2.ntdp_seq = 1
+            LEFT JOIN see_wtsdb.wts_location AS loc 
+                ON t1.ntdp_loc_Id = loc.loc_id
+            LEFT JOIN see_eqsdb.eqs_room AS room 
+                ON t1.ntdp_loc_ft_Id = room.rm_his_id
+            WHERE t1.ntdp_apm_id = '".$apm_id."'
+            AND t1.ntdp_date_end IS NOT NULL
+            ORDER BY t1.ntdp_id DESC, t1.ntdp_in_out DESC";
+    $query = $this->db->query($sql);
+    
+    return $query;
+  }
 
   public function get_notification_results_all($pt_id, $status_ntr){ // บันทึกผลการแจ้งเตือน
     $sql = "SELECT *, CONCAT(pf_name_abbr, ps_fname,' ', ps_lname) AS full_name FROM ams_notification_results 

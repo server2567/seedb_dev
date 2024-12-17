@@ -21,19 +21,37 @@
                 <div class="accordion-body">
                     <form class="row g-3" method="post" action="<?php echo base_url(); ?>index.php/ums/SyncHRsingle">
                         <div class="col-4">
-                            <label for="SearchLastName" class="form-label">สายงาน</label>
+                            <label for="SearchLastName" class="form-label">สายปฏิบัติงาน</label>
                             <select class="select2" name="select_hire_is_medical" id="select_hire_is_medical">
-                                <option value="-1" disabled>-- เลือกสายงาน --</option>
-                                <option value="-99" selected>ทั้งหมด</option>
+                                <option value="-1" disabled>-- เลือกสายปฏิบัติงาน --</option>
+                                <!-- <option value="-99" selected>ทั้งหมด</option>
                                 <?php 
                                     foreach ($hire_is_medical as $h) {
                                         echo "<option value=".$h['code'].">".$h['detail']."</option>";
+                                    }
+                                ?> -->
+                                <?php
+                                    // Assuming $hire_is_medical is already available as an array
+                                    $medical_types = [
+                                        'M'  => 'สายการแพทย์',
+                                        'N'  => 'สายการพยาบาล',
+                                        'SM' => 'สายสนับสนุนทางการแพทย์',
+                                        'T'  => 'สายเทคนิคและบริการ',
+                                        'A'  => 'สายบริหาร'
+                                    ];
+                                    echo '<option value="-99">ทั้งหมด</option>';
+                                    // Loop through hire_is_medical and display corresponding options
+                                    foreach ($this->session->userdata('hr_hire_is_medical') as $value) {
+                                        $type = $value['type'];
+                                        if (isset($medical_types[$type])) {
+                                            echo '<option value="' . $type . '">' . $medical_types[$type] . '</option>';
+                                        }
                                     }
                                 ?>
                             </select>
                         </div>
                         <div class="col-4">
-                            <label for="SearchFirstName" class="form-label">เลือกประเภทการลา</label>
+                            <label for="SearchFirstName" class="form-label">ประเภทการลา</label>
                             <select class="select2" name="select_leave" id="select_leave">
                                 <option value="-1" disabled>-- เลือกประเภทการลา --</option>
                                 <option value="-99" selected>ทั้งหมด</option>
@@ -43,18 +61,18 @@
                             </select>
                         </div>
                         <div class="col-4">
-                            <label for="SearchFirstName" class="form-label">เลือกประเภทการปฏิบัติงาน</label>
+                            <label for="SearchFirstName" class="form-label">ประเภทการปฏิบัติงาน</label>
                             <select class="select2" name="select_hire_type" id="select_hire_type">
                                 <option value="-1" disabled>-- เลือกประเภทการปฏิบัติงาน --</option>
                                 <option value="-99" selected>ทั้งหมด</option>
-                                <option value="1">เต็มเวลา</option>
-                                <option value="2">บางเวลา</option>
+                                <option value="1">ปฏิบัติงานเต็มเวลา (Full-Time)</option>
+                                <option value="2">ปฏิบัติงานบางเวลา (Part-Time)</option>
                             </select>
                         </div>
                         <!-- <div class="col-3">
-                            <label for="SearchLastName" class="form-label">ตำแหน่งในสายงาน</label>
+                            <label for="SearchLastName" class="form-label">ตำแหน่งในสายปฏิบัติงาน</label>
                             <select class="select2" name="" id="">
-                                <option value="-1" disabled>-- เลือกตำแหน่งในสายงาน --</option>
+                                <option value="-1" disabled>-- เลือกตำแหน่งในสายปฏิบัติงาน --</option>
                                 <option value="all" selected>ทั้งหมด</option>
                             </select>
                         </div>
@@ -65,10 +83,10 @@
                                 <option value="all" selected>ทั้งหมด</option>
                             </select>
                         </div> -->
-                        <div class="col-12">
+                        <!-- <div class="col-12">
                             <button type="reset" class="btn btn-secondary float-start">เคลียร์ข้อมูล</button>
                             <button type="submit" class="btn btn-primary float-end">ค้นหา</button>
-                        </div>
+                        </div> -->
                     </form>
                 </div>
             </div>
@@ -95,11 +113,13 @@
                         <thead>
                             <tr>
                                 <th class="text-center" scope="col">#</th>
-                                <th class="text-center" scope="col">สายงาน</th>
+                                <th class="text-center" scope="col">สายปฏิบัติงาน</th>
                                 <th class="text-center" scope="col">ประเภทการลา</th>
                                 <!-- <th class="text-center" scope="col" width="15%">ช่วงอายุ</th> -->
                                 <th class="text-center" scope="col" width="15%">อายุการทำงานเริ่มต้น</th>
                                 <th class="text-center" scope="col" width="15%">อายุการทำงานสิ้นสุด</th>
+                                <th class="text-center" scope="col" width="5%">เพศ</th>
+                                <th class="text-center" scope="col">ประเภทการปฏิบัติงาน</th>
                                 <th class="text-center" scope="col">จำนวนครั้งที่ลาได้</th>
                                 <th class="text-center" scope="col">จำนวนวันที่ลาได้ต่อปี</th>
                                 <th class="text-center" scope="col">จำนวนที่ลาได้ต่อครั้ง</th>
@@ -275,19 +295,40 @@
 
                 index = 1;
                 data.result.forEach((item, index) => {
-                    ctrl_start_age = (item.ctrl_start_age).substring(0, 2) + " ปี " + (item.ctrl_start_age).substring(3, 5) + " เดือน " + (item.ctrl_start_age).substring(6) + " วัน";
-                    ctrl_end_age = (item.ctrl_end_age).substring(0, 2) + " ปี " + (item.ctrl_end_age).substring(3, 5) + " เดือน " + (item.ctrl_end_age).substring(6) + " วัน";
+                    // ctrl_start_age = (item.ctrl_start_age).substring(0, 2) + " ปี " + (item.ctrl_start_age).substring(3, 5) + " เดือน " + (item.ctrl_start_age).substring(6) + " วัน";
+                    // ctrl_end_age = (item.ctrl_end_age).substring(0, 2) + " ปี " + (item.ctrl_end_age).substring(3, 5) + " เดือน " + (item.ctrl_end_age).substring(6) + " วัน";
+
+                    ctrl_start_age = formatAge(item.ctrl_start_age);
+                    ctrl_end_age = formatAge(item.ctrl_end_age);
                     // ctrl_money = "ไม่ได้รับ";
                     ctrl_money = "<i class='bi bi-x-lg text-danger'></i>";
                     if (item.ctrl_money == "Y") {
                         ctrl_money = '<i style="gr" class="bi bi-check-lg text-success"></i>'
                     }
 
+                    if(item.ctrl_hire_id == "M"){
+                        item.ctrl_hire_id = "สายการแพทย์";
+                    }
+                    else if(item.ctrl_hire_id == "N"){
+                        item.ctrl_hire_id = "สายการพยาบาล";
+                    }
+                    else if(item.ctrl_hire_id == "A"){
+                        item.ctrl_hire_id = "สายบริหาร";
+                    }
+                    else if(item.ctrl_hire_id == "SM"){
+                        item.ctrl_hire_id = "สายสนับสนุนทางการแพทย์";
+                    }
+                    else {
+                        item.ctrl_hire_id = "สายเทคนิคและบริการ";
+                    }
+
+                    link = `<?php echo base_url() ?>index.php/hr/leaves/Control_leaves/control_leave_update/${item.ctrl_id}`;
+
                     buttonZone = `<div class="text-center option">
-                                            <button class="btn btn-warning" onclick="window.location.href='<?php echo base_url() ?>index.php/hr/leaves/Control_leaves/control_leave_update/${item.ctrl_id}'" 
+                                            <a class="btn btn-warning" target="_blank" href="${link}" 
                                                     title="คลิกเพื่อแก้ไขข้อมูล" data-bs-toggle="tooltip" data-bs-placement="top" 
-                                                    ><i class="bi-pencil-square"></i></button>
-                                            <button class="btn btn-danger" 
+                                                    ><i class="bi-pencil-square"></i></a>
+                                            <a class="btn btn-danger" 
                                                     onclick="modal_confirm_delete(this)"
                                                     title="คลิกเพื่อลบข้อมูล" data-bs-toggle="tooltip" data-bs-placement="top"
                                                     data-ctrl-id="${item.ctrl_id}"
@@ -295,8 +336,8 @@
                                                     data-index="${(index)+1}" 
                                                     data-detail="
                                                         <div>
-                                                            <h6>สายงาน</h6>
-                                                            <p>${item.detail}</p>
+                                                            <h6>สายปฏิบัติงาน</h6>
+                                                            <p>${item.ctrl_hire_id}</p>
                                                         </div>
                                                         <div class='pt-2'>
                                                             <h6>ประเภทการลา</h6>
@@ -315,7 +356,7 @@
                                                             <p>${checkData(item.ctrl_time_per_year)}</p>
                                                         </div>
                                                     "
-                                                    ><i class="bi-trash"></i></button>
+                                                    ><i class="bi-trash"></i></a>
                                         </div>`;
                     // onclick="window.location.href='<?php // echo base_url() ?>index.php/hr/leaves/Control_leaves/control_leave_delete/${item.ctrl_id}'" 
                                         
@@ -329,13 +370,18 @@
                         }
                     }
 
+                    
+
+
                     // Add new row to DataTable
                     dataTable.row.add([
                             ++index,
-                            item.detail,
+                            item.ctrl_hire_id,
                             item.leave_name,
                             ctrl_start_age,
                             ctrl_end_age,
+                            (item.ctrl_gd_id == 1) ? ("ไม่ระบุ") : ((item.ctrl_gd_id == 2) ? ("ชาย") : ("หญิง")),
+                            (item.ctrl_hire_type == 1) ? "ปฏิบัติงานเต็มเวลา (Full-Time)" : "ปฏิบัติงานบางเวลา (Part-Time)",
                             checkData(item.ctrl_time_per_year),
                             checkData(item.ctrl_day_per_year),
                             checkData(item.ctrl_date_per_time),
@@ -359,6 +405,21 @@
                 });
             }
         });
+    }
+
+    // ฟังก์ชันแปลงอายุ
+    function formatAge(age) {
+        const years = parseInt(age.substring(0, 2), 10);
+        const months = parseInt(age.substring(3, 5), 10);
+        const days = parseInt(age.substring(6), 10);
+
+        // แสดงเฉพาะค่าที่มากกว่า 0
+        let result = "";
+        if (years > 0) result += `${years} ปี `;
+        if (months > 0) result += `${months} เดือน `;
+        if (days > 0) result += `${days} วัน`;
+
+        return result.trim(); // ลบช่องว่างส่วนเกินท้ายข้อความ
     }
 
     function modal_confirm_delete(elements) {
@@ -415,4 +476,3 @@
     }
 
 </script>
-   

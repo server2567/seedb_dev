@@ -101,11 +101,17 @@
                         <div class="col-md-3" id="div_filter_report_select_public">
                             <label for="filter_report_select_public" class="form-label">ประเภทตารางแพทย์ออกตรวจ</label>
                             <select class="form-select select2" id="filter_report_select_public" name="filter_report_select_public">
-                                <option value="0" selected>ตารางแพทย์ออกตรวจภายใน (In)</option>
-                                <option value="1">ตารางแพทย์ออกตรวจภายนอก (Public)</option>
+                                <option value="0" selected>ตารางแพทย์ออกตรวจสำหรับรพ. (In)</option>
+                                <option value="1">ตารางแพทย์ออกตรวจแบบสาธารณะ (Public)</option>
                             </select>
                         </div>
+                        <div class="col-md-3" id="div_button_report_pdf_by_stuc">
+                            <button type="button" class="btn btn-danger" title="คลิกเพื่อส่งออกเอกสาร PDF" id="button_report_pdf_by_stuc" data-bs-toggle="tooltip" data-bs-placement="top"  onclick="export_pdf_timework_by_structure()">
+                                <span><i class="bi-file-earmark-pdf-fill"></i> PDF</span>
+                            </button>
+                        </div>
 
+                        <input type="hidden" id="hidden_stuc_id" name="hidden_stuc_id" value="">
     
                     </form>
                 </div>
@@ -150,13 +156,20 @@
 
          // โค้ดที่คุณต้องการเรียกใช้เมื่อหน้าโหลดเสร็จ
         var selectedValue = $('#filter_report_select_hire_is_medical').val();
+
+        $('#div_button_report_pdf_by_stuc').hide();
         
         if (selectedValue === "M") {
             $('#div_filter_report_select_public').fadeIn(300);
             $('#div_filter_report_select_stde_id').removeClass('col-md-6').addClass('col-md-3');
+
+            $('#div_button_report_pdf_by_stuc').show();
+            
         } else {
             $('#div_filter_report_select_public').fadeOut(300);
             $('#div_filter_report_select_stde_id').removeClass('col-md-3').addClass('col-md-6');
+
+            $('#div_button_report_pdf_by_stuc').hide();
         }
 
         // ใช้ off เพื่อแน่ใจว่ามีการผูกเหตุการณ์เพียงครั้งเดียว
@@ -265,17 +278,46 @@
 
                 // เปลี่ยนคลาส #div_filter_report_select_stde_id เป็น col-md-3
                 $('#div_filter_report_select_stde_id').removeClass('col-md-6').addClass('col-md-3');
+
+                $('#div_button_report_pdf_by_stuc').show();
+                
             } else {
                 // ซ่อน #div_filter_report_select_public
                 $('#div_filter_report_select_public').hide();
 
                 // เปลี่ยนคลาส #div_filter_report_select_stde_id เป็น col-md-6
                 $('#div_filter_report_select_stde_id').removeClass('col-md-3').addClass('col-md-6');
+
+                $('#div_button_report_pdf_by_stuc').hide();
             }
         });
 
         $('[data-bs-toggle="tooltip"]').tooltip();
     });
+
+    function encrypt_stuc_id(){
+        var stuc_id = $("#filter_report_select_stuc_id").val()
+        $.ajax({
+            url: '<?php echo site_url() . "/" . $controller_dir; ?>encrypt_stuc_id',
+            type: 'POST',
+            data: {
+                stuc_id: stuc_id
+            },
+            success: function(data) {
+                // Parse the returned data
+                data = JSON.parse(data);
+
+                $("#hidden_stuc_id").val(data);
+
+            },
+            error: function(xhr, status, error) {
+                dialog_error({
+                    'header': text_toast_default_error_header,
+                    'body': text_toast_default_error_body
+                });
+            }
+        });
+    }
 
     function get_report_stucture(filter_dp_id){
 
@@ -353,6 +395,7 @@
 
                 // Trigger the change event to load time configs (if needed)
                 $('#filter_report_select_stde_id').trigger('change');
+                encrypt_stuc_id();
 
             },
             error: function(xhr, status, error) {
@@ -413,6 +456,29 @@
 
         // เปิดหน้าต่างใหม่เพื่อส่งออกข้อมูล
         window.open('<?php echo site_url($controller_dir . 'export_pdf_timework_calendar'); ?>/' + ps_id + '/' + isPublic + '/' + actor_type + '/' + dp_id + "/" + start_date + "/" + end_date, '_blank');
+    }
+
+    function export_pdf_timework_by_structure(){
+        var stuc_id = $('#hidden_stuc_id').val();
+        var date = $('#filter_report_select_date').val();
+        var dp_id = $('#filter_report_select_dp_id').val();
+        var is_public = $('#filter_report_select_public').val();
+
+        var hire_type = $('#filter_report_select_hire_type').val();
+        var ps_status = $('#filter_report_select_status_id').val();
+
+        // แยกวันที่เริ่มต้นและสิ้นสุด
+        var dates = date.split(' ถึง ');
+        var start_date_th = dates[0];
+        var end_date_th = dates[1];
+
+        // แปลง start_date และ end_date เป็นรูปแบบ Y-m-d
+        var start_date = convertToChristianYear(start_date_th);
+        var end_date = convertToChristianYear(end_date_th);
+
+        // console.log('<?php echo site_url($controller_dir . 'export_pdf_timework_calendar_by_structure'); ?>/' + '/' + 0 + '/' + actor_type + '/' + dp_id + "/" + start_date + "/" + end_date);
+        // เปิดหน้าต่างใหม่เพื่อส่งออกข้อมูล
+        window.open('<?php echo site_url($controller_dir . 'export_pdf_timework_calendar_by_structure'); ?>/' + stuc_id + '/' + is_public + '/' + actor_type + '/' + dp_id + "/" + start_date + "/" + end_date, '_blank');
     }
 
     function view_timework_person_detail(ps_id, isPublic){
@@ -624,12 +690,18 @@
                             </div>
                         `;
 
+                        var time_text = row.twpp_start_time_text + " - " + row.twpp_end_time_text;
+
+                        if(row.twpp_is_holiday == 1){
+                            time_text = "(OFF)";
+                        }
+
                         // Return data to push into array
                         return_data.push({
                             "seq": seq, // ลำดับ
                             "button": button, // ปุ่มดำเนินการ
                             "work_details": (row.rm_name != null ? row.rm_name : "") + " " + (row.twpp_desc != "" ? row.twpp_desc : ""), // ประเภทการทำงาน
-                            "work_date": row.twpp_start_date_text + " " + row.twpp_start_time_text + " - " + row.twpp_end_time_text, // เวลาเริ่ม-สิ้นสุด
+                            "work_date": row.twpp_start_date_text + " " + time_text, // เวลาเริ่ม-สิ้นสุด
                            
                         });
                     });

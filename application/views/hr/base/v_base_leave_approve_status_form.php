@@ -3,7 +3,7 @@
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdd" aria-expanded="true" aria-controls="collapseAdd">
-                    <i class="bi-window-dock icon-menu"></i><span><?php echo !empty($exts_info) ? 'แก้ไข' : 'เพิ่ม' ?>ข้อมูลประเภทบริการหน่วยงาน</span>
+                    <i class="bi-window-dock icon-menu"></i><span><?php echo !empty($exts_info) ? 'แก้ไข' : 'เพิ่ม' ?>ข้อมูลสถานะการอนุมัติการลา</span>
                 </button>
             </h2>
             <div id="collapseAdd" class="accordion-collapse collapse show" aria-labelledby="headingAdd">
@@ -38,7 +38,7 @@
                                 <?php if (!empty($leave_approve->last_id)) { ?>
                                     <input class="form-check-input" type="checkbox" name="leave_approve[]" id="last_active" value="<?php echo !empty($leave_approve) ? $leave_approve->last_active : '' ?>" <?php echo !empty($leave_approve) && $leave_approve->last_active == '1' ? 'checked' : '' ?>>
                                 <?php } else { ?>
-                                    <input type="checkbox" id="last_active" class="form-check-input m-1" checked disabled>
+                                    <input type="checkbox" id="last_active"  name="leave_approve[]" class="form-check-input m-1" checked disabled>
                                 <?php } ?>
                                 <label for="StActive" class="form-check-label">เปิดใช้งาน</label>
                             </div>
@@ -83,7 +83,7 @@
             return false;
         }
         $.ajax({
-            url: '<?php echo site_url() . '/' . $controller . 'Leave_approve/checkValue'; ?>',
+            url: '<?php echo site_url() . '/' . $controller . 'Leave_approve_status/checkValue'; ?>',
             method: 'POST',
             data: {
                 last_id: formData['last_id'],
@@ -103,7 +103,7 @@
             } else {
                 inputElement.innerHTML = "";
                 $.ajax({
-                    url: '<?php echo site_url() . '/' . $controller . 'Leave_approve/submit_leave_approve'; ?>',
+                    url: '<?php echo site_url() . '/' . $controller . 'Leave_approve_status/submit_leave_approve_status'; ?>',
                     method: 'POST',
                     data: formData
                 }).done(function(returnedData) {
@@ -112,7 +112,7 @@
                         'body': 'บันทึกข้อมูลเสร็จสิ้น'
                     });
                     setTimeout(function() {
-                        window.location.href = '<?php echo base_url() ?>index.php/hr/base/Leave_approve'
+                        window.location.href = '<?php echo base_url() ?>index.php/hr/base/Leave_approve_status'
                     }, 1500);
                 })
             }

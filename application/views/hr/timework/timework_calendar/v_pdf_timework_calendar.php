@@ -21,12 +21,12 @@
         }
 
         th, td {
-            border: 1px solid black; /* เส้นขอบของตาราง */
+            border: 4px solid white; /* เส้นขอบของตาราง */
             padding: 2px; /* ลด padding เพื่อให้ข้อความชิดกันมากขึ้น */
             vertical-align: top; /* ทำให้ข้อความชิดขอบบนของเซลล์ */
             text-align: left; /* ตั้งค่าให้ข้อความใน td ชิดซ้ายโดยปกติ */
             word-wrap: break-word; /* ทำให้ข้อความในเซลล์ห่อกลับหากยาวเกินไป */
-            font-size: 8pt; /* ขนาดฟอนต์ที่เล็กลง */
+            font-size: 14pt; /* ขนาดฟอนต์ที่เล็กลง */
             line-height: 1.2; /* ลดระยะห่างระหว่างบรรทัด */
         }
 
@@ -34,38 +34,40 @@
             text-align: right; /* จัดให้เนื้อหาใน td ชิดขวา */
             vertical-align: top; /* ทำให้ข้อความชิดขอบบนของเซลล์ */
             padding: 5px;
-            font-size: 12pt;
+            font-size: 20pt;
             width: 14.28%;
         }
 
         /* หัวเดือน */
         h1 {
-            border-style: solid; /* กำหนดสไตล์ของเส้นขอบเป็นเส้นทึบ */
-            border-width: 1px 1px 0px 1px; /* บน ขวา ล่าง ซ้าย: กำหนดขนาดของเส้นขอบ */
-            border-color: black; /* กำหนดสีของเส้นขอบ */
-            background-color: #f9c2ff; /* พื้นหลังสีชมพู */
-            color: black;
-            font-size: 12pt; /* ลดขนาดฟอนต์ของหัวเดือน */
-            padding: 5px; /* padding ของหัวเดือน */
+            /* border: 4px solid white; */
+            /* background-color: #e43169; */
+            color: white;
+            font-size: 20pt;
+            padding: 5px;
             text-align: center;
-            margin: 0; /* ไม่มี margin */
+            margin: 0;
             font-weight: bold;
         }
 
 
+
         /* หัวตาราง (วันจันทร์ - อาทิตย์) */
         th {
-            background-color: #dcdcdc; /* พื้นหลังสีเทาของหัวตาราง */
-            color: black;
-            font-size: 10pt; /* ขนาดฟอนต์ของหัวตาราง */
+            border: 4px solid white;
+            background-color: #f07b96; /* พื้นหลังสีเทาของหัวตาราง */
+            color: #53357a;
+            font-size: 16pt; /* ขนาดฟอนต์ของหัวตาราง */
             font-weight: bold;
             text-align: center;
         }
 
         /* ข้อมูลในตาราง */
         td {
-            font-size: 8pt; /* ขนาดฟอนต์ของข้อมูลในตาราง */
-            font-weight: normal;
+            font-size: 14pt; /* ขนาดฟอนต์ของข้อมูลในตาราง */
+            font-weight: bold;
+            background-color: #f9d8df;
+            color: #53357a;
             padding: 2px; /* ลด padding เพื่อให้ข้อความชิดกัน */
             line-height: 1.2; /* ลดระยะห่างระหว่างบรรทัด */
         }
@@ -142,8 +144,8 @@ function render_calendar($year, $month, $grouped_timework, $logo_url, $actor_typ
     $start_day_of_week = (new DateTime("$year-$month-01"))->format('w'); // 0 = อาทิตย์, 1 = จันทร์, ...
     
     // เพิ่มส่วนหัวพร้อมโลโก้
-    echo '<div style="text-align: center; font-weight: bold;">';
-    echo '<img src="' . $logo_url . '" alt="logo" style="max-height:80px;"> <br>';
+    echo '<div style="text-align: center;">';
+    echo '<img src="' . $logo_url . '" alt="logo" style="max-height:60px;"> <br>';
     echo '</div><br>';
     // echo "<h1>เดือน " . $date->format('F Y') . "</h1>"; // หัวเรื่องปฏิทิน
     if ($actor_type == "medical") {
@@ -151,10 +153,13 @@ function render_calendar($year, $month, $grouped_timework, $logo_url, $actor_typ
     } else {
         $title_report = "ตารางปฏิทินการทำงาน " . $ps_full_name . " ประจำเดือน" . getMonthTh($month) . " พ.ศ." . ($year + 543);
     }
-    echo "<h1>" . $title_report . "</h1>"; // หัวเรื่องปฏิทิน
+    // echo "<h1>" . $title_report . "</h1>"; // หัวเรื่องปฏิทิน
 
     echo '<table>';
     echo '<thead>
+            <tr>
+            <th colspan="7" style="background-color: #e43169; padding: 6px; text-align: center;">'."<h1>" . $title_report . "</h1>".'</th>
+            </tr>
             <tr>
                 <th>อาทิตย์</th>
                 <th>จันทร์</th>
@@ -177,27 +182,42 @@ function render_calendar($year, $month, $grouped_timework, $logo_url, $actor_typ
     for ($day = 1; $day <= $days_in_month; $day++) {
         $current_date = sprintf('%s-%s-%02d', $year, $month, $day); // YYYY-MM-DD
         echo '<td class="day-cell">';
-        echo "<strong class='day-number'>$day</strong><br>"; // แสดงวันที่
+        echo "<strong class='day-number' style='font-weight: bold; -webkit-text-stroke: 4px #53357a; font-size: 20pt;'>$day</strong><br>"; // แสดงวันที่
 
         // ตรวจสอบว่ามีข้อมูลการทำงานในวันนี้หรือไม่
         if (isset($grouped_timework[$current_date])) {
             echo '<table class="inner-table">';
             $row_count = 0;
             foreach ($grouped_timework[$current_date] as $work) {
+
                 echo '<tr>';
-                echo '<td>' . $work->pf_name_abbr . $work->ps_fname . '</td>';
-                echo '<td style="text-align: right;">' . format_time($work->twpp_start_time) . '-' . format_time($work->twpp_end_time) . ' น. </td>';
+                if($work->twpp_is_holiday == 0){
+                    echo '<td style="text-align: left;">';
+                    echo format_time($work->twpp_start_time) . '-' . format_time($work->twpp_end_time);
+                    if($work->twac_is_ot == 1){
+                        echo " (OT)";
+                    }
+                    echo '</td>';
+                }
+                else{
+                    $time_text = "OFF";
+                    echo '<td style="text-align: center;">OFF</td>';
+                }
+                
+                // echo '<td>' . $work->pf_name_abbr . $work->ps_fname . '</td>';
+                // echo '<td>' . '</td>';
+                
                 echo '</tr>';
                 $row_count++;
             }
             // ถ้าข้อมูลไม่ถึง 7 แถว ให้เติมช่องว่าง
-            for ($i = $row_count; $i < 6; $i++) {
+            for ($i = $row_count; $i < 3; $i++) {
                 echo '<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';
             }
             echo '</table>';
         } else {
             echo '<table class="inner-table">';
-            for ($i = 0; $i < 6; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 echo '<tr><td>&nbsp;</td><td>&nbsp;</td></tr>'; // ช่องว่าง
             }
             echo '</table>';
