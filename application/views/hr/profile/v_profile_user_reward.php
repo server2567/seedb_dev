@@ -61,7 +61,11 @@
                             </div>
                             <div class="col-md-6 mt-3">
                                 <label for="rewd_year" class="form-label required">ปีพุทธศักราช (พ.ศ.) ที่เริ่มเผยแพร่</label>
-                                <input type="number" class="form-control" name="rewd_year" id="rewd_year" value="<?php echo date("Y")+543; ?>">
+                                
+                                <div class="input-group mb-3">
+                                    <input type="number" class="form-control" name="rewd_year" id="rewd_year" value="<?php echo date("Y")+543; ?>">
+                                    <span class="input-group-text"><input type="checkbox" class="form-check-input" id="check_rewd_year" name="check_rewd_year">ไม่ระบุ</span>
+                                </div>
                             </div>
                             <div class="col-md-6 mt-3">
                               
@@ -162,7 +166,7 @@ $(document).ready(function() {
                     var isFile_cerf = "";
                     var buttonFile = "";
 
-                    if (row.rewd_reward_file !== null) {
+                    if (row.rewd_reward_file !== null && row.rewd_reward_file !== "") {
                         isFile_name = `
                             <a href="#" type="button" class="dropdown-item btn btn-primary" data-file-name="${row.rewd_reward_file}" 
                                 data-preview-path="<?php echo site_url($this->config->item('hr_dir').'Getpreview?path='.$this->config->item('hr_upload_profile_reward').'&doc='); ?>${row.rewd_reward_file}" 
@@ -172,7 +176,7 @@ $(document).ready(function() {
                             </a>`;
                     }
 
-                    if (row.rewd_cert_file !== null) {
+                    if (row.rewd_cert_file !== null && row.rewd_reward_file !== "") {
                         isFile_cerf = `
                             <a href="#" type="button" class="dropdown-item btn btn-primary" data-file-name="${row.rewd_cert_file}" 
                                 data-preview-path="<?php echo site_url($this->config->item('hr_dir').'Getpreview?path='.$this->config->item('hr_upload_profile_reward').'&doc='); ?>${row.rewd_cert_file}" 
@@ -255,6 +259,18 @@ $(document).ready(function() {
 
 });
 
+document.getElementById('check_rewd_year').addEventListener('change', function () {
+    const rewdYearInput = document.getElementById('rewd_year');
+    if (this.checked) {
+        rewdYearInput.value = ''; // Set the text to "ไม่ระบุ"
+        rewdYearInput.disabled = true;  // Disable the input
+    } else {
+        rewdYearInput.value = new Date().getFullYear() + 543; // Restore the default value
+        rewdYearInput.disabled = false; // Enable the input
+    }
+});
+
+
 function get_reward_detail_by_id(rewd_id) {
     $.ajax({
         url: '<?php echo site_url()."/".$controller_dir; ?>get_reward_detail_by_id/' + rewd_id,
@@ -277,7 +293,16 @@ function get_reward_detail_by_id(rewd_id) {
                 $('#rewd_name_en').text(reward.rewd_name_en);
                 $('#rewd_org_th').val(reward.rewd_org_th);
                 $('#rewd_org_en').val(reward.rewd_org_en);
-                $('#rewd_year').val(reward.rewd_year);
+
+                if(reward.rewd_year != 0){
+                    $('#rewd_year').val(reward.rewd_year);
+                }
+                else{
+                    document.getElementById('check_rewd_year').checked = true;
+                    document.getElementById('rewd_year').disabled = true;
+                    document.getElementById('rewd_year').value = '';
+                }
+                
                 $('#rewd_date').val(reward.rewd_date);
 
                 // Update values of Select2 dropdowns
@@ -344,7 +369,7 @@ function profile_reward_save_form() {
     var isValid = true;
 
      // List of fields to exclude from validation
-     var excludeFields = ["rewd_date", "rewd_reward_file", "rewd_cert_file"];
+     var excludeFields = ["rewd_year", "rewd_date", "rewd_reward_file", "rewd_cert_file"];
 
     // Validate regular form controls
     $('#profile_reward_form .form-control').each(function() {

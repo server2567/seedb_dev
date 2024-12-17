@@ -1,3 +1,24 @@
+<style>
+@media (max-width: 600px) {
+  #pass {
+    margin-top: -100px;
+    zoom:130%;
+  }
+
+  #pass .card-body.p-0.pt-5 {
+    padding-top: 15px !important;
+  }
+
+  #pass .col-md-9.mb-3.mt-5.mx-auto {
+    margin-top: -20px !important;
+  }
+  
+  #pass button.btn.btn-success {
+    font-size: 20px;
+  }
+}
+</style>
+<div id="pass">
 <h1 class="h3 mb-0">เปลี่ยนรหัสผ่าน</h1>
 <div class="card-body pt-0 px-0">
   <div class="row g-3">
@@ -30,10 +51,11 @@
           </div>
         </div>
         <div class="col-md-9 mt-5 mx-auto d-flex justify-content-end">
-          <button type="button" class="btn btn-success" onclick="changePassword()">เปลี่ยนรหัสผ่าน</button>
+            <button type="button" class="btn btn-success" onclick="changePassword()">ยืนยันการเปลี่ยนรหัสผ่าน</button>
+          </div>
         </div>
+        </form>
       </div>
-      </form>
     </div>
   </div>
 </div>

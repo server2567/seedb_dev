@@ -1,4 +1,6 @@
 <?php
+// dev
+
 /*
 * Import_examination_result
 * Main controller of Import_examination_result
@@ -10,6 +12,8 @@
 
 if (!defined('BASEPATH')) exit('No direct script access allowed');
 require_once('DIM_Controller.php');
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Import_examination_result extends DIM_Controller
 {
@@ -351,6 +355,7 @@ class Import_examination_result extends DIM_Controller
   {
     // decrypt id
     $exr_id = decrypt_id($exr_id);
+
     $this->load->model('dim/m_dim_examination_result');
     $this->m_dim_examination_result->exr_id = $exr_id;
     $exam_re_data = $this->m_dim_examination_result->get_detail_by_id()->row();
@@ -534,11 +539,15 @@ class Import_examination_result extends DIM_Controller
       // 3. save new m_dim_examination_result_doc
       if (!empty($filenames) && !empty($old_filenames)) {
         $fileCount = count($filenames);
-        for ($i = 0; $i < $fileCount; $i++) {
-          $this->m_dim_examination_result_doc->exrd_file_name = $filenames[$i];
-          $this->m_dim_examination_result_doc->exrd_old_file_name = $old_filenames[$i];
-          $this->m_dim_examination_result_doc->exrd_status = 1;
-          $this->m_dim_examination_result_doc->insert();
+        if($fileCount == 1 && empty($filenames[0])){
+          $this->m_dim_examination_result_doc->update_status_files_to_zero($exr_id);
+        }else{
+          for ($i = 0; $i < $fileCount; $i++) {
+            $this->m_dim_examination_result_doc->exrd_file_name = $filenames[$i];
+            $this->m_dim_examination_result_doc->exrd_old_file_name = $old_filenames[$i];
+            $this->m_dim_examination_result_doc->exrd_status = 1;
+            $this->m_dim_examination_result_doc->insert();
+          }
         }
       }
 
@@ -637,6 +646,51 @@ class Import_examination_result extends DIM_Controller
       }
       // End connect NAS
 
+      // ตรวจสอบว่า eqs_id == 15 และมีการอัปโหลดไฟล์ Excel หรือ CSV เข้ามา
+      // if ($exam_re_data->eqs_id == 15 && isset($_FILES['files'])) {
+      //   $uploadedFiles = $_FILES['files'];
+      //   $isValidFile = true;
+
+      //   // เตรียมไฟล์ให้อยู่ในรูปแบบ array เสมอ
+      //   if (is_string($uploadedFiles['name'])) {
+      //       // กรณีไฟล์เดียว
+      //       $uploadedFiles = [
+      //           'name' => [$uploadedFiles['name']],
+      //           'tmp_name' => [$uploadedFiles['tmp_name']],
+      //           'type' => [$uploadedFiles['type']],
+      //           'error' => [$uploadedFiles['error']],
+      //           'size' => [$uploadedFiles['size']],
+      //       ];
+      //   }
+
+      //   // ตรวจสอบไฟล์ทั้งหมด
+      //   foreach ($uploadedFiles['name'] as $fileName) {
+      //       $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+      //       if (!in_array(strtolower($fileExtension), ['xls', 'xlsx', 'csv'])) {
+      //           $isValidFile = false;
+      //           break;
+      //       }
+      //   }
+
+      //   // ถ้าไม่ใช่ไฟล์ที่รองรับ ให้แสดงข้อความแจ้งเตือน
+      //   if (!$isValidFile) {
+      //       echo json_encode([
+      //           'status' => 'error',
+      //           'message' => 'กรุณาอัปโหลดไฟล์ที่รองรับเท่านั้น (ไฟล์ที่รองรับ: .xls, .xlsx, .csv)'
+      //       ]);
+      //       return;
+      //   }
+
+      //   // ถ้าเป็นไฟล์ Excel หรือ CSV ให้ประมวลผล
+      //   $this->process_excel_files($uploadedFiles);
+      //   return;
+      // }
+
+
+
+
+
+
       // [AMS] Update ams_notification_results.ntr_ast_id = 3
       // [QUE] Update que_appointment.apm_sta_id = 12
       if (!empty($exam_re_data->exr_ntr_id)) {
@@ -648,6 +702,10 @@ class Import_examination_result extends DIM_Controller
           $this->m_dim_examination_result->update_wts_apm_sta_id();
         }
       }
+
+
+
+
 
       // [WTS] insert log timeline in wts_notifications_department
       $this->load->model('ams/m_ams_notification_result');
@@ -697,7 +755,7 @@ class Import_examination_result extends DIM_Controller
             $this->wts->where('ntdp_apm_id', $ntdp_apm_id_1);
             $this->wts->where('ntdp_seq', $latest_seq);
             $this->wts->update('wts_notifications_department', $wts_update_data);
-            echo "Update successful.";
+            // echo "Update successful.";
           } else {
               echo "No matching record found.";
           }
@@ -830,19 +888,150 @@ class Import_examination_result extends DIM_Controller
             }
         }
       }
-  
+      // Save Log
 
+      $eqs_id_obj = $this->m_dim_examination_result->get_eqs_id($exr_id);
+      $eqs_id = $eqs_id_obj->exr_eqs_id;
+      pre($_FILES);
+      die();
 
+      if($eqs_id == 15 && !empty($_FILES['files']['tmp_name'][0])){
+        // pre($_FILES);
+        // die();
+        $exrd_file_name = $_FILES['files']['name'][0];
+        $filePath = $_FILES['files']['tmp_name'][0];
 
-
-      // // Save Log
-
-      $data['returnUrl'] = base_url() . 'index.php/dim/Import_examination_result';
-      $data['status_response'] = $this->config->item('status_response_success');
+        $exrd_id_obj = $this->m_dim_examination_result->get_exrd_id($exr_id, $exrd_file_name);
+        $exrd_id = $exrd_id_obj->exrd_id;
+        // pre($exrd_id);
+        // die();
+        $result = $this->save_excel_data_to_database($filePath, $exrd_id);
+        // pre($result);
+        // die();
+        // แสดงข้อความตอบกลับ
+        if ($result['success']) {
+          // บันทึกสำเร็จให้ redirect ไปที่หน้าแสดงข้อมูล
+          $data['returnUrl'] = base_url() . 'index.php/dim/Import_examination_result/view_excel_result/' . $exrd_id;
+          $data['status_response'] = $this->config->item('status_response_success');
+        } else {
+          $data['status_response'] = $this->config->item('status_response_error');
+          return;
+        }
+      }else{
+        $data['returnUrl'] = base_url() . 'index.php/dim/Import_examination_result';
+        $data['status_response'] = $this->config->item('status_response_success');
+      }
     }
 
     $result = array('data' => $data);
     echo json_encode($result);
+  }
+
+  public function save_excel_data_to_database($filePath, $exrd_id)
+  {
+      // โหลดไลบรารี PhpSpreadsheet
+      require_once '/var/www/html/seedb/vendor/autoload.php';
+
+      try {
+          // โหลดไฟล์ Excel
+          $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+          $worksheet = $spreadsheet->getActiveSheet();
+          $rows = $worksheet->toArray();
+
+          // เชื่อมต่อโมเดลสำหรับบันทึกข้อมูลในตารางใหม่
+          $this->load->model('dim/m_dim_examination_result');
+          
+          // Static mapping for test_given_name
+          $testGivenNameMapping = [
+              'UREA-BUN-UV'       => 'BUN',
+              'CARBON DIOXIDE'    => 'CO2',
+              'Na+'               => 'Sodium',
+              'K+'                => 'Potassium',
+              'CREATININE ENZ'    => 'Creatinine',
+              'Cl-'               => 'Chloride',
+              'GLUCOSE'           => 'Blood Sugar',
+              'AST-GOT'           => 'AST',
+              'ALT-GPT'           => 'ALT',
+              'ALP-AMP'           => 'Alkaline Phosphatase',
+              'PROTEIN TOTALBIR'  => 'Total Protein',
+              'GLOBULIN'          => 'Globulin',
+              'CHO HOL DIRECT'    => 'HDL',
+              'LDL CALCULATE'     => 'LDL',
+              'BILI TOTAL DPD'    => 'Total Bilirubin',
+              'BILI DIRECT DPD'   => 'Direct Bilirubin',
+              'TRIGLYCERIDES'     => 'Triglyceride',
+              'CHOLESTEROL'       => 'Cholesterol',
+              'URIC ACID'         => 'Uric Acid',
+              'ALBUMIN'           => 'Albumin'
+          ];
+
+          // ลูปข้อมูลในแต่ละแถวของ Excel (เริ่มจากแถวที่ 2 เนื่องจากแถวแรกเป็น Header)
+          foreach ($rows as $index => $row) {
+              if (!empty($row[0]) && is_numeric($row[0])) {
+                  // ใช้ trim() กับข้อมูลทุกช่องเพื่อกำจัดช่องว่างส่วนเกิน
+                  $ptId          = trim($row[0]);
+                  $testType      = trim($row[1]);
+                  $testName      = trim($row[2]);
+                  $testValue     = trim($row[4]);
+                  $testUnit      = trim($row[5]);
+                  $testLevel     = trim($row[6]);
+                  $testRange     = trim($row[7]);
+                  $testDate      = trim($row[8]);
+
+                  // Map test_given_name จาก $testGivenNameMapping
+                  $testGivenName = isset($testGivenNameMapping[$testName]) ? $testGivenNameMapping[$testName] : '';
+
+                  $data = [
+                      'exrd_id'           => $exrd_id,
+                      'pt_id'             => $ptId,  // รหัสผู้ป่วย
+                      'test_type'         => $testType,  // ประเภทตัวอย่าง
+                      'test_name'         => $testName,  // ชื่อการตรวจ
+                      'test_given_name'   => $testGivenName, // Static mapping
+                      'test_value'        => $testValue,  // ค่าผลตรวจ
+                      'test_unit'         => $testUnit,  // หน่วย
+                      'test_level'        => $testLevel,  // ระดับ
+                      'test_range'        => $testRange,  // ช่วงค่าปกติ
+                      'test_date'         => date('Y-m-d H:i:s', strtotime($testDate)) // วันที่และเวลา
+                  ];
+                  // บันทึกข้อมูลลงในตารางใหม่
+                  $this->m_dim_examination_result->insert_pre_lab_result($data);
+                  // $this->m_dim_examination_result->insert_lab_result($data);
+              }
+          }
+
+          // แจ้งผลสำเร็จ
+          return ['success' => true, 'message' => 'ข้อมูลจากไฟล์ Excel ถูกบันทึกสำเร็จ.'];
+      } catch (Exception $e) {
+          return ['success' => false, 'message' => 'เกิดข้อผิดพลาดในการอ่านไฟล์ Excel: ' . $e->getMessage()];
+      }
+  }
+
+  public function view_excel_result($exrd_id)
+  {
+      $this->load->model('dim/m_dim_examination_result');
+      $data['results'] = $this->m_dim_examination_result->get_results_by_exrd_id($exrd_id);
+      $data['patient_info'] = $this->m_dim_examination_result->get_patient_info($exrd_id);
+      // pre($data);
+      // die();
+      $this->load->view('dim/import_examination_result/v_import_excel_result_table', $data);
+  }
+
+  public function update_results()
+  {
+      $this->load->model('dim/m_dim_examination_result');
+      $updatedResults = $this->input->post('results');
+
+      if (!empty($updatedResults)) {
+          foreach ($updatedResults as $result) {
+              $data = [
+                  'exrdt_value' => trim($result['value'])
+              ];
+              $this->m_dim_examination_result->update_lab_result($result['id'], $data);
+          }
+      }
+
+      // Redirect กลับไปที่หน้าตาราง
+      redirect('index.php/dim/Import_examination_result/view_excel_result/' . $this->session->userdata('current_exrd_id'));
   }
 
   /*
@@ -1048,4 +1237,94 @@ class Import_examination_result extends DIM_Controller
 
     return rmdir($dir);
   }
+
+  public function process_excel() {
+    $config['upload_path'] = './uploads/';
+    $config['allowed_types'] = 'xls|xlsx';
+    $config['max_size'] = 2048; // ขนาดสูงสุด 2MB
+    $this->load->library('upload', $config);
+
+    if (!$this->upload->do_upload('excelFile')) {
+        echo json_encode(['status' => 'error', 'message' => $this->upload->display_errors()]);
+        return;
+    }
+
+    $filePath = $this->upload->data('full_path');
+
+    try {
+        $this->load->library('PhpSpreadsheet');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+        $sheetData = $spreadsheet->getActiveSheet()->toArray();
+
+        // ตัวอย่าง: อ่านข้อมูลใน Sheet
+        $parsedData = [];
+        foreach ($sheetData as $row) {
+            $parsedData[] = $row;
+        }
+
+        // ทำการประมวลผลข้อมูลที่ได้จาก Excel ตามความต้องการ
+        unlink($filePath); // ลบไฟล์ที่อัปโหลดหลังใช้งานเสร็จ
+        echo json_encode(['status' => 'success', 'data' => $parsedData]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+  }
+
+  /**
+   * Process Excel files and render the result
+   */
+/**
+ * Process Excel files and render the result
+ */
+  private function process_excel_files($uploadedFiles)
+  {
+      $this->load->library('PhpSpreadsheet');
+      $parsedData = [];
+
+      // ประมวลผลไฟล์ทั้งหมด
+      for ($i = 0; $i < count($uploadedFiles['name']); $i++) {
+          $fileTmpName = $uploadedFiles['tmp_name'][$i];
+          $fileExtension = pathinfo($uploadedFiles['name'][$i], PATHINFO_EXTENSION);
+
+          try {
+              if (in_array(strtolower($fileExtension), ['xls', 'xlsx'])) {
+                  // โหลดไฟล์ Excel
+                  $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($fileTmpName);
+                  $sheetData = $spreadsheet->getActiveSheet()->toArray();
+              } elseif (strtolower($fileExtension) === 'csv') {
+                  // โหลดไฟล์ CSV
+                  $sheetData = [];
+                  if (($handle = fopen($fileTmpName, 'r')) !== FALSE) {
+                      while (($row = fgetcsv($handle, 1000, ',')) !== FALSE) {
+                          $sheetData[] = $row;
+                      }
+                      fclose($handle);
+                  }
+              }
+
+              $parsedData[] = [
+                  'fileName' => $uploadedFiles['name'][$i],
+                  'sheetData' => $sheetData
+              ];
+          } catch (Exception $e) {
+              echo json_encode([
+                  'status' => 'error',
+                  'message' => 'ไม่สามารถประมวลผลไฟล์ ' . $uploadedFiles['name'][$i] . ': ' . $e->getMessage()
+              ]);
+              return;
+          }
+      }
+
+      // ส่งข้อมูลไปยัง View
+      $data['excelFiles'] = $parsedData;
+      $data['status_response'] = $this->config->item('status_response_success');
+
+      $result = array('data' => $data);
+      echo json_encode($result);
+      // $html = $this->output('dim/import_examination_result/v_excel_file_view', $data, TRUE);
+      // $this->output
+      //     ->set_content_type('text/html')
+      //     ->set_output($html);
+  }
+
 }

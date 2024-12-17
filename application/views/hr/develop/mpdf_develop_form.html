@@ -208,7 +208,7 @@
     <div class="form-container" id="costTable">
         <table style="padding-bottom:0px;margin-bottom:5px;">
             <tr>
-                <td width="40%"><b>1. ค่าฝึกอบรม ต่อคน / ต่อครั้ง</b></td>
+                <td width="40%"><b>1. ค่าฝึกอบรม ({dev_budget_type})</b></td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_budget}</td>
                 <td width="15%">บาท รวม + Vat</td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_budget_vat}</td>
@@ -217,7 +217,7 @@
         </table>
         <table style="padding-bottom:0px;margin-bottom:5px;">
             <tr>
-                <td width="40%"><b>2. เบี้ยเลี้ยง ต่อคน / ต่อครั้ง</b></td>
+                <td width="40%"><b>2. เบี้ยเลี้ยง ({dev_allowance_type})</b></td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_allowance}</td>
                 <td width="15%">บาท รวม + Vat</td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_allowance_vat}</td>
@@ -226,7 +226,7 @@
         </table>
         <table style="padding-bottom:0px;margin-bottom:5px;">
             <tr>
-                <td width="40%"><b>3. ค่าที่พักและอาหาร ต่อคน / ต่อครั้ง</b></td>
+                <td width="40%"><b>3. ค่าที่พักและอาหาร ({dev_accommodation_type})</b></td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_accommodation}</td>
                 <td width="15%">บาท รวม + Vat</td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_accommodation_vat}</td>
@@ -235,13 +235,14 @@
         </table>
         <table style="padding-bottom:0px;margin-bottom:5px;">
             <tr>
-                <td width="40%"><b>4. อื่น ๆ</b></td>
+                <td width="40%"><b>4. อื่น ๆ ({dev_budget_type_other_type})</td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_budget_type_other}</td>
                 <td width="15%">บาท รวม + Vat</td>
                 <td width="10%" style="border-bottom: 1px solid black; text-align: right;">{dev_budget_type_other_vat}</td>
                 <td width="25%">บาท</td>
             </tr>
         </table>
+        {dev_budget_type_other_text}
         <table style="padding-bottom:0px;margin-bottom:5px; margin-left:15px">
             <tr>
                 <td width="39.5%"><b>รวมค่าใช้จ่ายทั้งสิ้น</b></td>

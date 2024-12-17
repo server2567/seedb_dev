@@ -56,25 +56,18 @@ $colorSchemes = [
     7 => ['background-color' => '#B0E57C', 'color' => '#1e651e'],
     8 => ['background-color' => '#ffe5c4', 'color' => '#d37400'],
     9 => ['background-color' => '#F0D9FF', 'color' => '#371359'],
-    10 => ['background-color' => '#ffa1a1', 'color' => '#7f2200'],
-    11 => ['background-color' => '#FFDAB9', 'color' => '#811d0b'],
-    12 => ['background-color' => '#d7efff', 'color' => '#0033A0'],
-    13 => ['background-color' => '#BFFFC6', 'color' => '#004d3b'],
-    14 => ['background-color' => '#E6E6FA', 'color' => '#3f3578'],
-    15 => ['background-color' => '#fafac8', 'color' => '#574900'],
-    16 => ['background-color' => '#ffc5ea', 'color' => '#5f0b41'],
-    17 => ['background-color' => '#B0E57C', 'color' => '#1e651e'],
-    18 => ['background-color' => '#ffe5c4', 'color' => '#d37400'],
-    19 => ['background-color' => '#F0D9FF', 'color' => '#371359'],
-    20 => ['background-color' => '#ffa1a1', 'color' => '#7f2200']
+    10 => ['background-color' => '#ffa1a1', 'color' => '#7f2200']
 ];
-// pro
-// pre($this->session->userdata());
-// pre($departments); die;
+
+$userdata = $this->session->userdata(); // ดึงข้อมูลจาก session
 $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['selected_departments'] : [];
+// pre($userdata); die;
+
+// กำหนด style display:none หาก us_dp_id เท่ากับ 2
+$cardStyle = (isset($userdata['us_dp_id']) && $userdata['us_dp_id'] == 2) ? 'display:none;' : '';
 ?>
 
-<div class="card">
+<div class="card" style="<?php echo $cardStyle; ?>">
     <div class="accordion">
         <div class="accordion-item">
             <h2 class="accordion-header">
@@ -182,11 +175,11 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                                 </div>
                             </div>
                         </div>
-                        <?php foreach ($get_doctors as $index => $doctor):
-                            $bg_color = isset($colorSchemes[$index + 1]) ?
-                                'background-color: ' . $colorSchemes[$index + 1]['background-color'] . ';'
-                                . 'color: ' . $colorSchemes[$index + 1]['color'] . ';'
-                                : '';
+                        <?php foreach ($get_doctors as $index => $doctor): 
+                            // วนรอบ index ของ $colorSchemes
+                            $colorIndex = ($index % count($colorSchemes)) + 1; 
+                            $bg_color = 'background-color: ' . $colorSchemes[$colorIndex]['background-color'] . ';'
+                                    . 'color: ' . $colorSchemes[$colorIndex]['color'] . ';';
                         ?>
                             <div class="col-md-4" id="tab-ps-<?php echo $doctor['ps_id']; ?>" style="display:none;">
                                 <div class="card m-1 p-1 pb-0">
@@ -251,19 +244,20 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                                 </div>
                             </div>
                         <?php endforeach; ?>
+
                         <div class="col-md-4">
-                            <div class="card m-3 p-2 pb-0">
+                            <div class="card m-1 p-1 pb-0">
                                 <div class="card-header bg-success text-white mb-2">
                                     <p class="mb-2">พบแพทย์เสร็จสิ้น</p>
                                     <div class="patient-count"></div>
                                 </div>
-                                <div class="sortable-list" id="tasks-success" data-ps-id="">
+                                <div class="sortable-list p-0" id="tasks-success" data-ps-id="">
                                 <!-- Tasks will be dynamically added here -->
                                 </div>
                             </div> 
                         </div>
                         <div class="col-md-4">
-                            <div class="card m-3 p-2 pb-0">
+                            <div class="card m-1 p-1 pb-0">
                                 <div class="card-header bg-danger text-white mb-2">
                                     <p class="mb-2">ยกเลิกการจองคิว</p>
                                     <div class="patient-count"></div>
@@ -513,13 +507,14 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
             setInterval(function() {
                 // console.log('เข้า');
                 get_new_patient()
+                // check_refresh()
 
             }, 5000);
             // search_params = getSearchParams();
         }
         // search_params = getSearchParams();
         // reload_que()
-        // reset_interval(); // Initial call to set the interval
+        // reset_interval(); // refresh หน้า
         // // search_params = getSearchParams();
 
         // set dropdown select
@@ -596,7 +591,8 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                         psrm_id: psrm_id,
                         psrm_ps_id: doctorId,
                         psrm_rm_id: val,
-                        psrm_date: search_params['date']
+                        psrm_date: search_params['date'],
+                        floor: search_params['floor'],
                     },
                     dataType: 'json', // Expect JSON response from the server
                     success: function(data) {
@@ -642,7 +638,48 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
     //     }
     // }
 
+    function check_refresh(){
+        let today = new Date();
+        let year = today.getFullYear();
+        let month = String(today.getMonth() + 1).padStart(2, '0'); // เติมเลข 0 ด้านหน้า ถ้าเดือนมีแค่หลักเดียว
+        let day = String(today.getDate()).padStart(2, '0'); // เติมเลข 0 ด้านหน้า ถ้าวันมีแค่หลักเดียว
+        let formattedDate = `${year}-${month}-${day}`;
+
+        $.ajax({
+            url: '<?php echo base_url(); ?>index.php/wts/Manage_queue_trello/get_all_que',
+            type: 'POST',
+            data: {
+                apm_date: formattedDate, // ส่งวันที่ปัจจุบันไปใน data
+            },
+            success: function(response) {
+                var result = JSON.parse(response);
+                console.log("count all que:", result.apm_ql_code); // แสดงผลลัพธ์ใน console
+
+                var taskIds = [];
+                $('[data-task-id]').each(function() {
+                    taskIds.push($(this).data('task-id')); // เก็บค่า data-task-id
+                });
+
+                // นับจำนวน task
+                var totalTasks = taskIds.length;
+
+                // console.log("All Task IDs:", taskIds); // แสดง task IDs ทั้งหมด
+                console.log("Total Tasks:", totalTasks); // แสดงจำนวน task
+
+                if(result.apm_ql_code != totalTasks){
+                    console.log('เข้า');
+                    clear_que()
+                    reload_que();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching queue data:", error); // แสดง error ใน console หากคำขอล้มเหลว
+            }
+        });
+    }
+
     function get_patient_ajax(ps_id, status = null, is_from_save = false) {
+        // console.log("ps_id : ",ps_id)
         var sta_id = null;
         var is_null_ps_id = false;
         var is_process = false;
@@ -679,6 +716,7 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
             },
             success: function(response) {
                 var result = JSON.parse(response);
+                console.log("data result : ",result)
                 var apmQlCodes = [];
                 base_doctor_list = result.doctor_list;
                 var clear_doctor_node = []
@@ -686,7 +724,6 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                     var tasksContainer = $('#' + selector);
                     // tasksContainer.empty(); // Clear existing tasks
                     result.tasks.forEach(function(task, index) {
-
                         if (task.apm_ps_id != null && task.apm_ps_id != tasksContainer.data('ps-id')) {
                             if (ps_id.includes(task.apm_ps_id) && !clear_doctor_node.includes(task.apm_ps_id)) {
                                 clear_doctor_node.push(task.apm_ps_id)
@@ -780,6 +817,9 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                                 // สร้าง HTML ของการ์ดและปุ่มต่าง ๆ
                                 var taskHtml = `
                                     <div class="sortable-item ql-${task.apm_anounce_id} rounded ${bg_class} shadow-2 mb-2" id="que_card">
+                                        <!-- จุดสีแดงที่มุมขวาบน -->
+                                        ${task.apm_ps_active == 'Y' ? `<div class="position-absolute" style="top: 5px; right: 5px; width: 15px; height: 15px; background-color: red; border-radius: 50%;"></div>` : ''}
+                                        
                                         <div class="card-body children-que" data-task-id="${task.apm_ql_code}" data-task-apm-id="${task.apm_id}" data-origin-list-id="${selector}">
                                             <!-- Header: หมายเลขคิว และชื่อผู้ป่วย -->
                                             <div class="task-header d-flex justify-content-between align-items-center">
@@ -836,7 +876,12 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
 
                                 if (task.apm_ps_id != null) {
                                     if (task.apm_ql_code != '9999') {
+                                        tasksContainerTemp = tasksContainer;
+                                        if (task.apm_sta_id == 10) {
+                                            tasksContainer = $('#tasks-success'); // ย้ายไปที่ tasks-success ถ้าพบแพทย์เสร็จสิ้น
+                                        }
                                         tasksContainer.append(taskHtml);
+                                        tasksContainer = tasksContainerTemp;
                                         let announce_card_count = task.apm_anounce_id;
                                         const elements_teset = document.querySelectorAll('.ql-' + task.apm_anounce_id);
 
@@ -890,8 +935,6 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                 });
                 ps_id.forEach(element => {
                     if (!clear_doctor_node.includes(element)) {
-
-                        
                         $('#tab-ps-'+element).hide()
                         $('#tab-ps-ap-'+element).hide()
                     }
@@ -899,6 +942,7 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
 
                 check_sortable_list();
                 update_badge_date(result.badge);
+                save_data(false);
             },
             error: function(error) {
                 console.error('Error fetching tasks:', error);
@@ -1111,41 +1155,42 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
     }
 
     function refreshQue() {
-        Swal.fire({
-            title: 'ยืนยันการบันทึก',
-            text: "ต้องการบันทึกข้อมูล หรือไม่?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#198754',
-            cancelButtonColor: '#dc3545',
-            confirmButtonText: 'บันทึก',
-            cancelButtonText: 'ไม่บันทึก'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // หากผู้ใช้กดยืนยัน ทำการบันทึกข้อมูลที่นี่
-                save_data(); // เรียกใช้ฟังก์ชันบันทึกข้อมูล
-            } else {
-                Swal.fire({
-                    title: '',
-                    html: 'รีเฟรชใน <b></b> วินาที.',
-                    icon: 'success',
-                    timer: 1000,
-                    timerProgressBar: true,
-                    showConfirmButton: false, // ซ่อนปุ่มยืนยัน
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        const b = Swal.getHtmlContainer().querySelector('b');
-                        timerInterval = setInterval(() => {
-                            b.textContent = Math.ceil(Swal.getTimerLeft() / 1000); // แสดงเวลาที่เหลือในหน่วยวินาที
-                        }, 100);
-                    },
-                    willClose: () => {
-                        clearInterval(timerInterval);
-                        window.location.reload(); // รีเฟรชหน้าเมื่อปิด
-                    }
-                });
-            }
-        });
+        window.location.reload();
+        // Swal.fire({
+        //     title: 'ยืนยันการบันทึก',
+        //     text: "ต้องการบันทึกข้อมูล หรือไม่?",
+        //     icon: 'warning',
+        //     showCancelButton: true,
+        //     confirmButtonColor: '#198754',
+        //     cancelButtonColor: '#dc3545',
+        //     confirmButtonText: 'บันทึก',
+        //     cancelButtonText: 'ไม่บันทึก'
+        // }).then((result) => {
+        //     if (result.isConfirmed) {
+        //         // หากผู้ใช้กดยืนยัน ทำการบันทึกข้อมูลที่นี่
+        //         save_data(); // เรียกใช้ฟังก์ชันบันทึกข้อมูล
+        //     } else {
+        //         Swal.fire({
+        //             title: '',
+        //             html: 'รีเฟรชใน <b></b> วินาที.',
+        //             icon: 'success',
+        //             timer: 1000,
+        //             timerProgressBar: true,
+        //             showConfirmButton: false, // ซ่อนปุ่มยืนยัน
+        //             allowOutsideClick: false,
+        //             didOpen: () => {
+        //                 const b = Swal.getHtmlContainer().querySelector('b');
+        //                 timerInterval = setInterval(() => {
+        //                     b.textContent = Math.ceil(Swal.getTimerLeft() / 1000); // แสดงเวลาที่เหลือในหน่วยวินาที
+        //                 }, 100);
+        //             },
+        //             willClose: () => {
+        //                 clearInterval(timerInterval);
+        //                 window.location.reload(); // รีเฟรชหน้าเมื่อปิด
+        //             }
+        //         });
+        //     }
+        // });
 
     }
 
@@ -1179,7 +1224,6 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
         refreshInterval = setInterval(function() {
             clear_que()
             // console.log('เข้า');
-
             reload_que();
         }, 10000); // 60000 ms คือ 60 วินาที
     }
@@ -1197,9 +1241,11 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
             data: {
                 sta_id: sta_id
             },
+            // dataType: 'json',
             success: function(response) {
-                var data = JSON.parse(response);
-                if (data.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
+                // console.log("response : ",response)
+                // var data = JSON.parse(response);
+                if (response.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
                     Swal.fire({
                         title: title,
                         text: text,
@@ -1210,23 +1256,23 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                         },
                     }).then(() => {
                         // if change status => success / cancel
-                        if (data.appointment != undefined && data.appointment != null) {
+                        if (response.appointment != undefined && response.appointment != null) {
                             let is_break = false;
                             for (let i = 0; i < patients_by_doctors.length; i++) {
                                 if (is_break) break;
                                 let doctorRecord = patients_by_doctors[i];
-                                if (doctorRecord.ps_id === data.appointment.apm_ps_id) {
+                                if (doctorRecord.ps_id === response.appointment.apm_ps_id) {
                                     for (let j = 0; j < doctorRecord.patient_ques.length; j++) {
                                         if (is_break) break;
                                         let que = doctorRecord.patient_ques[j];
-                                        if (que.apm_ql_code === data.appointment.apm_ql_code) {
-                                            let apm_sta_id = parseInt(data.appointment.apm_sta_id);
+                                        if (que.apm_ql_code === response.appointment.apm_ql_code) {
+                                            let apm_sta_id = parseInt(response.appointment.apm_sta_id);
                                             if (apm_sta_id === 10 || apm_sta_id === 9) {
                                                 // Remove the que from doctorRecord.patient_ques
                                                 doctorRecord.patient_ques.splice(j, 1);
 
                                                 // Find and remove the corresponding sortable-item from the DOM
-                                                $(`.sortable-list[data-ps-id="${data.appointment.apm_ps_id}"] .sortable-item[data-task-id="${data.appointment.apm_ql_code}"]`).remove();
+                                                $(`.sortable-list[data-ps-id="${response.appointment.apm_ps_id}"] .sortable-item[data-task-id="${response.appointment.apm_ql_code}"]`).remove();
 
                                                 // Exit both loops
                                                 is_break = true;
@@ -1280,7 +1326,7 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                 doctorsList.push(doctor.ps_id);
             });
         }
-
+        // $('.sortable-list').empty();
         // ส่งข้อมูลแพทย์และสถานะไปยังฟังก์ชัน AJAX
         get_patient_ajax(doctorsList, statusList, is_from_save);
     }
@@ -1326,13 +1372,13 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                 var optionStde = '<?php echo $row['stde_name_th']; ?>';
                 var optionText = '<?php echo $row['rm_name']; ?>';
 
-                if (optionFloor == parseInt(floor)) {
+                // if (optionFloor == parseInt(floor)) {
                     // Check if this option is the originally selected room
                     var selected = (parseInt(optionValue) == parseInt(oriRmId)) ? 'selected' : '';
 
                     // Append the option with the 'selected' attribute if it matches
-                    $select.append(`<option value="${optionValue}" ${selected} data-stde="${optionStde}" data-floor="${optionFloor}">${optionText}</option>`);
-                }
+                    $select.append(`<option value="${optionValue}" ${selected} data-stde="${optionStde}" data-floor="${optionFloor}">ชั้น ${optionFloor} ${optionText}</option>`);
+                // }
             <?php } ?>
 
             // Set the previously selected value if it's still available
@@ -1693,7 +1739,7 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
     }
 
     // additionalCardContainer.outerHTML = newCardHtml;
-    function save_data() {
+    function save_data(showFeedback = true) {
         var doctor_patient_ques = [];
         $('.sortable-list').each(function() {
             var ps_id = $(this).data('ps-id');
@@ -1783,7 +1829,6 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                     }
                 }
 
-
                 // console.log(apm_ql_code)
                 // console.log(apm_id)
                 // console.log(announce_id)
@@ -1808,34 +1853,34 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
             },
             dataType: 'json', // Expect JSON response from the server
             success: function(data) {
-
                 if (data.status_response == status_response_success) {
                     // dialog_success({ 'header': text_toast_save_success_header, 'body': text_toast_save_success_body }, data.returnUrl, false);
-
-                    // not reload page
-                    clear_que(true);
-                    reload_que(true);
-                    // dialog_success({ 'header': text_toast_save_success_header, 'body': text_toast_save_success_body }, null, false);
-                    let timerInterval;
-                    Swal.fire({
-                        title: 'บันทึกสำเร็จ',
-                        html: 'รีเฟรชใน <b></b> วินาที.',
-                        icon: 'success',
-                        timer: 1000,
-                        timerProgressBar: true,
-                        showConfirmButton: false, // ซ่อนปุ่มยืนยัน
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            const b = Swal.getHtmlContainer().querySelector('b');
-                            timerInterval = setInterval(() => {
-                                b.textContent = Math.ceil(Swal.getTimerLeft() / 1000); // แสดงเวลาที่เหลือในหน่วยวินาที
-                            }, 100);
-                        },
-                        willClose: () => {
-                            clearInterval(timerInterval);
-                            window.location.reload(); // รีเฟรชหน้าเมื่อปิด
-                        }
-                    });
+                    if (showFeedback) {
+                        // not reload page
+                        clear_que(true);
+                        reload_que(true);
+                        // dialog_success({ 'header': text_toast_save_success_header, 'body': text_toast_save_success_body }, null, false);
+                        let timerInterval;
+                        Swal.fire({
+                            title: 'บันทึกสำเร็จ',
+                            html: 'รีเฟรชใน <b></b> วินาที.',
+                            icon: 'success',
+                            timer: 1000,
+                            timerProgressBar: true,
+                            showConfirmButton: false, // ซ่อนปุ่มยืนยัน
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                const b = Swal.getHtmlContainer().querySelector('b');
+                                timerInterval = setInterval(() => {
+                                    b.textContent = Math.ceil(Swal.getTimerLeft() / 1000); // แสดงเวลาที่เหลือในหน่วยวินาที
+                                }, 100);
+                            },
+                            willClose: () => {
+                                clearInterval(timerInterval);
+                                window.location.reload(); // รีเฟรชหน้าเมื่อปิด
+                            }
+                        });
+                    }
 
                 } else {
                     if (!is_null(data.message_dialog))
@@ -1960,12 +2005,13 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
     }
 
     function select_doctor(id) {
+        // console.log("id : ", id)
         let stde_selected = []
         for (let index = 0; index < select_stde.length; index++) {
             stde_selected.push(select_stde[index].value)
         }
 
-         console.log(base_doctor_list);
+        // console.log("base_doctor_list : ",base_doctor_list);
 
         let html = `<select class="form-select select2" data-placeholder="-- กรุณาเลือกแพทย์ --" name="session_floor" id="select_doctor">
                             <option value=""></option>
@@ -2025,6 +2071,48 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
         // Initialize Select2 again in the SweetAlert2 popup
         $('#mySelect').select2();
     }
+
+    function rollback_status(apm_id) {
+        $.ajax({
+            url: "<?php echo base_url() ?>index.php/wts/Manage_queue_trello/rollback_process",
+            type: 'POST',
+            data: {
+                apm_id: apm_id
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({
+                        title: 'ย้อนกลับเสร็จแล้ว',
+                        icon: 'success',
+                        confirmButtonText: 'ตกลง',
+                        customClass: {
+                            htmlContainer: 'swal2-html-line-height'
+                        },
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', xhr.responseText);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while processing your request.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    }
+
 </script>
 
 <!-- jQuery and jQuery UI -->
@@ -2083,13 +2171,15 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                     title = 'ปรับสถานะเป็นยกเลิกการจองคิว';
                     text = 'กรุณากดปุ่มบันทึกข้อมูล';
                 } else if ((originListTask != 'wait' && originListTask != 'success') && (targetListTask != 'wait' && targetListTask != 'success') && isTransfer) { // 4
+                    is_show_alert = true;
                     let originArray = originList.split('-');
                     let targetArray = targetList.split('-');
                     if (originArray[2] != targetArray[2]) { // กรณีเปลี่ยนแพทย์
-                        is_show_alert = true;
                         title = 'เปลี่ยนแพทย์';
                         text = 'กรุณากดปุ่มบันทึกข้อมูล';
                     }
+                } else if((originListTask == 'wait' && originListTask != 'success') && (targetListTask != 'wait' && targetListTask != 'success') && isTransfer){
+                    is_show_alert = true;
                 }
 
                 if (is_can_not_do) {
@@ -2105,13 +2195,15 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                 } else {
                     if (is_show_alert) {
                         if (!toastShown) {
-                            dialog_success({
-                                'header': title,
-                                'body': text,
-                                'toastClass': 'bg-warning border-0',
-                                'headerClass': 'bg-warning border-0',
-                                'icon': 'bi bi-info-circle me-1'
-                            }, null, false);
+                            if (title === 'ขออภัย') {
+                                dialog_success({
+                                    'header': title,
+                                    'body': text,
+                                    'toastClass': 'bg-warning border-0',
+                                    'headerClass': 'bg-warning border-0',
+                                    'icon': 'bi bi-info-circle me-1'
+                                }, null, false);
+                            }
                             toastShown = true;
                         } else {
                             toastShown = false;
@@ -2121,6 +2213,53 @@ $selected_departments = isset($_SESSION['selected_departments']) ? $_SESSION['se
                         // Update the original list ID to the current list ID
                         ui.item.data('origin-list-id', targetList);
                         check_sortable_list();
+
+                        // เรียกฟังก์ชัน save_data() หลังจากลากเสร็จ
+                        // save_data();
+
+                        let apm_id = ui.item.attr('class').match(/ql-(\d+)/)?.[1];
+                        let origin_ps_id = originList.match(/\d+$/)?.[0]; 
+                        let target_ps_id = targetList.match(/\d+$/)?.[0] || null; // ถ้าไม่มีค่า ให้ตั้งเป็น null
+                        let target_app_walk = '';
+                        if(targetListTask == 'appointment'){
+                            target_app_walk = 'A';
+                        }else if(targetListTask == 'walkin'){
+                            target_app_walk = 'W';
+                        }
+
+                        // console.log("apm_id: ", apm_id);
+                        // console.log("target_app_walk: ", target_app_walk);
+                        // console.log("หมอต้นทาง: ", origin_ps_id);
+                        // console.log("หมอปลายทาง: ", target_ps_id);
+
+                        if (apm_id && !isNaN(apm_id)) {
+                            $.ajax({
+                                type: 'POST',
+                                url: '<?php echo base_url(); ?>index.php/wts/Manage_queue_trello/update_doctor_apm',
+                                data: {
+                                    apm_id: apm_id,
+                                    ps_id: target_ps_id,
+                                    apm_app_walk: target_app_walk
+                                },
+                                success: function(data) {
+                                    dialog_success({
+                                        'header': text_toast_save_success_header,
+                                        'body': text_toast_save_success_body
+                                    }, null, false);
+                                    
+                                    // Reload the page after 0.5 seconds
+                                    setInterval(function() {
+                                        window.location.reload();
+                                    }, 500);
+                                },
+                                error: function(xhr, status, error) {
+                                    // Handle error
+                                    console.log(xhr.responseText);
+                                }
+                            });
+                        } else {
+                            console.log("apm_id หรือ target_ps_id ไม่ถูกต้อง");
+                        }
                     } else {
                         ui.item.removeClass('bg-white').addClass('bg-warning-light');
 

@@ -1,5 +1,5 @@
 <?php
-
+// dev
 include_once("Da_dim_examination_result_doc.php");
 
 class M_dim_examination_result_doc extends Da_dim_examination_result_doc {
@@ -74,6 +74,13 @@ class M_dim_examination_result_doc extends Da_dim_examination_result_doc {
 				SET	exrd_status = ?
 				WHERE exrd_id = ? ";
 		$query = $this->dim->query($sql, array($this->exrd_status, $this->exrd_id));
+	}
+
+	function update_status_files_to_zero($exr_id) {
+		$sql = "UPDATE dim_examination_result_doc 
+				SET	exrd_status = 0
+				WHERE exrd_exr_id = '".$exr_id."'";
+		$query = $this->dim->query($sql);
 	}
 	
 } // end class M_dim_examination_result_doc

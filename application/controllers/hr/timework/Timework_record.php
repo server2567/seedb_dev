@@ -73,7 +73,7 @@ class Timework_record extends Timework_Controller
 
 					$this->M_hr_timework_person_record->twpc_mc_code = $record['machineCode'];
 					$this->M_hr_timework_person_record->twpc_ps_code = $record['employeeCode'];
-					$this->M_hr_timework_person_record->twpc_date = splitDateFormTH($record['date']);
+					$this->M_hr_timework_person_record->twpc_date = $this->splitDate_excel($record['date']);
 					$this->M_hr_timework_person_record->delete();
 
 					// ตรวจสอบว่ามีคีย์ 'times' อยู่ในแต่ละ record หรือไม่
@@ -105,7 +105,11 @@ class Timework_record extends Timework_Controller
 		echo json_encode($result);
 	}
 	// timework_record_import_excel_save
-
+	function splitDate_excel($date, $sp = "-")
+	{
+		list($mm, $dd, $yy) = preg_split("[/|-]", $date);
+		return $yy . $sp . $mm . $sp . $dd;
+	}
 
 	/*
 	* get_timework_record_list

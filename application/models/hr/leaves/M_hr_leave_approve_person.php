@@ -21,20 +21,20 @@ class M_hr_leave_approve_person extends Da_hr_leave_approve_person
 	function get_leaves_approve_person_all($dp_id, $hire_is_medical, $hire_type, $status_id)
 	{
 		$cond = "";
-		
+
 		if ($status_id != "all") {
 			$cond .= " AND pos.pos_status = {$status_id}";
 		}
 
-		if($hire_type != "all"){
+		if ($hire_type != "all") {
 			$cond .= " AND hire.hire_type = {$hire_type}";
 		}
 
-		if($hire_is_medical != "all"){
+		if ($hire_is_medical != "all") {
 			$cond .= " AND hire.hire_is_medical = '{$hire_is_medical}'";
 		}
-		
-		
+
+
 		$sql = "
         SELECT 
 
@@ -114,7 +114,21 @@ class M_hr_leave_approve_person extends Da_hr_leave_approve_person
 		return $query;
 	}
 	// get_leaves_approve_group_by_ps_id
-
+	/*
+	* get_leaves_approve_person_by_ps_id
+	* ข้อมูลกลุ่มเส้นทางการอนุมัติ
+	* @input $ps_id
+	* @output leave approve group all data
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 26/10/2567
+	*/
+	function get_leaves_approve_person_by_ps_id($ps_id)
+	{
+		$sql = "SELECT  laps_lapg_id FROM " . $this->hr_db . ".hr_leave_approve_person 
+            WHERE laps_ps_id = {$ps_id}";
+		$query = $this->hr->query($sql);
+		return $query;
+	}
 	/*
 	* get_leaves_approve_person_for_select_approve_group
 	* ข้อมูลรายชือบุคลากร ที่ไม่เคยได้รับการกำหนดกลุมอนุมัติการลา
@@ -123,37 +137,38 @@ class M_hr_leave_approve_person extends Da_hr_leave_approve_person
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 28/10/2567
 	*/
-	function get_leaves_approve_person_for_select_approve_group($action="") {
+	function get_leaves_approve_person_for_select_approve_group($action = "")
+	{
 		$conditions = [];
 		$params = [];
-	
+
 		// Add filter from session if medical_string exists
 		$medical_string = $this->session->userdata('hr_hire_is_medical_string');
 		if (!empty($medical_string)) {
 			// Remove outer quotes and split the string into an array
 			$medical_array = explode(',', str_replace(["'", " "], '', $medical_string)); // Remove quotes and spaces
-	
+
 			// Construct the FIND_IN_SET clause with the cleaned values
 			if (!empty($medical_array)) {
-				$conditions[] = "(" . implode(" OR ", array_map(function($value) {
+				$conditions[] = "(" . implode(" OR ", array_map(function ($value) {
 					return "FIND_IN_SET('$value', hire.hire_is_medical)";
 				}, $medical_array)) . ")";
 			}
 		}
-	
+
 		$conditions[] = "pos.pos_status = 1";
 		$conditions[] = "pos.pos_active = 'Y'";
 
-		if($action == ""){
+		if ($action == "") {
 			$conditions[] = "lapg.lapg_parent_id IS NULL";  // To get personnel without a leave approval group
 		}
 
-		
 
-		
+
+
 		// Prepare the final WHERE clause
 		$where_clause = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
-		
+
 		$sql = "
 			SELECT 
 				ps.ps_id,
@@ -189,12 +204,107 @@ class M_hr_leave_approve_person extends Da_hr_leave_approve_person
 			LEFT JOIN " . $this->hr_db . ".hr_leave_approve_group AS lapg ON lapg.lapg_parent_id = ps.ps_id AND lapg.lapg_type = 'ps'
 			{$where_clause}
 			GROUP BY ps.ps_id";
-	
+
 		$query = $this->hr->query($sql);
 		// echo $this->hr->last_query();
 		return $query;
-	}	
+	}
 	// get_leaves_approve_person_for_select_approve_group
+
+	/*
+	* get_leaves_approve_person_for_select_approve_group_type_stuc
+	* ข้อมูลรายชือบุคลากรตามโครงสร้างองค์กร ที่ไม่เคยได้รับการกำหนดกลุมอนุมัติการลา
+	* @input 
+	* @output leave approve person
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 28/10/2567
+	*/
+	function get_leaves_approve_person_for_select_approve_group_type_stuc($stde = "", $dp_id = "")
+	{
+		$conditions = [];
+		$params = [];
+
+		// Add filter from session if medical_string exists
+		$medical_string = $this->session->userdata('hr_hire_is_medical_string');
+		if (!empty($medical_string)) {
+			// Remove outer quotes and split the string into an array
+			$medical_array = explode(',', str_replace(["'", " "], '', $medical_string)); // Remove quotes and spaces
+
+			// Construct the FIND_IN_SET clause with the cleaned values
+			if (!empty($medical_array)) {
+				$conditions[] = "(" . implode(" OR ", array_map(function ($value) {
+					return "FIND_IN_SET('$value', hire.hire_is_medical)";
+				}, $medical_array)) . ")";
+			}
+		}
+
+
+		$conditions[] = "pos.pos_status = 1";
+		$conditions[] = "pos.pos_active = 'Y'";
+
+		if ($stde != "") {
+			$conditions[] = "stde.stde_id = {$stde}";
+		}
+
+		if ($dp_id != "") {
+			$conditions[] = "pos.pos_dp_id = {$dp_id}";
+		}
+
+		$conditions[] = "laps.laps_ps_id NOT IN (
+												SELECT l1.laps_ps_id
+											FROM " . $this->hr_db . ".hr_leave_approve_person AS l1
+											WHERE l1.laps_ps_id = laps.laps_ps_id
+												
+											)";  // To get personnel without a leave approval group
+
+
+		// Prepare the final WHERE clause
+		$where_clause = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
+
+		$sql = "
+			SELECT 
+				ps.ps_id,
+                pf.pf_name,
+                ps.ps_fname,
+                ps.ps_lname,
+                pos.pos_status,
+                hire.hire_name,
+                alp.alp_name,
+                CONCAT('<ul>',
+                    GROUP_CONCAT(
+                        DISTINCT CONCAT('<li>', ad.admin_name, '</li>')
+                        SEPARATOR ''
+                    ),
+                    '</ul>'
+                ) AS admin_position, 
+                CASE 
+                    WHEN hire.hire_is_medical = 'M' THEN 'สายการแพทย์'
+                    WHEN hire.hire_is_medical = 'N' THEN 'สายพยาบาล'
+                    WHEN hire.hire_is_medical = 'SM' THEN 'สายสนับสนุนทางการแพทย์'
+                    WHEN hire.hire_is_medical = 'T' THEN 'สายเทคนิคและบริการ'
+                    WHEN hire.hire_is_medical = 'A' THEN 'สายบริหาร'
+                    ELSE '(ไม่ระบุ)'
+                END AS hire_is_medical_label
+			FROM " . $this->hr_db . ".hr_structure_person AS stdp
+			LEFT JOIN " . $this->hr_db . ".hr_structure_detail AS stde ON stdp.stdp_stde_id = stde.stde_id
+			LEFT JOIN " . $this->hr_db . ".hr_leave_approve_person AS laps ON laps.laps_ps_id = stdp.stdp_ps_id
+			LEFT JOIN " . $this->hr_db . ".hr_person AS ps ON ps.ps_id = stdp.stdp_ps_id
+			LEFT JOIN " . $this->hr_db . ".hr_base_prefix AS pf ON ps.ps_pf_id = pf.pf_id
+			LEFT JOIN " . $this->hr_db . ".hr_person_position AS pos ON pos.pos_ps_id = ps.ps_id
+			LEFT JOIN " . $this->hr_db . ".hr_base_hire AS hire ON pos.pos_hire_id = hire.hire_id
+            LEFT JOIN " . $this->hr_db . ".hr_person_admin_position AS pap ON pos.pos_admin_id = pap.psap_pos_id
+            LEFT JOIN " . $this->hr_db . ".hr_base_adline_position AS alp ON pos.pos_alp_id = alp.alp_id
+            LEFT JOIN " . $this->hr_db . ".hr_base_admin_position AS ad ON pap.psap_admin_id = ad.admin_id
+
+
+			{$where_clause}
+			GROUP BY ps.ps_id";
+
+		$query = $this->hr->query($sql);
+		// echo $this->hr->last_query();
+		return $query;
+	}
+	// get_leaves_approve_person_for_select_approve_group_type_stuc
 
 	/*
 	* get_leaves_approve_person_by_lapg_id

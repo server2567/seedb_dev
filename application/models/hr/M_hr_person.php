@@ -58,38 +58,110 @@ class M_hr_person extends Da_hr_person
 		}
 
 		$sql = "
-    SELECT 
-        ps.ps_id,
-        pf.pf_name,
-        ps.ps_fname,
-        ps.ps_lname,
-		psd.psd_picture,
-        pos.pos_status,
-        hire.hire_name,
-        alp.alp_name,
-        dp.dp_name_th,
-        JSON_ARRAYAGG(DISTINCT JSON_OBJECT('admin_name', ad.admin_name)) AS admin_position
-    FROM " . $this->hr_db . ".hr_person AS ps
-	LEFT JOIN " . $this->hr_db . ".hr_person_detail AS psd ON psd.psd_ps_id = ps.ps_id
-    LEFT JOIN " . $this->hr_db . ".hr_base_prefix AS pf ON ps.ps_pf_id = pf.pf_id
-    LEFT JOIN " . $this->hr_db . ".hr_person_position AS pos ON pos.pos_ps_id = ps.ps_id
-    LEFT JOIN " . $this->hr_db . ".hr_base_hire AS hire ON pos.pos_hire_id = hire.hire_id
-    LEFT JOIN " . $this->hr_db . ".hr_person_admin_position AS pap ON pos.pos_admin_id = pap.psap_pos_id
-    LEFT JOIN " . $this->hr_db . ".hr_base_adline_position AS alp ON pos.pos_alp_id = alp.alp_id
-    LEFT JOIN " . $this->hr_db . ".hr_base_admin_position AS ad ON pap.psap_admin_id = ad.admin_id
-    LEFT JOIN " . $this->ums_db . ".ums_department AS dp ON dp.dp_id = pos.pos_dp_id
-    WHERE 
-        pos.pos_dp_id = " . $this->hr->escape($dp_id) . " 
-        {$hr_is_medical} 
-        {$cond} 
-        AND pos.pos_active = " . $this->hr->escape($pos_active) . "
-    GROUP BY ps.ps_id
-    ORDER BY pos.pos_status ASC";
+		SELECT 
+			ps.ps_id,
+			pf.pf_name,
+			ps.ps_fname,
+			ps.ps_lname,
+			psd.psd_picture,
+			pos.pos_status,
+			hire.hire_name,
+			alp.alp_name,
+			dp.dp_name_th,
+			JSON_ARRAYAGG(DISTINCT JSON_OBJECT('admin_name', ad.admin_name)) AS admin_position
+		FROM " . $this->hr_db . ".hr_person AS ps
+		LEFT JOIN " . $this->hr_db . ".hr_person_detail AS psd ON psd.psd_ps_id = ps.ps_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_prefix AS pf ON ps.ps_pf_id = pf.pf_id
+		LEFT JOIN " . $this->hr_db . ".hr_person_position AS pos ON pos.pos_ps_id = ps.ps_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_hire AS hire ON pos.pos_hire_id = hire.hire_id
+		LEFT JOIN " . $this->hr_db . ".hr_person_admin_position AS pap ON pos.pos_admin_id = pap.psap_pos_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_adline_position AS alp ON pos.pos_alp_id = alp.alp_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_admin_position AS ad ON pap.psap_admin_id = ad.admin_id
+		LEFT JOIN " . $this->ums_db . ".ums_department AS dp ON dp.dp_id = pos.pos_dp_id
+		WHERE 
+			pos.pos_dp_id = " . $this->hr->escape($dp_id) . " 
+			{$hr_is_medical} 
+			{$cond} 
+			AND pos.pos_active = " . $this->hr->escape($pos_active) . "
+		GROUP BY ps.ps_id
+		ORDER BY pos.pos_status ASC";
 
 		$query = $this->hr->query($sql);
 		return $query;
 	}
 
+
+	/*
+	* get_all_profile_data_by_param
+	* ข้อมูลบุคลากรทั้งหมด
+	* @input -
+	* @output person all
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 2567-05-21
+	*/
+	function get_all_profile_data_by_param($dp_id, $hire_is_medical, $hire_type, $status_id, $pos_active = 'Y')
+	{
+		$cond = "";
+
+		if ($hire_is_medical == "all") {
+			// Get the hire_is_medical values from session
+			$hire_is_medical = $this->session->userdata('hr_hire_is_medical');
+
+			// Build an array of the hire types (M, N, SM, A, T)
+			$allowed_hire_types = array_map(function ($hire) {
+				return $hire['type'];
+			}, $hire_is_medical);
+
+			// Convert the array into a string for the SQL query
+			$allowed_hire_types_str = implode("','", $allowed_hire_types);
+
+			$cond .= " AND hire.hire_is_medical IN ('" . $allowed_hire_types_str . "')";
+		} else {
+			$cond .= " AND hire.hire_is_medical = '{$hire_is_medical}'";
+		}
+
+		if ($hire_type != "all") {
+			$cond .= " AND hire.hire_type = {$hire_type}";
+		}
+
+		if ($status_id != "all") {
+			$cond .= " AND pos.pos_status = " . $this->hr->escape($status_id);
+		}
+
+
+		$sql = "
+		SELECT 
+			ps.ps_id,
+			pf.pf_name,
+			ps.ps_fname,
+			ps.ps_lname,
+			psd.psd_picture,
+			pos.pos_status,
+			hire.hire_name,
+			alp.alp_name,
+			dp.dp_name_th,
+			JSON_ARRAYAGG(DISTINCT JSON_OBJECT('admin_name', ad.admin_name)) AS admin_position
+		FROM " . $this->hr_db . ".hr_person AS ps
+		LEFT JOIN " . $this->hr_db . ".hr_person_detail AS psd ON psd.psd_ps_id = ps.ps_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_prefix AS pf ON ps.ps_pf_id = pf.pf_id
+		LEFT JOIN " . $this->hr_db . ".hr_person_position AS pos ON pos.pos_ps_id = ps.ps_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_hire AS hire ON pos.pos_hire_id = hire.hire_id
+		LEFT JOIN " . $this->hr_db . ".hr_person_admin_position AS pap ON pos.pos_admin_id = pap.psap_pos_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_adline_position AS alp ON pos.pos_alp_id = alp.alp_id
+		LEFT JOIN " . $this->hr_db . ".hr_base_admin_position AS ad ON pap.psap_admin_id = ad.admin_id
+		LEFT JOIN " . $this->ums_db . ".ums_department AS dp ON dp.dp_id = pos.pos_dp_id
+		WHERE 
+			pos.pos_dp_id = " . $this->hr->escape($dp_id) . " 
+
+			{$cond} 
+			AND pos.pos_active = " . $this->hr->escape($pos_active) . "
+		GROUP BY ps.ps_id
+		ORDER BY pos.pos_status ASC";
+
+		$query = $this->hr->query($sql);
+		// echo $this->hr->last_query();
+		return $query;
+	}
 
 
 
@@ -101,7 +173,7 @@ class M_hr_person extends Da_hr_person
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 2567-05-21
 	*/
-	function get_profile_detail_data_by_id()
+	function get_profile_detail_data_by_id($dp_id = null)
 	{
 		$sql = "SELECT 
 					ps_id,
@@ -144,6 +216,7 @@ class M_hr_person extends Da_hr_person
 					psd_addhome_dist_id,
 					psd_addhome_zipcode,
 					pos.pos_ps_code,
+					pos.pos_dp_id,
 					gd.gd_name,
 					race.race_name,
 					reli.reli_name,
@@ -179,6 +252,9 @@ class M_hr_person extends Da_hr_person
 				LEFT JOIN " . $this->hr_db . ".hr_base_amphur as amph
 				   ON amph.amph_id = psd.psd_addcur_amph_id
 				WHERE 	ps.ps_id = ?";
+		if ($dp_id != null) {
+			$sql .= ' AND pos.pos_dp_id = ' . $dp_id;
+		}
 		$query = $this->hr->query($sql, array($this->ps_id));
 		return $query;
 		// 	LEFT JOIN ".$this->hr_db.".hr_blood as blood 
@@ -297,7 +373,9 @@ class M_hr_person extends Da_hr_person
             alp.alp_name,
             spcl.spcl_name,
             hire.hire_name,
+			hire.hire_type,
 			hire.hire_is_medical,
+			dp.dp_name_th,
 			
 		   (SELECT JSON_ARRAYAGG(JSON_OBJECT('stdp_po_id', stdp.stdp_po_id, 'stde_name_th', stde_name_th) ORDER BY stde_level ASC) 
 				FROM  " . $this->hr_db . ".hr_structure_person AS stdp 
@@ -321,6 +399,7 @@ class M_hr_person extends Da_hr_person
             ON pssp.pssp_spcl_id = spcl.spcl_id
         LEFT JOIN " . $this->hr_db . ".hr_base_hire as hire
             ON pos.pos_hire_id = hire.hire_id
+		LEFT JOIN " . $this->ums_db . ".ums_department AS dp ON dp.dp_id = pos.pos_dp_id
         WHERE pos.pos_ps_id = {$ps_id}
             AND pos.pos_dp_id = {$dp_id}
             AND pos.pos_active = 'Y'";
@@ -365,15 +444,15 @@ class M_hr_person extends Da_hr_person
 	{
 		// Get the hire_is_medical values from session
 		$hire_is_medical = $this->session->userdata('hr_hire_is_medical');
-		
+
 		// Build an array of the hire types (M, N, SM, A, T)
-		$allowed_hire_types = array_map(function($hire) {
+		$allowed_hire_types = array_map(function ($hire) {
 			return $hire['type'];
 		}, $hire_is_medical);
-	
+
 		// Convert the array into a string for the SQL query
 		$allowed_hire_types_str = implode("','", $allowed_hire_types);
-	
+
 		// SQL query, filtering by allowed hire types
 		$sql = "SELECT hire_id, 
 					   hire_name,
@@ -384,12 +463,12 @@ class M_hr_person extends Da_hr_person
 				WHERE hire_active = 1
 				  AND hire_is_medical IN ('" . $allowed_hire_types_str . "')
 				ORDER BY hire_name ASC";
-	
+
 		$query = $this->hr->query($sql);
 		return $query;
 	}
 	// get_hr_base_hire_data
-	
+
 
 	/*
 	* get_hr_base_admin_position_data
@@ -1240,6 +1319,63 @@ class M_hr_person extends Da_hr_person
 	// get_structure_detail_by_confirm
 
 	/*
+	* get_structure_detail_by_param
+	* ข้อมูลรายละเอียดโครงสร้างองค์กร
+	* @input -
+	* @output 
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 2567-08-1
+	*/
+	function get_structure_detail_by_param($stuc_id = null, $dp_id = null, $level = null)
+	{
+		if ($stuc_id == null) {
+			$where = 'WHERE stuc_dp_id = 1 
+						AND stuc_status = 1 
+						AND stde_active = 1 ';
+		} else {
+			$where = 'WHERE ';
+			if ($stuc_id != null) {
+				$where .= "stuc_id = '$stuc_id' AND ";
+			}
+			if ($dp_id != null) {
+				$where .= "stuc_dp_id = '$dp_id' AND ";
+			}
+			$where .= "stde_active = 1 ";
+		}
+
+		if ($level != null) {
+			$where .= "AND stde_level >= {$level} ";
+		}
+
+		$hr_is_medical = "";
+		if ($this->session->userdata('hr_hire_is_medical')) {
+			$hr_hire = $this->session->userdata('hr_hire_is_medical');
+			$hr_is_medical = " AND (";
+			foreach ($hr_hire as $key => $value) {
+				if ($key > 0) {
+					$hr_is_medical .= " OR ";
+				}
+				if ($value['type'] == "M") {
+					$value['type'] = "Y";
+				}
+				$hr_is_medical .= "stde_is_medical = " . $this->hr->escape($value['type']);
+			}
+			$hr_is_medical .= ')';
+		}
+
+		$sql = "SELECT stuc_id, stde_id, stde_name_th, stde_seq, stde_level
+			FROM {$this->hr_db}.hr_structure_detail
+			LEFT JOIN hr_structure 
+				ON stde_stuc_id = stuc_id 
+		" . $where . $hr_is_medical . "ORDER BY stde_seq ASC;";
+
+		$query = $this->hr->query($sql);
+		// echo $this->hr->last_query();
+		return $query;
+	}
+	// get_structure_detail_by_param
+
+	/*
 	* get_structure_detail_by_dp_level
 	* ข้อมูลรายละเอียดโครงสร้างองค์กร ตามหน่วยงานและลำดับชั้น
 	* @input -
@@ -1254,7 +1390,7 @@ class M_hr_person extends Da_hr_person
 					AND stuc_status = 1 
 					AND stde_active = 1 
 					AND stde_level >= {$level} ";
-		} 
+		}
 
 		$sql = "SELECT 	stuc_id, 
 						stde_id, 
@@ -1272,7 +1408,7 @@ class M_hr_person extends Da_hr_person
 	}
 	// get_structure_detail_by_dp_level
 
-		/*
+	/*
 	* get_structure_detail_by_dpid_psid
 	* ข้อมูลรายละเอียดโครงสร้างองค์กร
 	* @input -
@@ -1280,15 +1416,14 @@ class M_hr_person extends Da_hr_person
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 2567-08-1
 	*/
-	function get_structure_detail_by_dpid_psid($dp_id, $ps_id, $stuc_id="")
+	function get_structure_detail_by_dpid_psid($dp_id, $ps_id, $stuc_id = "")
 	{
-		if($stuc_id != ""){
-			$cond =" AND stuc_id = {$stuc_id}";
-		}
-		else{
+		if ($stuc_id != "") {
+			$cond = " AND stuc_id = {$stuc_id}";
+		} else {
 			$cond = "";
 		}
-		
+
 		$sql = "SELECT stuc_id, stde_id, stde_name_th, stde_seq
 			FROM {$this->hr_db}.hr_structure_detail
 			LEFT JOIN {$this->hr_db}.hr_structure 
@@ -1406,7 +1541,8 @@ class M_hr_person extends Da_hr_person
 		$query = $this->hr->query($sql, array($dp_id, $ps_id, $status));
 		return $query;
 	}
-	function get_current_stucture_by_department($dp_id,$status = 1){
+	function get_current_stucture_by_department($dp_id, $status = 1)
+	{
 		$sql = "SELECT  stuc.stuc_id,
                 stuc.stuc_confirm_date, 
                 stuc.stuc_status,
@@ -1415,6 +1551,37 @@ class M_hr_person extends Da_hr_person
 				   see_hrdb.hr_structure as stuc
 				WHERE stuc.stuc_dp_id = $dp_id AND stuc.stuc_status = $status";
 		$query = $this->hr->query($sql);
+		return $query;
+	}
+	function get_person_list_by_dp_id($dp_id, $hire_type, $hire_is_medical, $stde_id, $status = 1)
+	{
+		// เริ่มต้น SQL พื้นฐาน
+		$sql = "SELECT ps.ps_id, CONCAT(pf.pf_name, ' ', ps.ps_fname, ' ', ps.ps_lname, ' ') as ps_name,pos.pos_dp_id,pos.pos_ps_code,hire.hire_abbr,CONCAT(pf.pf_name_abbr, ' ', ps.ps_fname, ' ', ps.ps_lname, ' ') as ps_list
+            FROM see_hrdb.hr_person as ps
+            INNER JOIN see_hrdb.hr_person_position as pos on pos.pos_ps_id = ps.ps_id
+            INNER JOIN see_hrdb.hr_base_hire as hire on hire.hire_id = pos.pos_hire_id
+            INNER JOIN see_hrdb.hr_base_prefix as pf on pf.pf_id = ps.ps_pf_id";
+
+		// ถ้า $stde_id ไม่เท่ากับ 'all' ให้เพิ่ม INNER JOIN และเงื่อนไขเพิ่มเติม
+		if ($stde_id !== 'all') {
+			$sql .= " INNER JOIN see_hrdb.hr_structure_person as struct on struct.stdp_ps_id = ps.ps_id";
+			$sql .= " WHERE pos.pos_dp_id = ? 
+                  AND hire.hire_type = ? 
+                  AND hire.hire_is_medical = ? 
+                  AND pos.pos_status = ?
+                  AND struct.stdp_stde_id = ?";
+			$params = array($dp_id, $hire_type, $hire_is_medical, $status, $stde_id);
+		} else {
+			// ถ้า $stde_id เท่ากับ 'all' ไม่ต้องเพิ่มเงื่อนไข INNER JOIN
+			$sql .= " WHERE pos.pos_dp_id = ? 
+                  AND hire.hire_type = ? 
+                  AND hire.hire_is_medical = ? 
+                  AND pos.pos_status = ?";
+			$params = array($dp_id, $hire_type, $hire_is_medical, $status);
+		}
+
+		// รัน query ด้วยพารามิเตอร์ที่กำหนด
+		$query = $this->hr->query($sql, $params);
 		return $query;
 	}
 } // end class M_hr_person

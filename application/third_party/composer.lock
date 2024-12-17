@@ -4,8 +4,50 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "99c829022e778e2dc2b084880b853da0",
+    "content-hash": "4ba9315c91968d1711c024f8d3238f7a",
     "packages": [
+        {
+            "name": "agile-bm/zk-lib",
+            "version": "1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/agile-bm/zk-lib.git",
+                "reference": "ced6ef0c15a79eaaf082c06503ca700c4079bee9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/agile-bm/zk-lib/zipball/ced6ef0c15a79eaaf082c06503ca700c4079bee9",
+                "reference": "ced6ef0c15a79eaaf082c06503ca700c4079bee9",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AgileBM\\ZKLib\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mostafa Zakaria",
+                    "email": "mzakaria@agilebm.com"
+                }
+            ],
+            "description": "Library to connect ZK biometric time/attendnace devices.",
+            "keywords": [
+                "ZK",
+                "biometric",
+                "tad"
+            ],
+            "support": {
+                "issues": "https://github.com/agile-bm/zk-lib/issues",
+                "source": "https://github.com/agile-bm/zk-lib/tree/1.2.0"
+            },
+            "time": "2023-03-02T16:03:31+00:00"
+        },
         {
             "name": "dompdf/dompdf",
             "version": "v3.0.0",

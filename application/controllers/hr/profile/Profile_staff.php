@@ -39,7 +39,6 @@ class Profile_staff extends UMS_Controller
 			$value->ps_id = encrypt_id($value->ps_id);
 		}
 		$data['filter_profile'] = $this->M_staff_profile->filter_profile_option($is_medical)->result();
-		// pre($data['medical_person'] );
 		$this->output_staff('staff/v_doctors', $data);
 	}
 
@@ -58,6 +57,9 @@ class Profile_staff extends UMS_Controller
 				$ft_stde = $_GET['ft_stde'];
 			}
 			$data['nurses_person'] = $this->M_staff_profile->get_medical_profile($is_medical, null, $ft_name, $ft_stde)->result();
+		    foreach ($data['nurses_person'] as $key => $value) {
+				$value->ps_id = encrypt_id($value->ps_id);
+			}
 			$data['ft_select'] = $ft_stde;
 			$data['ft_name'] = $ft_name;
 		}
@@ -80,6 +82,9 @@ class Profile_staff extends UMS_Controller
 				$ft_stde = $_GET['ft_stde'];
 			}
 			$data['staff_person'] = $this->M_staff_profile->get_medical_profile($is_medical, null, $ft_name, $ft_stde)->result();
+			foreach ($data['staff_person'] as $key => $value) {
+				$value->ps_id = encrypt_id($value->ps_id);
+			}
 			$data['ft_select'] = $ft_stde;
 			$data['ft_name'] = $ft_name;
 		}

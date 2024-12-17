@@ -1,13 +1,13 @@
 <?php
 /*
- * Da_hr_leave
+ * M_hr_leave_control
  * Model for Manage about hr_leave_control and hr_leave Table.
  * @Author Patcharapol Sirimaneechot
  * @Create Date 07/10/2024
  */
-include_once("hr_model.php");
+include_once("Da_hr_leave_control.php");
 
-class Da_hr_leave extends Hr_model 
+class M_hr_leave_control extends Da_hr_leave_control 
 {
 	/*
 	* get_all_leave_type
@@ -34,7 +34,7 @@ class Da_hr_leave extends Hr_model
 		/*** edit query string ***/ 
 
 		// main statement with where
-		$main_statement = "SELECT * FROM hr_leave_control LEFT JOIN hr_hire_is_medical ON hr_hire_is_medical.code = hr_leave_control.ctrl_hire_id LEFT JOIN hr_leave ON hr_leave.leave_id = hr_leave_control.ctrl_leave_id WHERE ";
+		$main_statement = "SELECT * FROM hr_leave_control LEFT JOIN hr_leave ON hr_leave.leave_id = hr_leave_control.ctrl_leave_id WHERE ";
 		$left_join_conjunction = " LEFT JOIN ";
 
 		$and = " AND ";
@@ -106,11 +106,11 @@ class Da_hr_leave extends Hr_model
 		// }
 	}
 
-	function get_all_hire_is_medical() {
-		$data = $this->hr->query("SELECT * FROM hr_hire_is_medical", array());
-		$data = $data->result_array();
-		return $data;
-	}
+	// function get_all_hire_is_medical() {
+	// 	$data = $this->hr->query("SELECT * FROM hr_hire_is_medical", array());
+	// 	$data = $data->result_array();
+	// 	return $data;
+	// }
 	
 	function get_all_leave() {
 		$data = $this->hr->query("SELECT * FROM hr_leave", array());
@@ -119,7 +119,7 @@ class Da_hr_leave extends Hr_model
 	}
 
 	function get_leave_control($id) {
-		$data = $this->hr->query("SELECT * FROM hr_leave_control LEFT JOIN hr_hire_is_medical ON hr_hire_is_medical.code = hr_leave_control.ctrl_hire_id WHERE ctrl_id = ?", array($id));
+		$data = $this->hr->query("SELECT * FROM hr_leave_control WHERE ctrl_id = ?", array($id));
 		$data = $data->result_array();
 		return $data;
 	}
@@ -127,14 +127,15 @@ class Da_hr_leave extends Hr_model
 	function get_all_leave_control() {
 		// $data = $this->hr->query("SELECT * FROM hr_leave_control INNER JOIN hr_base_hire ON hr_base_hire.hire_is_medical = hr_leave_control.ctrl_hire_id INNER JOIN hr_hire_is_medical ON hr_hire_is_medical.code = hr_base_hire.hire_is_medical INNER JOIN hr_leave ON hr_leave.leave_id = hr_leave_control.ctrl_leave_id GROUP BY ctrl_id", array());
 		// $data = $this->hr->query("SELECT * FROM hr_leave_control LEFT JOIN hr_hire_is_medical ON hr_hire_is_medical.code = hr_leave_control.ctrl_hire_id LEFT JOIN hr_leave ON hr_leave.leave_id = hr_leave_control.ctrl_leave_id", array());
-		$data = $this->hr->query("SELECT * FROM hr_leave_control LEFT JOIN hr_hire_is_medical ON hr_hire_is_medical.code = hr_leave_control.ctrl_hire_id LEFT JOIN hr_leave ON hr_leave.leave_id = hr_leave_control.ctrl_leave_id ORDER BY hr_leave_control.ctrl_id DESC", array());
+		$data = $this->hr->query("SELECT * FROM hr_leave_control LEFT JOIN hr_leave ON hr_leave.leave_id = hr_leave_control.ctrl_leave_id ORDER BY hr_leave_control.ctrl_id DESC", array());
 		$data = $data->result_array();
 		return $data;
 	}
 	
-	function store_leave_control($data) {
+	function store_leave_control($data, $us_id) {
 		try {
-			$query = $this->hr->query("INSERT INTO `hr_leave_control`( `ctrl_hire_id`, `ctrl_hire_type`, `ctrl_leave_id`, `ctrl_start_age`, `ctrl_end_age`, `ctrl_time_per_year`, `ctrl_day_per_year`, `ctrl_date_per_time`, `ctrl_pack_per_year`, `ctrl_money`, `ctrl_day_before`, `ctrl_day_after`, `ctrl_gd_id`, `ctrl_update`, `ctrl_user_update`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP() , CURRENT_TIMESTAMP() )", 
+			// $query = $this->hr->query("INSERT INTO `hr_leave_control`( `ctrl_hire_id`, `ctrl_hire_type`, `ctrl_leave_id`, `ctrl_start_age`, `ctrl_end_age`, `ctrl_time_per_year`, `ctrl_day_per_year`, `ctrl_date_per_time`, `ctrl_pack_per_year`, `ctrl_money`, `ctrl_day_before`, `ctrl_day_after`, `ctrl_gd_id`, `ctrl_update`, `ctrl_user_update`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP() , CURRENT_TIMESTAMP() )", 
+			$query = $this->hr->query("INSERT INTO `hr_leave_control`( `ctrl_hire_id`, `ctrl_hire_type`, `ctrl_leave_id`, `ctrl_start_age`, `ctrl_end_age`, `ctrl_time_per_year`, `ctrl_day_per_year`, `ctrl_hour_per_year`, `ctrl_minute_per_year`, `ctrl_date_per_time`, `ctrl_pack_per_year`, `ctrl_money`, `ctrl_day_before`, `ctrl_day_after`, `ctrl_gd_id`, `ctrl_update`, `ctrl_user_update`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP() , ? )", 
 				array(
 					$data['ctrl_hire_id']
 					,$data['ctrl_hire_type']
@@ -143,12 +144,15 @@ class Da_hr_leave extends Hr_model
 					,$data['ctrl_end_age']
 					,$data['ctrl_time_per_year']
 					,$data['ctrl_day_per_year']
+					,$data['ctrl_hour_per_year']
+					,$data['ctrl_minute_per_year']
 					,$data['ctrl_date_per_time']
 					,$data['ctrl_pack_per_year']
 					,$data['ctrl_money']
 					,$data['ctrl_day_before']
 					,$data['ctrl_day_after']
 					,$data['ctrl_gd_id']
+					,$us_id
 				));
 			return $query;
 		} catch (e) {
@@ -156,9 +160,10 @@ class Da_hr_leave extends Hr_model
 		}
 	}
 	
-	function store_updated_leave_control($id, $data) {
+	function store_updated_leave_control($id, $data, $us_id) {
 		try {
-			$query = $this->hr->query("UPDATE `hr_leave_control` SET `ctrl_hire_id` = ?, `ctrl_hire_type` = ?, `ctrl_leave_id` = ?, `ctrl_start_age` = ?, `ctrl_end_age` = ?, `ctrl_time_per_year` = ?, `ctrl_day_per_year` = ?, `ctrl_date_per_time` = ?, `ctrl_pack_per_year` = ?, `ctrl_money` = ?, `ctrl_day_before` = ?, `ctrl_day_after` = ?, `ctrl_gd_id` = ?, `ctrl_update` = CURRENT_TIMESTAMP(), `ctrl_user_update` = CURRENT_TIMESTAMP() WHERE ctrl_id = ?;", 
+			// $query = $this->hr->query("UPDATE `hr_leave_control` SET `ctrl_hire_id` = ?, `ctrl_hire_type` = ?, `ctrl_leave_id` = ?, `ctrl_start_age` = ?, `ctrl_end_age` = ?, `ctrl_time_per_year` = ?, `ctrl_day_per_year` = ?, `ctrl_date_per_time` = ?, `ctrl_pack_per_year` = ?, `ctrl_money` = ?, `ctrl_day_before` = ?, `ctrl_day_after` = ?, `ctrl_gd_id` = ?, `ctrl_update` = CURRENT_TIMESTAMP(), `ctrl_user_update` = CURRENT_TIMESTAMP() WHERE ctrl_id = ?;", 
+			$query = $this->hr->query("UPDATE `hr_leave_control` SET `ctrl_hire_id` = ?, `ctrl_hire_type` = ?, `ctrl_leave_id` = ?, `ctrl_start_age` = ?, `ctrl_end_age` = ?, `ctrl_time_per_year` = ?, `ctrl_day_per_year` = ?, `ctrl_hour_per_year` = ?, `ctrl_minute_per_year` = ?, `ctrl_date_per_time` = ?, `ctrl_pack_per_year` = ?, `ctrl_money` = ?, `ctrl_day_before` = ?, `ctrl_day_after` = ?, `ctrl_gd_id` = ?, `ctrl_update` = CURRENT_TIMESTAMP(), `ctrl_user_update` = ? WHERE ctrl_id = ?;", 
 				array(
 					$data['ctrl_hire_id']
 					,$data['ctrl_hire_type']
@@ -167,12 +172,15 @@ class Da_hr_leave extends Hr_model
 					,$data['ctrl_end_age']
 					,$data['ctrl_time_per_year']
 					,$data['ctrl_day_per_year']
+					,$data['ctrl_hour_per_year']
+					,$data['ctrl_minute_per_year']
 					,$data['ctrl_date_per_time']
 					,$data['ctrl_pack_per_year']
 					,$data['ctrl_money']
 					,$data['ctrl_day_before']
 					,$data['ctrl_day_after']
 					,$data['ctrl_gd_id']
+					,$us_id
 					,$id
 				));
 			return $query;

@@ -454,7 +454,6 @@ function updateQueue() {
 
           let card = document.createElement('div');
           card.className = 'col-md-3 p-0';
-            console.log(room);
             
           card.innerHTML = `
             <div class="card mb-0">

@@ -86,11 +86,11 @@ class Dashboard_modal extends UMS_Controller {
 
   public function modal_appointment($ap_id) {
 
-    $status_app = '2'; // จองคิวสำเร็จ
+    // $status_app = '2'; // จองคิวสำเร็จ
     $status_ntr = '4'; // จองคิวสำเร็จ
-    $data['app'] = $this->M_ums_patient->get_appointment_details($ap_id,$status_app)->row();
+    $data['app'] = $this->M_ums_patient->get_appointment_details($ap_id)->row();
     // echo $this->db->last_query();
-    // pre($data['app']);
+    // pre($data['app']); die;
     $data['can'] = $this->M_ums_patient->get_base_cancel()->result_array();
     
     $this->load->view('ums/frontend/v_modal_appointment', $data);

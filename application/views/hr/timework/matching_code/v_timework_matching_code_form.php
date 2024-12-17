@@ -77,7 +77,7 @@
                                     'body': text_toast_default_success_body
                                 });
                                 setInterval(() => {
-                                    location.reload()
+                                    location.href = '<?php echo base_url() ?>index.php/hr/timework/Timework_matching_code';
                                 }, 2000);
                             } else {
                                 dialog_success({

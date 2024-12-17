@@ -1,3 +1,4 @@
+<meta name="viewport" content="width=device-width, initial-scale=0.7">
 <style>
     .card-img-container {
         height: 300px; /* Fixed height for the image container */
@@ -19,8 +20,90 @@
         flex-direction: column;
         justify-content: space-between;
     }
+    @media (max-width: 600px) { 
+      #header{
+        display: none !important;
+      }
+      .row.topbar {
+          margin-top: -96px;
+      }
+      #main {
+        margin-top: 30px;
+      }
+      #profile {
+        margin-top: 100px !important;
+        width: 116%;
+        margin-left: -60px;
+      }
+      .row.justify-content-md-center.mt-2 {
+          display: flex;
+          justify-content: center;
+          margin-top: 30px !important;
+      }
+      a.nav-link.nav-profile.d-flex.align-items-center.pe-0 {
+          display: none !important;
+      }
+      #profile label {
+          font-size: 20px;
+          margin-top: -35px;
+      }
+      #profile input#floatingInput {
+          font-size: 20px;
+      }
+      #profile .form-floating.mb-2 {
+          margin-bottom: 40px !important;
+      }
+      #profile select#floatingSelect {
+          font-size: 20px;
+      }
+      #profile button#seacrh_button {
+          font-size: 28px !important;
+      }
+      #profile .card-img-container img {
+          width: 100%;
+          height: auto !important;
+          object-fit: cover !important;
+          position: absolute !important;
+      }
+      #profile .col-6.col-sm-6.col-md-3.col-lg-3 {
+          padding: 0;
+          padding-right: 5px;
+          padding-left: 5px;
+      }
+      #profile .card-img-container {
+          height: 550px !important;
+      }
+      #profile .h-160 {
+          height: auto !important;
+      }
+      #profile .card.content-card {
+        height: auto !important;
+        padding: 5px;
+      }
+      #profile p.card-text.btn.btn-primary.font-16.text-dark.mb-2.mt-2.pt-2 {
+          font-size: 20px !important;
+      }
+      #profile p.card-text.pb-0.font-14.text-dark {
+          font-size: 18px !important;
+      }
+      #profile .card-body.pb-0 {
+          padding: 10px !important;
+      }
+      #profile .col-6.col-sm-6.col-md-6.col-lg-6.mb-4 {
+          padding: 10px !important;
+      }
+      #profile .col-md-7 {
+          margin-top: 250px !important;
+      }
+      #profile p.card-text.btn.btn-primary.font-16.text-dark.mb-2 {
+          font-size: 20px !important;
+      }
+      #profile button#search_button {
+          font-size: 24px !important;
+      }
+    }
 </style>
-
+<div id="profile">
 <div class="row justify-content-md-center mt-2" style="margin-top: -160px !important;">
     <div class="col-12 col-sm-12 col-md-12 text-center">
         <h5 class="font-weight-600">ค้นหาทีมบริหารของโรงพยาบาลจักษุสุราษฎร์</h5>
@@ -43,14 +126,14 @@
                     <option value="<?= $value->stde_id ?>" <?= $ft_select == $value->stde_id ? 'selected' : ''; ?>><?= $value->stde_name_th ?></option>
                 <?php } ?>
             </select>
-            <label for="floatingSelect">ค้นหาทีมบริหาร</label>
+            <label for="floatingSelect">ตำแหน่งทีมบริหาร</label>
         </div>
     </div>
 </div>
 
 <div class="row justify-content-md-center mb-4 mt-2 text-center">
     <div class="col-12 col-sm-12 col-md-8">
-        <button type="button" onclick="filter_profile()" id="search_button" data-value="executives" class="btn btn-primary-search mb-2 w-100 font-20 float-start"><i class="bi bi-search"></i> ค้นหา</button>
+        <button type="button" onclick="filter_profile()" id="search_button" data-value="executives" class="btn btn-primary-search mb-2 w-100 font-20 float-start"><i class="bi bi-search"></i> ค้นหาผู้บริหาร</button>
     </div>
 </div>
 
@@ -90,7 +173,7 @@
                                                     </p>
                                                 </div>
                                                 <br>
-                                                <p class="card-text btn btn-primary font-16 text-dark mb-2"><a href="<?php echo site_url(); ?>/hr/frontend/profile/view_profile/<?= $value->ps_id ?>" style="color: white;">ข้อมูลแพทย์เพิ่มเติม...</a></p>
+                                                <p class="card-text btn btn-primary font-16 text-dark mb-2"><a href="<?php echo site_url(); ?>/hr/frontend/profile/view_profile/<?= $value->ps_id ?>" style="color: white;">ข้อมูลแพทย์เพิ่มเติม</a></p>
                                             </div>
                                         </div>
                                     </div>
@@ -104,6 +187,7 @@
                             </div>
                         </div>
                     <?php endif; ?>
+                </div>
                 </div>
             </div>
         </div>

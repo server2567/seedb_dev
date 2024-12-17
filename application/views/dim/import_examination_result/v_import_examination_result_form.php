@@ -91,14 +91,14 @@
                                 <h5 class="text-muted font-18">ชื่อผู้ป่วย</h5>
                                 <p class="fw-bold font-18"><?php echo $edit['pt_full_name'];?></p>
                             </div>
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <h5 for="exr_round" class="text-muted font-18">รอบที่เข้ามาใช้บริการของวันปัจจุบัน</h5>
                                 <p class="fw-bold font-18"><?php echo $edit['exr_round'];?></p>
-                            </div>
-                            <div class="col-md-6">
+                            </div> -->
+                            <!-- <div class="col-md-6">
                                 <h5 for="" class="text-muted font-18"><b> </b></h5>
                                 <p class="text-warning" name="exr_last_round" id="exr_last_round" style="padding-top: 18px;"></p>
-                            </div>
+                            </div> -->
                             <hr>
 
                             <div class="col-md-6">
@@ -178,6 +178,16 @@
 </div>
 
 <script>
+    // const originalAjax = $.ajax;
+    // $.ajax = function(settings) {
+    //     console.log("AJAX Call: ", settings);
+    //     return originalAjax.apply(this, arguments);
+    // };
+    
+    // $(document).ajaxComplete(function() {
+    //     console.log("Reloading the view page...");
+    // });
+
     const dropzone = document.getElementById('dropzone');
     const files = document.getElementById('files');
     const fileTableBody = document.getElementById('fileTableBody');

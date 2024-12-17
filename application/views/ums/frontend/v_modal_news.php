@@ -7,7 +7,7 @@
     <div class="col-12 col-sm-12 col-md-12 mx-auto">
       <div class="card-header border-bottom d-flex justify-content-between align-items-center">
         <h5 class="mb-2 mb-sm-0">วันที่ประกาศ <?php echo formatThaiDateNews($news->news_start_date); ?></h5>
-        <button id="saveImageNews" class="btn btn-info mb-0"><i class="bi bi-image me-2"></i>บันทึกข่าว</button>
+        <!-- <button id="saveImageNews" class="btn btn-info mb-0"><i class="bi bi-image me-2"></i>บันทึกข่าว</button> -->
       </div>
       <div id="cardToSave">
         <div class="card-body pb-2">

@@ -19,6 +19,7 @@ class Da_hr_leave_history extends Hr_model
     public $lhis_num_day;
     public $lhis_num_hour;
     public $lhis_num_minute;
+    public $lhis_sum_minutes;
     public $lhis_year;
     public $lhis_topic;
     public $lhis_address;
@@ -42,9 +43,9 @@ class Da_hr_leave_history extends Hr_model
     {
         // Insert all the relevant fields into the database
         $sql = "INSERT INTO " . $this->hr_db . ".hr_leave_history 
-                (lhis_ps_id, lhis_leave_id, lhis_start_date, lhis_end_date, lhis_num_day, lhis_num_hour, lhis_num_minute, lhis_year, lhis_topic, lhis_address, lhis_write_place, lhis_write_date, lhis_replace_id, lhis_status, lhis_attach_file, lhis_tell, lhis_create_user, lhis_create_date)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $this->hr->query($sql, array($this->lhis_ps_id, $this->lhis_leave_id, $this->lhis_start_date, $this->lhis_end_date, $this->lhis_num_day, $this->lhis_num_hour, $this->lhis_num_minute, $this->lhis_year, $this->lhis_topic, $this->lhis_address, $this->lhis_write_place, $this->lhis_write_date, $this->lhis_replace_id, $this->lhis_status, $this->lhis_attach_file, $this->lhis_tell, $this->lhis_create_user, $this->lhis_create_date));
+                (lhis_ps_id, lhis_leave_id, lhis_start_date, lhis_end_date, lhis_num_day, lhis_num_hour, lhis_num_minute, lhis_sum_minutes, lhis_year, lhis_topic, lhis_address, lhis_write_place, lhis_write_date, lhis_replace_id, lhis_status, lhis_attach_file, lhis_tell, lhis_create_user, lhis_create_date)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $this->hr->query($sql, array($this->lhis_ps_id, $this->lhis_leave_id, $this->lhis_start_date, $this->lhis_end_date, $this->lhis_num_day, $this->lhis_num_hour, $this->lhis_num_minute, $this->lhis_sum_minutes, $this->lhis_year, $this->lhis_topic, $this->lhis_address, $this->lhis_write_place, $this->lhis_write_date, $this->lhis_replace_id, $this->lhis_status, $this->lhis_attach_file, $this->lhis_tell, $this->lhis_create_user, $this->lhis_create_date));
         $this->last_insert_id = $this->hr->insert_id();
     }
 
@@ -52,9 +53,9 @@ class Da_hr_leave_history extends Hr_model
     {
         // Update all relevant fields based on the primary key lhis_id
         $sql = "UPDATE " . $this->hr_db . ".hr_leave_history
-				SET lhis_ps_id=?, lhis_leave_id=?, lhis_start_date=?, lhis_end_date=?, lhis_num_day=?, lhis_num_hour=?, lhis_num_minute=?, lhis_year=?, lhis_topic=?, lhis_address=?, lhis_write_place=?, lhis_write_date=?, lhis_replace_id=?, lhis_status=?, lhis_attach_file=?, lhis_tell=?, lhis_create_user=?, lhis_create_date=?
+				SET lhis_ps_id=?, lhis_leave_id=?, lhis_start_date=?, lhis_end_date=?, lhis_num_day=?, lhis_num_hour=?, lhis_num_minute=?, lhis_sum_minutes=?, lhis_year=?, lhis_topic=?, lhis_address=?, lhis_write_place=?, lhis_write_date=?, lhis_replace_id=?, lhis_status=?, lhis_attach_file=?, lhis_tell=?, lhis_create_user=?, lhis_create_date=?
 				WHERE lhis_id=?";
-        $this->hr->query($sql, array($this->lhis_ps_id, $this->lhis_leave_id, $this->lhis_start_date, $this->lhis_end_date, $this->lhis_num_day, $this->lhis_num_hour, $this->lhis_num_minute, $this->lhis_year, $this->lhis_topic, $this->lhis_address, $this->lhis_write_place, $this->lhis_write_date, $this->lhis_replace_id, $this->lhis_status, $this->lhis_attach_file, $this->lhis_tell, $this->lhis_create_user, $this->lhis_create_date, $this->lhis_id));
+        $this->hr->query($sql, array($this->lhis_ps_id, $this->lhis_leave_id, $this->lhis_start_date, $this->lhis_end_date, $this->lhis_num_day, $this->lhis_num_hour, $this->lhis_num_minute, $this->lhis_sum_minutes, $this->lhis_year, $this->lhis_topic, $this->lhis_address, $this->lhis_write_place, $this->lhis_write_date, $this->lhis_replace_id, $this->lhis_status, $this->lhis_attach_file, $this->lhis_tell, $this->lhis_create_user, $this->lhis_create_date, $this->lhis_id));
     }
 
     function delete()

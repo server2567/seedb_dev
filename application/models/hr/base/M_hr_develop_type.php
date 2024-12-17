@@ -78,10 +78,10 @@ class M_hr_develop_type extends Da_hr_develop_type {
 	* @author Jiradat Pomyai
 	* @Create Date 2567-05-30
 	*/
-	function get_all_by_active($orderby='DESC',$delete="2"){
+	function get_all_by_active($orderby='DESC',$delete="(2)"){
 		$sql = "SELECT * 
 				FROM ".$this->hr_db.".hr_base_develop_type
-				WHERE devb_active != '$delete'
+				WHERE devb_active NOT IN $delete
 				ORDER BY devb_active DESC,devb_id $orderby";
 		$query = $this->hr->query($sql);
 		return $query;

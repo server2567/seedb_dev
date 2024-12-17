@@ -5,10 +5,9 @@
  * @Author Tanadon Tangjaimongkhon
  * @Create Date 12/06/2024
 */
-include_once(dirname(__FILE__) . "/que_model.php");
+include_once(dirname(__FILE__)."/que_model.php");
 
-class Da_que_appointment extends Que_model
-{
+class Da_que_appointment extends Que_model {
 
 	// PK is apm_id
 
@@ -32,44 +31,30 @@ class Da_que_appointment extends Que_model
 
 	public $last_insert_id;
 
-	function __construct()
-	{
+	function __construct() {
 		parent::__construct();
 	}
 
-	function insert()
-	{
-		$sql = "INSERT INTO " . $this->que_db . ".que_appointment (
+	function insert() {
+		$sql = "INSERT INTO ".$this->que_db.".que_appointment (
 			apm_pt_id, apm_cl_id, apm_cl_code, 
 			apm_date, apm_time, apm_ps_id, apm_stde_id, 
 			apm_ds_id, apm_patient_type, apm_cause, apm_need, 
-			apm_create_user, apm_create_date, apm_update_user, apm_update_date
+			apm_create_user, apm_create_date, apm_update_user, apm_update_date,apm_patient_in_out,apm_patient_in_out_date,apm_ps_active
 		) VALUES (
-			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?
 		)";
 		$this->que->query($sql, array(
-			$this->apm_pt_id,
-			$this->apm_cl_id,
-			$this->apm_cl_code,
-			$this->apm_date,
-			$this->apm_time,
-			$this->apm_ps_id,
-			$this->apm_stde_id,
-			$this->apm_ds_id,
-			$this->apm_patient_type,
-			$this->apm_cause,
-			$this->apm_need,
-			$this->apm_create_user,
-			$this->apm_create_date,
-			$this->apm_update_user,
-			$this->apm_update_date
+			$this->apm_pt_id, $this->apm_cl_id, $this->apm_cl_code,
+			$this->apm_date, $this->apm_time, $this->apm_ps_id, $this->apm_stde_id,
+			$this->apm_ds_id, $this->apm_patient_type, $this->apm_cause, $this->apm_need,
+			$this->apm_create_user, $this->apm_create_date, $this->apm_update_user, $this->apm_update_date,$this->apm_patient_in_out, $this->apm_patient_in_out_date, $this->apm_ps_active
 		));
 	}
 
 
-	function update()
-	{
-		$sql = "UPDATE " . $this->que_db . ".que_appointment 
+	function update() {
+		$sql = "UPDATE ".$this->que_db.".que_appointment 
                 SET 
                     apm_pt_id = ?, 
                     apm_cl_id = ?, 
@@ -83,35 +68,23 @@ class Da_que_appointment extends Que_model
                     apm_cause = ?, 
                     apm_need = ?, 
                     apm_update_user = ?, 
-                    apm_update_date = ?
+                    apm_update_date = ?,
+                    apm_patient_in_out = ?
+                    apm_patient_in_out_date = ?
+                    apm_ps_active =?
                 WHERE
                     apm_id = ?";
 		$this->que->query($sql, array(
-			$this->apm_pt_id,
-			$this->apm_cl_id,
-			$this->apm_cl_code,
-			$this->apm_date,
-			$this->apm_time,
-			$this->apm_ps_id,
-			$this->apm_stde_id,
-			$this->apm_ds_id,
-			$this->apm_patient_type,
-			$this->apm_cause,
-			$this->apm_need,
-			$this->apm_update_user,
-			$this->apm_update_date,
-			$this->apm_id
+			$this->apm_pt_id, $this->apm_cl_id, $this->apm_cl_code, 
+			$this->apm_date, $this->apm_time, $this->apm_ps_id, 
+			$this->apm_stde_id, $this->apm_ds_id, $this->apm_patient_type, 
+			$this->apm_cause, $this->apm_need, $this->apm_update_user, 
+			$this->apm_update_date, $this->apm_patient_in_out, $this->apm_patient_in_out_date, $this->apm_ps_active, $this->apm_id
 		));
 	}
-	function update_sta_by_id()
-	{
-		$sql = "UPDATE " . $this->que_db . ".que_appointment SET apm_sta_id=? WHERE apm_id=?";
-		// pre($sql);
-		$this->que->query($sql, array($this->apm_sta_id, $this->apm_id));
-	}
-	function delete()
-	{
-		$sql = "DELETE FROM " . $this->que_db . ".que_appointment
+
+	function delete() {
+		$sql = "DELETE FROM ".$this->que_db.".que_appointment
 				WHERE apm_id = ?";
 		$this->que->query($sql, array($this->apm_id));
 	}
@@ -119,22 +92,28 @@ class Da_que_appointment extends Que_model
 	/*
 	 * You have to assign primary key value before call this function.
 	 */
-	function get_by_key($withSetAttributeValue = FALSE)
-	{
+	function get_by_key($withSetAttributeValue=FALSE) {
 		$sql = "SELECT *
-				FROM " . $this->que_db . ".que_appointment
+				FROM ".$this->que_db.".que_appointment
 				WHERE apm_id=?";
 		$query = $this->hr->query($sql, array($this->apm_id));
-		if ($withSetAttributeValue) {
-			$this->row2attribute($query->row());
+		if ( $withSetAttributeValue ) {
+			$this->row2attribute( $query->row() );
 		} else {
-			return $query;
+			return $query ;
 		}
 	}
-	function update_doctor_by_id()
-	{
-		$sql = "UPDATE " . $this->que_db . ".que_appointment SET apm_ps_id=? WHERE apm_id=?";
+
+	function update_sta_by_id(){
+		$sql = "UPDATE ".$this->que_db.".que_appointment SET apm_sta_id=? WHERE apm_id=?";
 		// pre($sql);
-		$this->que->query($sql, array($this->apm_ps_id, $this->apm_id));
+		$this->que->query($sql, array($this->apm_sta_id,$this->apm_id));
+	}
+
+	function update_doctor_by_id(){
+		$sql = "UPDATE ".$this->que_db.".que_appointment SET apm_ps_id=? WHERE apm_id=?";
+		$this->que->query($sql, array($this->apm_ps_id,$this->apm_id));
+		// echo $this->que->last_query(); die;
 	}
 }
+?>

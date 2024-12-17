@@ -125,16 +125,19 @@ class Profile_user extends Profile_Controller
 
 		$dp_id = $this->input->get('dp_id');
 		$hire_id = $this->input->get('hire_id');
-		$admin_id = $this->input->get('admin_id');
+		$hire_type = $this->input->get('hire_type');
 		$status_id = $this->input->get('status_id');
 
-		$result = $this->M_hr_person->get_all_profile_data($dp_id, $admin_id, $hire_id, $status_id)->result();
+		$result = $this->M_hr_person->get_all_profile_data_by_param($dp_id, $hire_id, $hire_type, $status_id)->result();
 		foreach ($result as $key => $row) {
 			$array = array();
 			$row->ps_id = encrypt_id($row->ps_id);
 			$admin_name = json_decode($row->admin_position, true);
 			if ($admin_name) {
 				foreach ($admin_name as $value) {
+					if (is_string($value)) {
+						$value = json_decode($value, true);
+					}
 					if ($value['admin_name']) {
 						$array[] = $value['admin_name'];
 					}
@@ -149,7 +152,7 @@ class Profile_user extends Profile_Controller
 	// get_profile_user_list
 
 
- 
+
 	/*
 	* profile_insert
 	* เพิ่มรายชื่อบุคลากรลงฐานข้อมูล
@@ -320,7 +323,7 @@ class Profile_user extends Profile_Controller
 			}
 		}
 		$data['person_department_detail'] = $position_department_array;
-        //   pre($data['person_department_detail'] );
+		//   pre($data['person_department_detail'] );
 		$data['base_amphur_list'] = $this->M_hr_person->get_hr_base_amphur_data()->result();
 		$data['base_adline_position_list'] = $this->M_hr_person->get_hr_base_adline_position_data()->result();
 		$data['base_admin_position_list'] = $this->M_hr_person->get_hr_base_admin_position_data()->result();
@@ -564,7 +567,7 @@ class Profile_user extends Profile_Controller
 
 		if (isset($profile_education_form["check_edu_start_year"]) && $profile_education_form["check_edu_start_year"] == "on") {
 			$this->M_hr_person_education->edu_start_date = "0000-00-00";	//วันที่เริ่มศึกษา 
-			$this->M_hr_person_education->edu_start_year = $profile_education_form["edu_start_year"]-543; //ปีที่เริ่มศึกษา 
+			$this->M_hr_person_education->edu_start_year = $profile_education_form["edu_start_year"] - 543; //ปีที่เริ่มศึกษา 
 		} else {
 			$this->M_hr_person_education->edu_start_date = splitDateForm1($profile_education_form["edu_start_date"]);	//วันที่เริ่มศึกษา 
 			list($day, $month, $year) = explode('/', $profile_education_form["edu_start_date"]);
@@ -573,7 +576,7 @@ class Profile_user extends Profile_Controller
 
 		if (isset($profile_education_form["check_edu_end_year"]) && $profile_education_form["check_edu_end_year"] == "on") {
 			$this->M_hr_person_education->edu_end_date = "0000-00-00";	//วันที่จบศึกษา 
-			$this->M_hr_person_education->edu_end_year = $profile_education_form["edu_end_year"]-543;	//ปีที่จบศึกษา 
+			$this->M_hr_person_education->edu_end_year = $profile_education_form["edu_end_year"] - 543;	//ปีที่จบศึกษา 
 		} else {
 			$this->M_hr_person_education->edu_end_date = splitDateForm1($profile_education_form["edu_end_date"]);	//วันที่จบศึกษา 
 			list($day, $month, $year) = explode('/', $profile_education_form["edu_end_date"]);
@@ -916,7 +919,13 @@ class Profile_user extends Profile_Controller
 		$this->M_hr_person_external_service->pexs_ps_id = $profile_external_service_form["ps_id"];	// รหัสบุคลากร (id.hr_person)
 		$this->M_hr_person_external_service->pexs_exts_id = $profile_external_service_form["pexs_exts_id"];	// ประเภทบริการหน่วยงานภายนอก
 		$this->M_hr_person_external_service->pexs_name_th = $profile_external_service_form["pexs_name_th"];	// เรื่องบริการหน่วยงานภายนอก
-		$this->M_hr_person_external_service->pexs_date = splitDateForm1($profile_external_service_form["pexs_date"]);	// วันที่บริการหน่วยงานภายนอก
+
+		if(isset($profile_external_service_form['check_pexs_date'])){
+			$this->M_hr_person_external_service->pexs_date = "0000-00-00";	// วันที่บริการหน่วยงานภายนอก
+		}
+		else{
+			$this->M_hr_person_external_service->pexs_date = splitDateForm1($profile_external_service_form["pexs_date"]);	// วันที่บริการหน่วยงานภายนอก
+		}
 		$this->M_hr_person_external_service->pexs_place_id = $profile_external_service_form["pexs_place_id"];	// สถานที่/หน่วยงาน
 
 		if (isset($_FILES['pexs_attach_file']) && $_FILES['pexs_attach_file']['error'] === UPLOAD_ERR_OK) {
@@ -1007,7 +1016,12 @@ class Profile_user extends Profile_Controller
 		$this->M_hr_person_reward->rewd_org_th = $profile_reward_form["rewd_org_th"];	//หน่วยงานที่มอบรางวัล (ภาษาอังกฤษ) 
 		$this->M_hr_person_reward->rewd_org_en = $profile_reward_form["rewd_org_en"];	//หน่วยงานที่มอบรางวัล (ภาษาไทย)
 
-		$this->M_hr_person_reward->rewd_year = $profile_reward_form["rewd_year"];	//ปีพุทธศักราช (พ.ศ.) ที่เริ่มเผยแพร่
+		if(isset($profile_reward_form["check_rewd_year"])){
+			$this->M_hr_person_reward->rewd_year = 0;	//ปีพุทธศักราช (พ.ศ.) ที่เริ่มเผยแพร่
+		}
+		else{
+			$this->M_hr_person_reward->rewd_year = $profile_reward_form["rewd_year"];	//ปีพุทธศักราช (พ.ศ.) ที่เริ่มเผยแพร่
+		}
 
 
 		if ($profile_reward_form["select_reward_date"] == 1) {
@@ -1171,8 +1185,8 @@ class Profile_user extends Profile_Controller
 
 		foreach ($result as $key => $row) {
 			$row->edu_id = encrypt_id($row->edu_id);
-			$row->edu_start_date = ($row->edu_start_date == "0000-00-00" ? ($row->edu_start_year+543) : abbreDate2($row->edu_start_date));
-			$row->edu_end_date = ($row->edu_end_date == "0000-00-00" ? ($row->edu_end_year+543) : abbreDate2($row->edu_end_date));
+			$row->edu_start_date = ($row->edu_start_date == "0000-00-00" ? ($row->edu_start_year + 543) : abbreDate2($row->edu_start_date));
+			$row->edu_end_date = ($row->edu_end_date == "0000-00-00" ? ($row->edu_end_year + 543) : abbreDate2($row->edu_end_date));
 		}
 
 		echo json_encode($result);
@@ -1218,7 +1232,7 @@ class Profile_user extends Profile_Controller
 
 			$row->edu_start_date = ($row->edu_start_date == "0000-00-00" ? $currentDateThai : date('d/m/Y', strtotime($row->edu_start_date . ' +543 years')));
 			$row->edu_end_date = ($row->edu_end_date == "0000-00-00" ? $currentDateThai : date('d/m/Y', strtotime($row->edu_end_date . ' +543 years')));
-			
+
 			$row->edu_start_year += 543;
 			$row->edu_end_year += 543;
 		}
@@ -1274,7 +1288,7 @@ class Profile_user extends Profile_Controller
 
 		foreach ($result as $key => $row) {
 			$row->pexs_id = encrypt_id($row->pexs_id);
-			$row->pexs_date = abbreDate2($row->pexs_date);
+			$row->pexs_date = ($row->pexs_date != "0000-00-00" ? abbreDate2($row->pexs_date) : "ไม่ระบุ");
 		}
 
 		echo json_encode($result);
@@ -1328,7 +1342,13 @@ class Profile_user extends Profile_Controller
 		foreach ($result as $key => $row) {
 			$row->pexs_id = encrypt_id($row->pexs_id);
 
-			$row->pexs_date = date('d/m/Y', strtotime($row->pexs_date . ' +543 years'));
+			if($row->pexs_date != "0000-00-00"){
+				$row->pexs_date = date('d/m/Y', strtotime($row->pexs_date . ' +543 years'));
+			}
+			else{
+				$row->pexs_date = "ไม่ระบุ";
+			}
+			
 		}
 
 		echo json_encode($result);
@@ -1486,6 +1506,7 @@ class Profile_user extends Profile_Controller
 
 		foreach ($result as $key => $row) {
 			$row->rewd_id = encrypt_id($row->rewd_id);
+			$row->rewd_year = ($row->rewd_year != 0 ? $row->rewd_year : "ไม่ระบุ");
 			$row->rewd_date = ($row->rewd_date == "0000-00-00" ? date('d/m/Y', strtotime($row->wohr_end_date . ' +543 years')) : date('d/m/Y', strtotime($row->rewd_date . ' +543 years')));
 		}
 
@@ -1794,5 +1815,108 @@ class Profile_user extends Profile_Controller
 		$stuc_id = $this->input->post('stuc_id');
 		$result = $this->M_hr_person->get_structure_detail_by_confirm($stuc_id)->result();
 		echo json_encode($result);
+	}
+	public function readCsvToArray()
+	{
+		$filename = '/var/www/html/seedb/application/test3_position.csv';
+		// ตรวจสอบว่าไฟล์มีอยู่หรือไม่
+		if (!file_exists($filename) || !is_readable($filename)) {
+			return false;
+		}
+
+		$data = [];
+		if (($handle = fopen($filename, 'r')) !== false) {
+			while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+				$data[] = [
+					'pos_ps_code' => $row[0],
+					'pos_ps_id' => $row[1],
+					'pos_dp_id' => $row[2],
+					'pos_hire_id' => $row[3],
+					'pos_active' => $row[4],
+					'pos_create_user' => $row[5]
+				];
+			}
+			fclose($handle);
+		}
+          $this->hr = $this->load->database('hr', TRUE);
+		// if (($handle = fopen($filename, 'r')) !== false) {
+		// 	while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+		// 		// pre($row[0]);
+		// 		$sql = 'SELECT ps_id,ps_fname_en,ps_lname_en FROM see_hrdb.hr_person WHERE ps_id = ?';
+		// 		$query = $this->hr->query($sql,array($row[0] == 140 ? '140': $row[0]));
+		// 		$result = $query->result_array();
+		// 		if($result){
+		// 			$email = strtolower($result[0]['ps_fname_en']).'_'.strtolower($result[0]['ps_lname_en']).'@see.in.th';
+		// 		}else{
+		// 			$email = '-';
+		// 		}
+		// 		$data[] = [
+		// 			'psd_ps_id' => $row[0],
+		// 			'psd_cellphone' => $row[1],
+		// 			'psd_id_card_no' => $row[2],
+		// 			'psd_picture' => $row[3],
+		// 			'psd_birthdate' => date('Y-m-d', strtotime($row[4])), // Convert date format
+		// 			'psd_psst_id' => $row[5],
+		// 			'psd_gd_id' => $row[9],
+		// 			'psd_email'=>$email,
+		// 			'psd_addcur_no' => $row[17],
+		// 			'psd_addcur_pv_id' => $row[18],
+		// 			'psd_addcur_amph_id' => $row[19],
+		// 			'psd_addcur_dist_id' => $row[20],
+		// 			'psd_addcur_zipcode' => $row[21],
+		// 			'psd_addhome_no' => $row[22],
+		// 			'psd_addhome_pv_id' => $row[23],
+		// 			'psd_addhome_amph_id' => $row[24],
+		// 			'psd_addhome_dist_id' => $row[25],
+		// 			'psd_addhome_zipcode' => $row[26],
+		// 			'psd_create_user' => $row[27]
+		// 		];
+		// 	}
+		// 	fclose($handle);
+		// }
+		// // pre($data);
+	    // $this->hr = $this->load->database('hr', TRUE);
+		// $count = count($data);
+		// // pre($count);
+		// for ($i=0; $i < $count; $i++) { 
+		// $this->hr->insert('hr_person_detail', $data[$i]);
+		// }
+		// foreach ($variable as $key => $value) {
+		// 	# code...
+		// }
+		// $this->hr->insert('hr_person_detail', $data);
+		// ตรวจสอบว่ามีข้อมูลใน CSV หรือไม่
+		if (empty($data)) {
+			return false;
+		}
+		// foreach ($data as $key => $value) {
+		// 	if ($key != 0) {
+		// 		$sql = "SELECT pos_ps_code 
+		// 		FROM hr_person_position
+        //         WHERE pos_ps_code LIKE '" . $value['pos_ps_code'] . "'";
+		// 		$this->hr = $this->load->database('hr', TRUE);
+		// 		// ดึงผลลัพธ์
+		// 		$query = $this->hr->query($sql);
+		// 		$result = $query->result_array();
+		// 		if (empty($result)) {
+		// 			$data2[] = $value;
+		// 		}
+		// 	}
+		// }
+		// Query หาข้อมูลที่ไม่มีใน hr_person_position
+		// pre($data);
+		// foreach ($data as $key => $value2) {
+		// 	$sql_insert = array(
+		// 		'pos_ps_code' => $value2['pos_ps_code'],
+		// 		'pos_ps_id' => $value2['pos_ps_id'],
+		// 		'pos_dp_id' =>  $value2['pos_dp_id'],
+		// 		'pos_hire_id' =>  $value2['pos_hire_id'],
+		// 		'pos_active' =>  1,
+		// 		'pos_create_user'=>1
+		// 	);
+		// 	// pre($sql_insert);
+		// 	// $this->hr->insert('hr_person_position', $sql_insert);
+		// }
+		// return $data;
 	}
 }

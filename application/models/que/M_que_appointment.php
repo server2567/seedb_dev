@@ -286,9 +286,19 @@ class M_que_appointment extends Da_que_appointment
               FROM $this->que_db.que_appointment 
               LEFT JOIN $this->hr_db.hr_structure_detail ON apm_stde_id = stde_id
               LEFT JOIN $this->hr_db.hr_structure ON stuc_id = stde_stuc_id 
-              WHERE stuc_status = '1' 
+              WHERE stuc_status = '1'
               GROUP BY stde_name_th 
-              ORDER BY CONVERT(stde_name_th USING utf8) COLLATE utf8_unicode_ci";
+              ORDER BY
+              CASE apm_stde_id
+                  WHEN 66 THEN 1
+                  WHEN 67 THEN 2
+                  WHEN 68 THEN 3
+                  WHEN 69 THEN 4
+                  WHEN 81 THEN 5
+                  WHEN 63 THEN 6
+                  WHEN 77 THEN 7
+                  ELSE 8
+              END";
         $query = $this->que->query($sql);
         return $query;
     }
@@ -453,7 +463,7 @@ class M_que_appointment extends Da_que_appointment
         $sql = "SELECT *,
                 CONCAT(hr_base_prefix.pf_name_abbr, '', hr_person.ps_fname, ' ', hr_person.ps_lname) AS ps_name, 
                 CONCAT(ums_patient.pt_prefix, '', ums_patient.pt_fname, ' ', ums_patient.pt_lname) AS pt_name,
-                ptd_img_type, ptd_img_code
+                ptd_img_type, ptd_img_code,stde_name_th,apm_visit
              FROM $this->que_db.que_appointment
             LEFT JOIN $this->ums_db.ums_patient ON apm_pt_id = pt_id 
             LEFT JOIN $this->hr_db.hr_person ON apm_ps_id = ps_id
@@ -486,7 +496,7 @@ class M_que_appointment extends Da_que_appointment
     }
 
 
-    public function get_appointment_by_code($date, $apm_ql_code, $apm_stde_id)
+    public function get_appointment_by_code($date, $apm_ql_code)
     {
         $sql = "SELECT * FROM que_appointment 
         LEFT JOIN $this->ums_db.ums_patient ON apm_pt_id = pt_id 
@@ -496,10 +506,9 @@ class M_que_appointment extends Da_que_appointment
         LEFT JOIN $this->wts_db.wts_base_disease ON apm_ds_id = ds_id
         LEFT JOIN $this->ums_db.ums_department ON apm_dp_id = dp_id
         LEFT JOIN $this->wts_db.wts_notifications_department ON apm_id = ntdp_apm_id
-        WHERE apm_date = ? AND apm_ql_code = ? AND apm_stde_id = ?
-        
-         ";
-        $query = $this->que->query($sql, array($date, $apm_ql_code, $apm_stde_id));
+        WHERE apm_date = ? AND apm_ql_code = ?";
+        $query = $this->que->query($sql, array($date, $apm_ql_code));
+        // echo $this->que->last_query(); die;
         return $query; // Return result as array
     }
 
@@ -520,16 +529,16 @@ class M_que_appointment extends Da_que_appointment
         LEFT JOIN see_umsdb.ums_department ON apm_dp_id = dp_id
         LEFT JOIN see_wtsdb.wts_notifications_department ON apm_id = ntdp_apm_id
         WHERE apm_date = ? AND apm_sta_id = ? AND apm_ps_id = ?
-        GROUP BY apm_ql_code
         {$order}
-        
          ";
         $query = $this->que->query($sql, array($date, $sta_id, $ps_id));
-        // pre($query);
+        // pre($query); die;
+        // echo $this->que->last_query();
+        // die;
         return $query; // Return result as array
     }
 
-    function get_ntdp_list_btw_select_apm($date, $pre_que, $pt_que)
+    function get_ntdp_list_btw_select_apm($date, $pre_que, $pt_que,$ps_id='')
     {
         $sql = "SELECT que_appointment.*, wts_notifications_department.*, wts_base_disease_time.*
                 FROM que_appointment
@@ -542,13 +551,14 @@ class M_que_appointment extends Da_que_appointment
                 (see_quedb.que_appointment.apm_ql_code BETWEEN '$pt_que' AND '$pre_que')
                 OR (see_quedb.que_appointment.apm_ql_code BETWEEN '$pre_que' AND '$pt_que')
                 )
-                AND see_quedb.que_appointment.apm_ql_code IS NOT NULL;
+                AND see_quedb.que_appointment.apm_ql_code IS NOT NULL AND apm_ps_id = '$ps_id' AND apm_sta_id IN (2,4) GROUP BY apm_ql_code;
                 ";
         $query = $this->que->query($sql, array());
+        // echo $this->que->last_query(); die;
         return $query; // Return result as array
     }
 
-    public function get_count_list_btw_select_apm($date, $pre_que, $pt_que)
+    public function get_count_list_btw_select_apm($date, $pre_que, $pt_que, $ps_id='')
     {
         // ฟังก์ชัน SQL สำหรับการค้นหาข้อมูล
         $where = 'AND see_quedb.que_appointment.apm_ql_code BETWEEN ? AND ?';
@@ -559,16 +569,16 @@ class M_que_appointment extends Da_que_appointment
                 LEFT JOIN see_wtsdb.wts_base_disease_time
                 ON wts_notifications_department.ntdp_dst_id = wts_base_disease_time.dst_id
                 WHERE see_quedb.que_appointment.apm_date = ?
-                {$where}
+                {$where} AND apm_ps_id = ? AND apm_sta_id IN (2,4)
                 AND see_quedb.que_appointment.apm_ql_code IS NOT NULL
                 GROUP BY apm_ql_code";
 
         // ลองค้นหาด้วย $pre_que และ $pt_que
-        $query = $this->que->query($sql, array($date, $pre_que, $pt_que));
-
+        $query = $this->que->query($sql, array($date, $pre_que, $pt_que,$ps_id));
+        // echo $this->que->last_query(); die;
         // ถ้าไม่เจอผลลัพธ์ให้ลองสลับ $pre_que และ $pt_que แล้วค้นหาใหม่
         if ($query->num_rows() == 0) {
-            $query = $this->que->query($sql, array($date, $pt_que, $pre_que));
+            $query = $this->que->query($sql, array($date, $pt_que, $pre_que,$ps_id));
         }
 
         return $query; // ส่งผลลัพธ์กลับเป็น array
@@ -1345,7 +1355,7 @@ class M_que_appointment extends Da_que_appointment
 
         return $this->que->insert_id();
     }
-    function insert_appointment_api($apm_pt_id, $apm_visit, $apm_app_walk, $apm_ntf_id, $apm_date, $apm_sta_id, $apm_patient_type, $ds_stde_id, $apm_ql_code, $apm_pri_id, $apm_dp_id, $person_query, $apm_time)
+    function insert_appointment_api($apm_pt_id, $apm_visit, $apm_app_walk, $apm_ntf_id, $apm_date, $apm_sta_id, $apm_patient_type, $ds_stde_id, $apm_ql_code, $apm_pri_id, $apm_dp_id, $person_query, $apm_time,$apm_patient_in_out,$apm_patient_in_out_date,$apm_ps_active)
     {
         $sql = "INSERT INTO " . $this->que_db . ".que_appointment (
             apm_pt_id,apm_visit,apm_app_walk,
@@ -1357,9 +1367,12 @@ class M_que_appointment extends Da_que_appointment
             apm_pri_id,
             apm_dp_id,
             apm_ps_id,
-            apm_time
+            apm_time,
+            apm_patient_in_out,
+            apm_patient_in_out_date,
+            apm_ps_active
         ) VALUES (
-           ?, ?, ?, ?, ?, ?, ? , NOW() , ? , ? , ? ,? ,? ,?
+           ?, ?, ?, ?, ?, ?, ? , NOW() , ? , ? , ? ,? ,? ,? ,?,?,?
         )";
 
         $this->que->query($sql, array(
@@ -1375,7 +1388,10 @@ class M_que_appointment extends Da_que_appointment
             $apm_pri_id,
             $apm_dp_id,
             $person_query,
-            $apm_time
+            $apm_time,
+            $apm_patient_in_out,
+            $apm_patient_in_out_date,
+            $apm_ps_active
         ));
 
         return $this->que->insert_id();
@@ -1592,7 +1608,7 @@ class M_que_appointment extends Da_que_appointment
                 LEFT JOIN see_hrdb.hr_structure_detail ON apm_stde_id = stde_id
                 LEFT JOIN see_wtsdb.wts_base_disease ON apm_ds_id = ds_id
                 LEFT JOIN see_umsdb.ums_department ON apm_dp_id = dp_id 
-                WHERE apm_stde_id IN ($stde_ids_str)";
+                WHERE apm_ps_id = $ps_id AND apm_dp_id = '1'";
 
         $binds = array();
 
@@ -1638,14 +1654,14 @@ class M_que_appointment extends Da_que_appointment
             $sql .= " AND apm_sta_id = ?";
             $binds[] = $params['sta_id'];
         } else {
-            $sql .= "AND apm_sta_id NOT IN ('1', '5') "; // แก้ เพิ่ม 1, 5
+            $sql .= " AND apm_sta_id NOT IN ('1', '5') "; // แก้ เพิ่ม 1, 5
         }
 
         if (!empty($params['status'])) {
             if ($params['status'] === 'waiting') {
-                $sql .= " AND apm_sta_id NOT IN (10, 15)"; // สถานะอื่นๆ (ยกเว้น 10 และ 15)
+                $sql .= " AND apm_sta_id IN (2, 4, 11, 12)"; 
             } else if ($params['status'] === 'completed') {
-                $sql .= " AND apm_sta_id IN (10, 15)"; // สถานะพบแพทย์เสร็จแล้ว
+                $sql .= " AND apm_sta_id IN (10)"; // สถานะพบแพทย์เสร็จแล้ว
             }
         }
 
@@ -1662,8 +1678,19 @@ class M_que_appointment extends Da_que_appointment
             $binds[] = '%' . $params['search'] . '%';
         }
 
-        if(!empty($order_column) || !empty($order_dir)) {
-            $sql .= " ORDER BY apm_ql_code asc";
+        if(empty($order_column) && empty($order_dir)) {
+            $sql .= " ORDER BY 
+                        CASE 
+                            WHEN apm_pri_id = 1 THEN 1
+                            WHEN apm_pri_id = 6 THEN 2
+                            WHEN apm_ql_code LIKE 'I-%' THEN 3
+                            ELSE 4
+                        END,
+                        CASE 
+                            WHEN apm_ql_code LIKE 'I-%' THEN apm_time
+                            ELSE NULL
+                        END,
+                        apm_ql_code ASC";
         }else{
             $sql .= " ORDER BY $order_column $order_dir";
         }
@@ -1671,6 +1698,127 @@ class M_que_appointment extends Da_que_appointment
         $sql .= " LIMIT ?, ?";
         array_push($binds, (int)$start, (int)$length);
 
+        // echo $sql; die();
+        $query = $this->que->query($sql, $binds);
+
+        if (!$query) {
+            log_message('error', 'Query error: ' . $this->db->_error_message());
+        }
+
+        return $query->result_array();
+    }
+
+    public function get_appointments_server_wts_clinic($start, $length, $order_column, $order_dir, $params)
+    {
+        $ps_id = $this->session->userdata('us_ps_id');
+        $get_stde = $this->hr->query("SELECT * FROM hr_structure_detail 
+                                    LEFT JOIN hr_structure_person ON stdp_stde_id = stde_id 
+                                    WHERE stde_is_medical = 'Y' AND stdp_ps_id = '$ps_id' AND stdp_active = '1'")->result_array();
+        $stde_ids = array_column($get_stde, 'stde_id');
+        $stde_ids_str = implode(',', $stde_ids);
+
+        $sql = "SELECT *, 
+                    CONCAT(pf_name, '', ps_fname, ' ', ps_lname) AS ps_name, 
+                    CONCAT(pt_prefix, '', pt_fname, ' ', pt_lname) AS pt_name
+                FROM see_quedb.que_appointment 
+                LEFT JOIN see_quedb.que_base_priority ON apm_pri_id = pri_id 
+                LEFT JOIN see_umsdb.ums_patient ON apm_pt_id = pt_id 
+                LEFT JOIN see_hrdb.hr_person ON apm_ps_id = ps_id
+                LEFT JOIN see_hrdb.hr_base_prefix ON pf_id = ps_pf_id
+                LEFT JOIN see_hrdb.hr_structure_detail ON apm_stde_id = stde_id
+                LEFT JOIN see_wtsdb.wts_base_disease ON apm_ds_id = ds_id
+                LEFT JOIN see_umsdb.ums_department ON apm_dp_id = dp_id 
+                WHERE apm_ps_id = $ps_id AND apm_dp_id = '2'";
+
+        $binds = array();
+
+        if (!empty($params['month'])) {
+            $sql .= " AND MONTH(apm_date) = ?";
+            $binds[] = $params['month'];
+        }
+
+        if (!empty($params['date'])) {
+            $dateParts = explode('/', $params['date']);
+            $day = $dateParts[0];
+            $month = $dateParts[1];
+            $buddhistYear = $dateParts[2];
+            $gregorianYear = (int)$buddhistYear - 543;
+            $gregorianDate = $gregorianYear . '-' . $month . '-' . $day;
+            $sql .= " AND DATE(see_quedb.que_appointment.apm_date) = ?";
+            $binds[] = $gregorianDate;
+        } else {
+            $sql .= " AND DATE(apm_date) = CURDATE()";
+        }
+
+        if (!empty($params['department'])) {
+            $sql .= " AND apm_stde_id = ?";
+            $binds[] = $params['department'];
+        }
+
+        if (!empty($params['doctor'])) {
+            $sql .= " AND see_quedb.que_appointment.apm_ps_id = ?";
+            $binds[] = $params['doctor'];
+        }
+
+        if (!empty($params['patientId'])) {
+            $sql .= " AND pt_member = ?";
+            $binds[] = $params['patientId'];
+        }
+
+        if (!empty($params['patientName'])) {
+            $sql .= " AND CONCAT(pt_prefix, '', pt_fname, ' ', pt_lname) LIKE ?";
+            $binds[] = '%' . $params['patientName'] . '%';
+        }
+
+        if (!empty($params['sta_id'])) {
+            $sql .= " AND apm_sta_id = ?";
+            $binds[] = $params['sta_id'];
+        } else {
+            $sql .= " AND apm_sta_id NOT IN ('1', '5') "; // แก้ เพิ่ม 1, 5
+        }
+
+        if (!empty($params['status'])) {
+            if ($params['status'] === 'waiting') {
+                $sql .= " AND apm_sta_id IN (2, 4, 11, 12)"; 
+            } else if ($params['status'] === 'completed') {
+                $sql .= " AND apm_sta_id IN (10)"; // สถานะพบแพทย์เสร็จแล้ว
+            }
+        }
+
+        if (!empty($ps_id)) {
+            $sql .= " AND ps_id = $ps_id";
+        }
+
+        if (!empty($params['search'])) {
+            $sql .= " AND (CONCAT(ums_patient.pt_prefix, '', ums_patient.pt_fname, ' ', ums_patient.pt_lname) LIKE ? OR apm_cl_code LIKE ? OR pt_member LIKE ? OR CONCAT(hr_base_prefix.pf_name, '', hr_person.ps_fname, ' ', hr_person.ps_lname) LIKE ? OR stde_name_th LIKE ?)";
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+        }
+
+        if(empty($order_column) && empty($order_dir)) {
+            $sql .= " ORDER BY 
+                        CASE 
+                            WHEN apm_pri_id = 1 THEN 1
+                            WHEN apm_pri_id = 6 THEN 2
+                            WHEN apm_ql_code LIKE 'I-%' THEN 3
+                            ELSE 4
+                        END,
+                        CASE 
+                            WHEN apm_ql_code LIKE 'I-%' THEN apm_time
+                            ELSE NULL
+                        END,
+                        apm_ql_code ASC";
+        }else{
+            $sql .= " ORDER BY $order_column $order_dir";
+        }
+        
+        $sql .= " LIMIT ?, ?";
+        array_push($binds, (int)$start, (int)$length);
+
+        // echo $sql; die();
         $query = $this->que->query($sql, $binds);
 
         if (!$query) {
@@ -1708,7 +1856,7 @@ class M_que_appointment extends Da_que_appointment
                 LEFT JOIN see_hrdb.hr_structure_detail ON apm_stde_id = stde_id
                 LEFT JOIN see_wtsdb.wts_base_disease ON apm_ds_id = ds_id
                 LEFT JOIN see_umsdb.ums_department ON apm_dp_id = dp_id 
-                WHERE apm_stde_id IN ($stde_ids_str)";
+                WHERE apm_ps_id = $ps_id AND apm_dp_id = '1'";
 
         $binds = array();
 
@@ -1727,7 +1875,7 @@ class M_que_appointment extends Da_que_appointment
             $sql .= " AND DATE(see_quedb.que_appointment.apm_date) = ?";
             $binds[] = $gregorianDate;
         } else {
-            $sql .= "AND DATE(apm_date) = CURDATE() ";
+            $sql .= " AND DATE(apm_date) = CURDATE() ";
         }
 
         if (!empty($params['department'])) {
@@ -1754,7 +1902,7 @@ class M_que_appointment extends Da_que_appointment
             $sql .= " AND apm_sta_id = ?";
             $binds[] = $params['sta_id'];
         } else {
-            $sql .= "AND apm_sta_id NOT IN (1, 5) "; // แก้ เพิ่ม 5
+            $sql .= " AND apm_sta_id NOT IN (1, 5) "; // แก้ เพิ่ม 5
 
         }
         if (!empty($params['search'])) {
@@ -1769,9 +1917,111 @@ class M_que_appointment extends Da_que_appointment
         // กรองตามสถานะ
         if (!empty($params['status'])) {
             if ($params['status'] === 'waiting') {
-                $sql .= " AND apm_sta_id NOT IN (10, 15)"; // สถานะรอดำเนินการ (ยกเว้น 10 และ 15)
+                $sql .= " AND apm_sta_id IN (2, 4, 11, 12)"; // เอาสถานะอื่นออก
             } else if ($params['status'] === 'completed') {
-                $sql .= " AND apm_sta_id IN (10, 15)"; // สถานะพบแพทย์เสร็จแล้ว
+                $sql .= " AND apm_sta_id IN (10)"; // สถานะพบแพทย์เสร็จแล้ว
+            }
+        }
+
+        // กรองตามแพทย์ที่ log in
+        if (!empty($ps_id)) {
+            $sql .= " AND ps_id = $ps_id";
+        }
+
+        $query = $this->que->query($sql, $binds);
+
+        if (!$query) {
+            log_message('error', 'Query error: ' . $this->db->_error_message());
+        }
+
+        $result = $query->row_array();
+
+        return isset($result['total']) ? $result['total'] : 0;
+    }
+
+    public function get_appointment_count_wts2_clinic($params)
+    {
+        $ps_id = $this->session->userdata('us_ps_id');
+        $get_stde = $this->hr->query("SELECT * FROM hr_structure_detail 
+                                      LEFT JOIN hr_structure_person ON stdp_stde_id = stde_id 
+                                      WHERE stde_is_medical = 'Y' AND stdp_ps_id = '$ps_id' AND stdp_active = '1'")->result_array();
+        $stde_ids = array_column($get_stde, 'stde_id');
+
+        $stde_ids_str = implode(',', $stde_ids);
+
+        $sql = "SELECT COUNT(*) AS total
+                FROM see_quedb.que_appointment 
+                LEFT JOIN see_quedb.que_base_priority ON apm_pri_id = pri_id 
+                LEFT JOIN see_umsdb.ums_patient ON apm_pt_id = pt_id 
+                LEFT JOIN see_hrdb.hr_person ON apm_ps_id = ps_id
+                LEFT JOIN see_hrdb.hr_base_prefix ON pf_id = ps_pf_id
+                LEFT JOIN see_hrdb.hr_structure_detail ON apm_stde_id = stde_id
+                LEFT JOIN see_wtsdb.wts_base_disease ON apm_ds_id = ds_id
+                LEFT JOIN see_umsdb.ums_department ON apm_dp_id = dp_id 
+                WHERE apm_ps_id = $ps_id AND apm_dp_id = '2'";
+
+        $binds = array();
+
+        if (!empty($params['month'])) {
+            $sql .= " AND MONTH(apm_date) = ?";
+            $binds[] = $params['month'];
+        }
+
+        if (!empty($params['date'])) {
+            $dateParts = explode('/', $params['date']);
+            $day = $dateParts[0];
+            $month = $dateParts[1];
+            $buddhistYear = $dateParts[2];
+            $gregorianYear = (int)$buddhistYear - 543;
+            $gregorianDate = $gregorianYear . '-' . $month . '-' . $day;
+            $sql .= " AND DATE(see_quedb.que_appointment.apm_date) = ?";
+            $binds[] = $gregorianDate;
+        } else {
+            $sql .= " AND DATE(apm_date) = CURDATE() ";
+        }
+
+        if (!empty($params['department'])) {
+            $sql .= " AND apm_stde_id = ?";
+            $binds[] = $params['department'];
+        }
+
+        if (!empty($params['doctor'])) {
+            $sql .= " AND see_quedb.que_appointment.apm_ps_id = ?";
+            $binds[] = $params['doctor'];
+        }
+
+        if (!empty($params['patientId'])) {
+            $sql .= " AND pt_member = ?";
+            $binds[] = $params['patientId'];
+        }
+
+        if (!empty($params['patientName'])) {
+            $sql .= " AND CONCAT(pt_prefix, '', pt_fname, ' ', pt_lname) LIKE ?";
+            $binds[] = '%' . $params['patientName'] . '%';
+        }
+
+        if (!empty($params['sta_id'])) {
+            $sql .= " AND apm_sta_id = ?";
+            $binds[] = $params['sta_id'];
+        } else {
+            $sql .= " AND apm_sta_id NOT IN (1, 5) "; // แก้ เพิ่ม 5
+
+        }
+        if (!empty($params['search'])) {
+            $sql .= " AND (CONCAT(ums_patient.pt_prefix, '', ums_patient.pt_fname, ' ', ums_patient.pt_lname) LIKE ? OR apm_cl_code LIKE ? OR pt_member LIKE ? OR CONCAT(hr_base_prefix.pf_name, '', hr_person.ps_fname, ' ', hr_person.ps_lname) LIKE ? OR stde_name_th LIKE ?)";
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+            $binds[] = '%' . $params['search'] . '%';
+        }
+
+        // กรองตามสถานะ
+        if (!empty($params['status'])) {
+            if ($params['status'] === 'waiting') {
+                $sql .= " AND apm_sta_id IN (2, 4, 11, 12)"; // เอาสถานะอื่นออก
+            } else if ($params['status'] === 'completed') {
+                $sql .= " AND apm_sta_id IN (10)"; // สถานะพบแพทย์เสร็จแล้ว
             }
         }
 
@@ -2390,7 +2640,7 @@ class M_que_appointment extends Da_que_appointment
             $sta_ids_str = implode(',', $params['sta_ids']);
             $where .= " AND apm.apm_sta_id IN ({$sta_ids_str}) ";
         } else {
-            $where .= " AND apm.apm_sta_id NOT IN ('1', '5', '9', '13','10','15') ";
+            $where .= " AND apm.apm_sta_id IN (2,4,10,11,12) ";
         }
 
         // กรองข้อมูลตาม doctor (ในกรณีที่ doctor เป็น array)
@@ -2408,45 +2658,176 @@ class M_que_appointment extends Da_que_appointment
         $where .= "AND apm.apm_ql_code IS NOT NULL";
 
         $sql = " SELECT apm.apm_stde_id, apm.apm_id, apm.apm_visit, apm.apm_patient_type, 
-                apm.apm_ps_id, apm.apm_sta_id, apm.apm_ql_code, apm.apm_pri_id, 
-                pt.pt_member, pri.pri_color, pri.pri_name, apm_app_walk, 
-                qus.qus_app_walk, ntdp.max_ntdp_date_start AS ntdp_date_start, 
-                ntdp.max_ntdp_time_start AS ntdp_time_start, apm.apm_time, 
-                CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname) AS ps_name, 
-                CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname) AS pt_name,
-                qus.qus_announce_id,
-                qus.qus_announce,
-                qus.qus_time_start,
-                qus.qus_time_end     
-            FROM see_quedb.que_appointment apm
-            LEFT JOIN see_quedb.que_base_priority pri ON apm.apm_pri_id = pri.pri_id 
-            LEFT JOIN see_umsdb.ums_patient pt ON apm.apm_pt_id = pt.pt_id 
-            LEFT JOIN see_hrdb.hr_person ps ON apm.apm_ps_id = ps.ps_id
-            LEFT JOIN see_hrdb.hr_base_prefix pf ON pf.pf_id = ps.ps_pf_id
-            LEFT JOIN see_hrdb.hr_structure_detail stde ON apm.apm_stde_id = stde.stde_id
-            LEFT JOIN see_wtsdb.wts_queue_seq qus ON qus.qus_apm_id = apm.apm_id
-            LEFT JOIN (
-                SELECT ntdp_apm_id, MAX(ntdp_date_start) AS max_ntdp_date_start, 
-                    MAX(ntdp_time_start) AS max_ntdp_time_start 
-                FROM see_wtsdb.wts_notifications_department 
-                WHERE ntdp_loc_id = 5 
-                GROUP BY ntdp_apm_id
-            ) ntdp ON ntdp.ntdp_apm_id = apm.apm_id
-            WHERE {$where} 
-            GROUP BY apm.apm_stde_id, apm.apm_id, apm.apm_visit, apm.apm_patient_type, 
-                apm.apm_ps_id, apm.apm_sta_id, apm.apm_ql_code, apm.apm_pri_id, 
-                pri.pri_color, pri.pri_name, apm_app_walk, qus.qus_app_walk,
-                ntdp.max_ntdp_date_start, ntdp.max_ntdp_time_start, apm.apm_time, 
-                CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname), 
-                CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname)
-            ORDER BY CASE WHEN apm.apm_ql_code IS NULL THEN 1 ELSE 0 END ASC, 
-    CASE WHEN qus.qus_seq IS NULL THEN 1 ELSE 0 END ASC, 
-    CAST(apm.apm_ql_code AS UNSIGNED) ASC,  
-                qus.qus_seq ASC 
-            ";
+                    apm.apm_ps_id, apm.apm_sta_id, apm.apm_ql_code, apm.apm_pri_id,
+                    apm.apm_ps_active, pt.pt_member, pri.pri_color, pri.pri_name, apm_app_walk, 
+                    qus.qus_app_walk, ntdp.max_ntdp_date_start AS ntdp_date_start, 
+                    ntdp.max_ntdp_time_start AS ntdp_time_start, apm.apm_time, 
+                    CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname) AS ps_name, 
+                    CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname) AS pt_name,
+                    qus.qus_announce_id,
+                    qus.qus_announce,
+                    qus.qus_time_start,
+                    qus.qus_time_end     
+                FROM see_quedb.que_appointment apm
+                LEFT JOIN see_quedb.que_base_priority pri ON apm.apm_pri_id = pri.pri_id 
+                LEFT JOIN see_umsdb.ums_patient pt ON apm.apm_pt_id = pt.pt_id 
+                LEFT JOIN see_hrdb.hr_person ps ON apm.apm_ps_id = ps.ps_id
+                LEFT JOIN see_hrdb.hr_base_prefix pf ON pf.pf_id = ps.ps_pf_id
+                LEFT JOIN see_hrdb.hr_structure_detail stde ON apm.apm_stde_id = stde.stde_id
+                LEFT JOIN see_wtsdb.wts_queue_seq qus ON qus.qus_apm_id = apm.apm_id
+                LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id = psrm_id
+				LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
+                LEFT JOIN (
+                    SELECT ntdp_apm_id, MAX(ntdp_date_start) AS max_ntdp_date_start, 
+                        MAX(ntdp_time_start) AS max_ntdp_time_start 
+                    FROM see_wtsdb.wts_notifications_department 
+                    WHERE ntdp_loc_id = 5 
+                    GROUP BY ntdp_apm_id
+                ) ntdp ON ntdp.ntdp_apm_id = apm.apm_id
+                WHERE {$where}
+                AND apm.apm_dp_id = '1'
+                " . (($params['floor'] == 1 || $params['floor'] == 2) ? " AND (see_eqsdb.eqs_room.rm_floor = {$params['floor']} OR see_eqsdb.eqs_room.rm_floor IS NULL) " : "") . "
+                GROUP BY apm.apm_stde_id, apm.apm_id, apm.apm_visit, apm.apm_patient_type, 
+                    apm.apm_ps_id, apm.apm_sta_id, apm.apm_ql_code, apm.apm_pri_id, 
+                    pri.pri_color, pri.pri_name, apm_app_walk, qus.qus_app_walk,
+                    ntdp.max_ntdp_date_start, ntdp.max_ntdp_time_start, apm.apm_time, 
+                    CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname), 
+                    CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname)
+                ORDER BY  
+                    CASE 
+                        WHEN apm.apm_pri_id = 1 THEN 1
+                        WHEN apm.apm_pri_id = 6 THEN 2
+                        WHEN apm.apm_ql_code LIKE 'I-%' THEN 3
+                        ELSE 4
+                    END,
+                    CASE 
+                        WHEN apm.apm_ql_code LIKE 'I-%' THEN apm.apm_time
+                        ELSE NULL
+                    END,
+                    CASE WHEN apm.apm_ql_code IS NULL THEN 1 ELSE 0 END ASC, 
+                    CASE WHEN qus.qus_seq IS NULL THEN 1 ELSE 0 END ASC, 
+                    CAST(apm.apm_ql_code AS UNSIGNED) ASC,  
+                    qus.qus_seq ASC;
+                ";
 
         $query = $this->que->query($sql, $binds);
         // pre($this->que->last_query());
+        // die();
+        if (!$query) {
+            log_message('error', 'Query error: ' . $this->db->_error_message());
+        }
+
+        return $query->result_array();
+    }
+
+    public function get_appointment_trello_wts_clinic($params)
+    {
+        $binds = array();
+        $where = '';
+
+        // แปลงวันที่จากพุทธศักราชเป็นคริสต์ศักราช
+        if (!empty($params['date'])) {
+            $dateParts = explode('/', $params['date']);
+            $day = $dateParts[0];
+            $month = $dateParts[1];
+            $buddhistYear = $dateParts[2];
+            $gregorianYear = (int)$buddhistYear - 543;
+            $gregorianDate = $gregorianYear . '-' . $month . '-' . $day;
+            $where .= " DATE(apm.apm_date) = ? ";
+            $binds[] = $gregorianDate;
+        } else {
+            $where .= " DATE(apm.apm_date) = CURDATE() ";
+        }
+
+        // // กรองข้อมูลตาม department
+        // if (!empty($params['department'])) {
+        //     $where .= " AND apm.apm_stde_id = ? ";
+        //     $binds[] = $params['department'];
+        // }
+
+        // // กรองข้อมูลตาม departments
+        // if (!empty($params['departments'])) {
+        //     $stde_ids_str = implode(',', $params['departments']);
+        //     $where .= " AND apm.apm_stde_id IN ({$stde_ids_str}) ";
+        // }
+
+        // กรองข้อมูลตามสถานะ
+        if (!empty($params['sta_ids'])) {
+            $sta_ids_str = implode(',', $params['sta_ids']);
+            $where .= " AND apm.apm_sta_id IN ({$sta_ids_str}) ";
+        } else {
+            $where .= " AND apm.apm_sta_id IN (2,4,10,11,12) ";
+        }
+
+        // กรองข้อมูลตาม doctor (ในกรณีที่ doctor เป็น array)
+        if (!empty($params['doctor']) && is_array($params['doctor'])) {
+            $doctor_ids_str = implode(',', array_map('intval', $params['doctor']));
+            $where .= " AND (apm.apm_ps_id IN ({$doctor_ids_str}) OR apm.apm_ps_id IS NULL)";
+        } elseif (!empty($params['doctor'])) {
+            // กรณีที่ doctor ไม่ได้เป็น array ก็ให้กรองตาม doctor เดียว
+            $where .= " AND (apm.apm_ps_id = ? OR apm.apm_ps_id IS NULL) ";
+            $binds[] = $params['doctor'];
+        } else {
+            // กรณีที่ไม่ได้กรอก doctor แต่ต้องการดึงข้อมูลที่ ps_id เป็น null ด้วย
+            $where .= " AND (apm.apm_ps_id IS NULL)";
+        }
+        $where .= "AND apm.apm_ql_code IS NOT NULL";
+
+        $sql = " SELECT apm.apm_stde_id, apm.apm_id, apm.apm_visit, apm.apm_patient_type, 
+                    apm.apm_ps_id, apm.apm_sta_id, apm.apm_ql_code, apm.apm_pri_id,
+                    apm.apm_ps_active, pt.pt_member, pri.pri_color, pri.pri_name, apm_app_walk, 
+                    qus.qus_app_walk, ntdp.max_ntdp_date_start AS ntdp_date_start, 
+                    ntdp.max_ntdp_time_start AS ntdp_time_start, apm.apm_time, 
+                    CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname) AS ps_name, 
+                    CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname) AS pt_name,
+                    qus.qus_announce_id,
+                    qus.qus_announce,
+                    qus.qus_time_start,
+                    qus.qus_time_end     
+                FROM see_quedb.que_appointment apm
+                LEFT JOIN see_quedb.que_base_priority pri ON apm.apm_pri_id = pri.pri_id 
+                LEFT JOIN see_umsdb.ums_patient pt ON apm.apm_pt_id = pt.pt_id 
+                LEFT JOIN see_hrdb.hr_person ps ON apm.apm_ps_id = ps.ps_id
+                LEFT JOIN see_hrdb.hr_base_prefix pf ON pf.pf_id = ps.ps_pf_id
+                LEFT JOIN see_hrdb.hr_structure_detail stde ON apm.apm_stde_id = stde.stde_id
+                LEFT JOIN see_wtsdb.wts_queue_seq qus ON qus.qus_apm_id = apm.apm_id
+                LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id = psrm_id
+				LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
+                LEFT JOIN (
+                    SELECT ntdp_apm_id, MAX(ntdp_date_start) AS max_ntdp_date_start, 
+                        MAX(ntdp_time_start) AS max_ntdp_time_start 
+                    FROM see_wtsdb.wts_notifications_department 
+                    WHERE ntdp_loc_id = 5 
+                    GROUP BY ntdp_apm_id
+                ) ntdp ON ntdp.ntdp_apm_id = apm.apm_id
+                WHERE {$where} 
+                AND apm.apm_dp_id = '2'
+                GROUP BY apm.apm_stde_id, apm.apm_id, apm.apm_visit, apm.apm_patient_type, 
+                    apm.apm_ps_id, apm.apm_sta_id, apm.apm_ql_code, apm.apm_pri_id, 
+                    pri.pri_color, pri.pri_name, apm_app_walk, qus.qus_app_walk,
+                    ntdp.max_ntdp_date_start, ntdp.max_ntdp_time_start, apm.apm_time, 
+                    CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname), 
+                    CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname)
+                ORDER BY  
+                    CASE 
+                        WHEN apm.apm_pri_id = 1 THEN 1
+                        WHEN apm.apm_pri_id = 6 THEN 2
+                        WHEN apm.apm_ql_code LIKE 'I-%' THEN 3
+                        ELSE 4
+                    END,
+                    CASE 
+                        WHEN apm.apm_ql_code LIKE 'I-%' THEN apm.apm_time
+                        ELSE NULL
+                    END,
+                    CASE WHEN apm.apm_ql_code IS NULL THEN 1 ELSE 0 END ASC, 
+                    CASE WHEN qus.qus_seq IS NULL THEN 1 ELSE 0 END ASC, 
+                    CAST(apm.apm_ql_code AS UNSIGNED) ASC,  
+                    qus.qus_seq ASC;
+                ";
+
+        $query = $this->que->query($sql, $binds);
+        // pre($this->que->last_query());
+        // die();
         if (!$query) {
             log_message('error', 'Query error: ' . $this->db->_error_message());
         }
@@ -2590,7 +2971,117 @@ class M_que_appointment extends Da_que_appointment
         $sql .= $order;
 
         $query = $this->que->query($sql, $binds);
+        // echo $this->que->last_query(); die;
+        if (!$query) {
+            log_message('error', 'Query error: ' . $this->db->_error_message());
+        }
 
+        return $query->result_array();
+    }
+
+    public function get_doctors_trello_wts_clinic($params)
+    {
+        $binds = array();
+        $where = '';
+        $where_join = '';
+
+        if (!empty($params['month'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " MONTH(apm.apm_date) = ? ";
+            $binds[] = $params['month'];
+        }
+
+        if (!empty($params['date'])) {
+            if (!empty($where)) $where .= " AND ";
+            $dateParts = explode('/', $params['date']);
+            $day = $dateParts[0];
+            $month = $dateParts[1];
+            $buddhistYear = $dateParts[2];
+            $gregorianYear = (int)$buddhistYear - 543;
+            $gregorianDate = $gregorianYear . '-' . $month . '-' . $day;
+            $where .= " DATE(apm.apm_date) = ? ";
+            $binds[] = $gregorianDate;
+
+            $where_join .= " AND DATE(psrm.psrm_date) = ? ";
+            $binds[] = $gregorianDate;
+        } else {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " DATE(apm.apm_date) = CURDATE() ";
+
+            $where_join .= " AND DATE(psrm.psrm_date) = CURDATE() ";
+        }
+
+        if (!empty($params['department'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " apm.apm_stde_id = ? ";
+            $binds[] = $params['department'];
+        }
+
+        if (!empty($params['departments'])) {
+            if (!empty($where)) $where .= " AND ";
+            $stde_ids_str = implode(',', $params['departments']);
+            $where .= " apm.apm_stde_id IN ( {$stde_ids_str} ) ";
+        }
+
+        if (!empty($params['doctor'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " apm.apm_ps_id = ? ";
+            $binds[] = $params['doctor'];
+
+        }
+
+        if (!empty($params['patientId'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " pt.pt_member = ? ";
+            $binds[] = $params['patientId'];
+        }
+
+        if (!empty($params['visitId'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " apm.apm_visit LIKE ? ";
+            $binds[] = '%' . $params['visitId'] . '%';
+        }
+
+        if (!empty($params['patientName'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " CONCAT(pt.pt_prefix, '', pt.pt_fname, ' ', pt.pt_lname) LIKE ? ";
+            $binds[] = '%' . $params['patientName'] . '%';
+        }
+
+        // check condition for order by
+        if (!empty($params['sta_id'])) {
+            if (!empty($where)) $where .= " AND ";
+            $where .= " apm.apm_sta_id = ? ";
+            $binds[] = $params['sta_id'];
+        } else {
+            /*  ไม่เอา
+                1 - นัดหมายสำเร็จ
+                5 - ดำเนินการเสร็จสิ้น (จะไม่ใช้แล้ว)
+                10 - พบแพทย์เสร็จสิ้น
+             */
+            // if(!empty($where)) $where .= " AND ";
+            // $where .= "AND apm.apm_sta_id NOT IN ('1', '5', '9', '10') ";
+        }
+        $order = " ORDER BY apm.apm_update_date DESC";
+
+        $sql = "SELECT  CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname) AS ps_name, 
+                        apm.apm_ps_id, ps.ps_id, psrm.psrm_id, rm.rm_id, rm.rm_name, stde.stde_name_th
+            FROM see_quedb.que_appointment apm
+            LEFT JOIN see_hrdb.hr_person ps ON apm.apm_ps_id = ps.ps_id
+            LEFT JOIN see_hrdb.hr_base_prefix pf ON pf.pf_id = ps.ps_pf_id
+            LEFT JOIN see_hrdb.hr_person_room psrm ON psrm.psrm_ps_id = apm.apm_ps_id {$where_join}
+            LEFT JOIN see_eqsdb.eqs_room rm ON rm.rm_id = psrm.psrm_rm_id
+            LEFT JOIN see_hrdb.hr_structure_detail stde ON rm.rm_stde_id = stde.stde_id
+            WHERE apm.apm_ps_id IS NOT NULL AND {$where}";
+        // AND apm.apm_stde_id IN ($stde_ids_str) 
+
+        $sql .= " GROUP BY CONCAT(pf.pf_name, '', ps.ps_fname, ' ', ps.ps_lname), 
+                        apm.apm_ps_id, psrm.psrm_id, rm.rm_id, rm.rm_name, stde.stde_name_th ";
+
+        $sql .= $order;
+
+        $query = $this->que->query($sql, $binds);
+        // echo $this->que->last_query(); die;
         if (!$query) {
             log_message('error', 'Query error: ' . $this->db->_error_message());
         }
@@ -2680,4 +3171,87 @@ class M_que_appointment extends Da_que_appointment
         $query = $this->que->query($sql);
         return $query;
     }
+
+    function update_rollback_process($apm_id) {
+        try {
+            $sql = "UPDATE " . $this->que_db . ".que_appointment SET
+                        apm_sta_id = '4'
+                    WHERE 
+                        apm_id = ?";
+            $query = $this->que->query($sql, array($apm_id));
+    
+            // ตรวจสอบว่ามีการอัปเดตแถวใด ๆ หรือไม่
+            if ($this->que->affected_rows() > 0) {
+                return true; // อัปเดตสำเร็จ
+            } else {
+                return false; // ไม่มีการอัปเดตแถวใด ๆ
+            }
+        } catch (Exception $e) {
+            throw new Exception('Database error: ' . $e->getMessage());
+        }
+    }  
+    
+    public function get_time_end($apm_id) {
+        $sql = "SELECT MAX(wts.ntdp_time_end) AS ntdp_time_end, wl.loc_time
+                FROM see_wtsdb.wts_notifications_department wts
+                LEFT JOIN see_wtsdb.wts_location wl ON (wts.ntdp_seq = wl.loc_seq)
+                WHERE wts.ntdp_apm_id = '".$apm_id."' AND wts.ntdp_seq = 8";
+        $query = $this->que->query($sql);
+        $result = $query->row(); // ดึงผลลัพธ์แถวเดียว
+    
+        // Debugging: ดูค่าที่ได้
+        // print_r($result); 
+        // die();
+    
+        return $result;
+    }
+
+    public function get_time_start($apm_id) {
+        $sql = "SELECT MAX(wts.ntdp_time_start) AS ntdp_time_start
+                FROM see_wtsdb.wts_notifications_department wts
+                WHERE wts.ntdp_apm_id = '".$apm_id."' AND wts.ntdp_seq = 6";
+        $query = $this->que->query($sql);
+        $result = $query->row(); // ดึงผลลัพธ์แถวเดียว
+        return $result->ntdp_time_start; // ส่งค่ากลับเป็นเวลาที่มากที่สุด
+    }
+
+    public function get_apm_pri_id_quedb_backup() {
+        $sqlQueBk = "SELECT apm_id, apm_pri_id FROM see_quedb_backup.que_appointment ORDER BY apm_id ASC";
+        $query = $this->que->query($sqlQueBk);
+        $result = $query->row();
+        return $query->result_array();
+    }
+
+    public function update_apm_pri_id($apm_id, $apm_pri_id)
+    {
+        $sqlUpdate = "UPDATE see_quedb.que_appointment 
+                        SET apm_pri_id = ? 
+                        WHERE apm_id = ?";
+        $query = $this->que->query($sqlUpdate, array($apm_pri_id, $apm_id));
+    }
+
+    function update_doctor_appwalk_que(){
+		$sql = "UPDATE ".$this->que_db.".que_appointment SET apm_ps_id=?, apm_app_walk=? WHERE apm_id=?";
+		$this->que->query($sql, array($this->apm_ps_id,$this->apm_app_walk,$this->apm_id));
+		// echo $this->que->last_query(); die;
+	}
+
+    public function update_apmwalk_seq()
+    {
+        $sql = "UPDATE see_wtsdb.wts_queue_seq 
+                        SET qus_app_walk = ? 
+                        WHERE qus_apm_id = ?";
+        $this->que->query($sql, array($this->apm_app_walk,$this->apm_id));
+    }
+
+    public function count_all_que($apm_date)
+    {
+        $sql = "SELECT COUNT(apm_ql_code) AS apm_ql_code FROM see_quedb.que_appointment WHERE apm_date = '".$apm_date."' ORDER BY apm_ql_code ASC";
+        $query = $this->que->query($sql);
+        $result = $query->row();
+        return $result;
+    }
+
+    
+
 } // end class M_que_appointment

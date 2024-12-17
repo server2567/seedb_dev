@@ -19,7 +19,8 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 28/10/2567
 	*/
-    function get_structure_detail_by_stuc_id($stuc_id){  
+    function get_structure_detail_by_stuc_id($stuc_id)
+    {
         $sql = "
             SELECT 
                 stde_id,
@@ -39,10 +40,9 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
                 sd.stde_id
             ORDER BY 
                 sd.stde_level ASC";
-        
+
         $query = $this->hr->query($sql);
         return $query;
-    
     }
     // get_structure_detail_by_stuc_id
 
@@ -54,7 +54,8 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 28/10/2567
 	*/
-    function get_structure_detail_all_by_level_desc($stuc_id, $stde_id) {
+    function get_structure_detail_all_by_level_desc($stuc_id, $stde_id)
+    {
         $sql = "
             WITH RECURSIVE hierarchy AS (
 
@@ -84,7 +85,7 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
             FROM hierarchy
             ORDER BY stde_level DESC;
         ";
-    
+
         $query = $this->hr->query($sql);
         // echo $this->hr->last_query();
         return $query;
@@ -100,7 +101,8 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 28/10/2567
 	*/
-    function get_person_list_by_stde_id($stde_id) {
+    function get_person_list_by_stde_id($stde_id)
+    {
         $sql = "
             SELECT  		
                 ps.ps_id,
@@ -143,7 +145,7 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
             LIMIT 1
 
         ";
-    
+
         $query = $this->hr->query($sql);
         // echo $this->hr->last_query();
         return $query;
@@ -158,12 +160,14 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 28/10/2567
 	*/
-    function get_base_leave_approve_status(){  
+    function get_base_leave_approve_status()
+    {
         $sql = "
             SELECT 
                 *
             FROM " . $this->hr_db . ".hr_base_leave_approve_status
-            WHERE last_active = 1";
+            WHERE last_active = 1
+            ORDER BY last_id ASC";
 
         $query = $this->hr->query($sql);
         // echo $this->hr->last_query();
@@ -179,7 +183,8 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 29/10/2567
 	*/
-    function get_leave_approve_detail_hire_ps_by_lapg_id($lapg_id){
+    function get_leave_approve_detail_hire_ps_by_lapg_id($lapg_id)
+    {
         $sql = "
             SELECT 
                 *
@@ -191,6 +196,28 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
         return $query;
     }
     // get_leave_approve_detail_hire_ps_by_lapg_id
+    public function find_common_stde($ps_id_1, $ps_id_2)
+    {
+        $sql = "
+            SELECT h1.stdp_stde_id
+            FROM " . $this->hr_db . ".hr_structure_person AS h1
+            INNER JOIN hr_structure_person AS h2
+                ON h1.stdp_stde_id = h2.stdp_stde_id
+            WHERE h1.stdp_ps_id = {$ps_id_1}
+                AND h1.stdp_po_id IN (1,3,6)
+                AND h1.stdp_active = 1
+                AND h2.stdp_ps_id = {$ps_id_2}
+                AND h2.stdp_active = 1
+        ";
+        
+        $query = $this->hr->query($sql);
+        // ตรวจสอบว่ามีข้อมูลหรือไม่
+        if ($query->num_rows() > 0) {
+            return 'true'; // ส่งผลลัพธ์กลับมาเป็น Array
+        } else {
+            return 'false'; // ไม่มีข้อมูล
+        }
+    }
 
     /*
 	* get_leave_approve_detail_stuc_by_lapg_id
@@ -200,7 +227,11 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 28/10/2567
 	*/
-    function get_leave_approve_detail_stuc_by_lapg_id($lapg_id, $stde_id) {
+    function get_leave_approve_detail_stuc_by_lapg_id($lapg_id = '', $stde_id = '', $ps_id = '')
+    {
+        $conditions = [];
+
+        // Base SQL
         $sql = "
             SELECT  		
                 ps.ps_id,
@@ -243,23 +274,43 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
             LEFT JOIN " . $this->hr_db . ".hr_base_admin_position AS ad ON pap.psap_admin_id = ad.admin_id
             LEFT JOIN " . $this->hr_db . ".hr_structure_person AS stdp ON stdp.stdp_ps_id = ps.ps_id
             LEFT JOIN " . $this->hr_db . ".hr_structure_detail AS stde ON stde.stde_id = stdp.stdp_stde_id
-            
-            WHERE   lage.lage_lapg_id = {$lapg_id}
-                    AND lage.lage_stde_id = {$stde_id}
-                    AND pos.pos_status = 1
-                    AND pos.pos_active = 'Y'
-            GROUP BY lage.lage_id
-            ORDER BY lage.lage_seq ASC
-
+            WHERE 1 = 1
         ";
-    
+
+        // Check parameters and add conditions
+        if (!empty($lapg_id)) {
+            $conditions[] = "lage.lage_lapg_id = " . intval($lapg_id);
+        }
+
+        if (!empty($stde_id)) {
+            $conditions[] = "lage.lage_stde_id = " . intval($stde_id);
+        }
+
+        if (!empty($ps_id)) {
+            $conditions[] = "lage.lage_ps_id = " . intval($ps_id);
+        }
+
+        // Always add these conditions
+        $conditions[] = "pos.pos_status = 1";
+        $conditions[] = "pos.pos_active = 'Y'";
+
+        // Append conditions to SQL
+        if (!empty($conditions)) {
+            $sql .= " AND " . implode(" AND ", $conditions);
+        }
+
+        // Group by and order by
+        $sql .= " GROUP BY lage.lage_id ORDER BY lage.lage_seq ASC";
+
+        // Execute query
         $query = $this->hr->query($sql);
         // echo $this->hr->last_query();
         return $query;
     }
+
     // get_leave_approve_detail_stuc_by_lapg_id
 
-       /*
+    /*
 	* get_structure_detail_by_stde_id
 	* แสดงรายละเอียดเส้นทางอนุมัติการลา
 	* @input stde_id
@@ -267,7 +318,8 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
 	* @author Tanadon Tangjaimongkhon
 	* @Create Date 29/10/2567
 	*/
-    function get_structure_detail_by_stde_id($stde_id){
+    function get_structure_detail_by_stde_id($stde_id)
+    {
         $sql = "
             SELECT 
                 dp_id,
@@ -288,7 +340,7 @@ class M_hr_leave_approve_group_detail extends Da_hr_leave_approve_group_detail
         return $query;
     }
     // get_structure_detail_by_stde_id
-    
-	
+
+
 
 } // end class hr_leave_approve_group_detail

@@ -255,6 +255,11 @@ class Leaves_approve_group extends Leaves_Controller
 		}
 
 		$result['select_person'] = $this->M_hr_leave_approve_person->get_leaves_approve_person_for_select_approve_group()->result();
+
+		if($this->input->post("lapg_type") == "stuc"){
+			$result['select_person_stuc'] = $this->M_hr_leave_approve_person->get_leaves_approve_person_for_select_approve_group_type_stuc($this->input->post('stde_id'), $this->input->post('dp_id'))->result();
+		}
+		
 		$result['select_leave_approve_status'] = $this->M_hr_leave_approve_group_detail->get_base_leave_approve_status()->result();
 		
 		echo json_encode($result);

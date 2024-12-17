@@ -187,7 +187,7 @@
                                                             echo '<ul class="mb-0"><li>' . implode('<br>', array_map('htmlspecialchars', $stde_admin['stde_name_th'])) . '</li></ul>';
                                                         } else {
                                                             if (count($stde_admin['stde_name_th']) == 1) {
-                                                                echo '<ul class="mb-0"><li>' . htmlspecialchars($position2[$stde_admin['stdp_po_id']-1]) . htmlspecialchars($stde_admin['stde_name_th'][0]) . '</li></ul>';
+                                                                echo '<ul class="mb-0"><li>' . htmlspecialchars($position2[$stde_admin['stdp_po_id'] - 1]) . htmlspecialchars($stde_admin['stde_name_th'][0]) . '</li></ul>';
                                                             } else {
                                                                 echo '<ul class="mb-0"><li>' . htmlspecialchars($position[$stde_admin['stdp_po_id']]) . '<br>- ' . implode('<br> - ', array_map('htmlspecialchars', $stde_admin['stde_name_th'])) . '</li></ul>';
                                                             }
@@ -241,7 +241,7 @@
                                 <ul class="nav nav-pills mb-3" id="department-tab" role="tablist">
                                     <?php foreach ($profile_person['person_department_topic'] as $key => $row) { ?>
                                         <li class="nav-item" role="presentation">
-                                            <button class="nav-link <?php echo ($key == 0 ? "active" : ""); ?>" id="department-<?php echo htmlspecialchars($row->dp_id); ?>-tab" data-bs-toggle="tab" data-bs-target="#department-<?php echo htmlspecialchars($row->dp_id); ?>" type="button" role="tab" aria-controls="department-<?php echo htmlspecialchars($row->dp_id); ?>" aria-selected="<?php echo ($key == 0 ? "true" : "false"); ?>">
+                                            <button class="nav-link <?php echo ($key == 0 ? "active" : ""); ?> dapartment-tab" id="department-<?php echo htmlspecialchars($row->dp_id); ?>-tab" data-bs-toggle="tab" data-bs-target=".department-<?php echo htmlspecialchars($row->dp_id); ?>-ct" type="button" role="tab" aria-controls="department-<?php echo htmlspecialchars($row->dp_id); ?>" aria-selected="<?php echo ($key == 0 ? "true" : "false"); ?>">
                                                 <?php echo htmlspecialchars($row->dp_name_th); ?>
                                             </button>
                                         </li>
@@ -249,7 +249,7 @@
                                 </ul>
                                 <div class="tab-content" id="department-tab-content">
                                     <?php foreach ($profile_person['person_department_detail'] as $key => $row) { ?>
-                                        <div class="tab-pane fade <?php echo ($key == 0 ? "show active" : ""); ?>" id="department-<?php echo htmlspecialchars($row->pos_dp_id); ?>" role="tabpanel" aria-labelledby="department-<?php echo htmlspecialchars($row->pos_dp_id); ?>-tab">
+                                        <div class="tab-pane multi-tab fade <?php echo ($key == 0 ? "show active" : ""); ?> department-<?php echo htmlspecialchars($row->pos_dp_id); ?>-ct" id="department-<?php echo htmlspecialchars($row->pos_dp_id); ?>" role="tabpanel" aria-labelledby="department-<?php echo htmlspecialchars($row->pos_dp_id); ?>-tab">
                                             <div class="card-body pb-2">
                                                 <div class="d-flex align-items-center mb-3">
                                                     <div class="card-icon me-3">
@@ -288,7 +288,7 @@
                                                                         echo '<ul class="mb-0"><li>' . implode('<br>', array_map('htmlspecialchars', $stde_admin['stde_name_th'])) . '</li></ul>';
                                                                     } else {
                                                                         if (count($stde_admin['stde_name_th']) == 1) {
-                                                                            echo '<ul class="mb-0"><li>' . htmlspecialchars($position2[$stde_admin['stdp_po_id']-1]) . htmlspecialchars($stde_admin['stde_name_th'][0]) . '</li></ul>';
+                                                                            echo '<ul class="mb-0"><li>' . htmlspecialchars($position2[$stde_admin['stdp_po_id'] - 1]) . htmlspecialchars($stde_admin['stde_name_th'][0]) . '</li></ul>';
                                                                         } else {
                                                                             echo '<ul class="mb-0"><li>' . htmlspecialchars($position[$stde_admin['stdp_po_id']]) . '<br>- ' . implode('<br> - ', array_map('htmlspecialchars', $stde_admin['stde_name_th'])) . '</li></ul>';
                                                                         }
@@ -345,70 +345,116 @@
                         </div>
                     </div>
                 </div>
-                <?php if ($profile_person['person_department_detail']) : ?>
-                    <?php foreach ($profile_person['person_department_detail'] as $key => $row): ?>
-                        <?php if ($row->pos_hire_id == 23) : ?>
-                            <div class="card" style="min-height: 150px; max-height: 250px;">
-                                <div class="card-body">
-                                    <section class="section dashboard">
-                                        <div class="row">
-                                            <br>
-                                            <?php $data['trail_info'] = ['start_date' => $row->pos_work_start_date, 'trail_date' => $row->pos_trial_day] ?>
-                                            <?php $this->load->view($this->config->item('pd_dir') . 'resume/v_progress_bar', $data['trail_info']); ?>
-                                        </div>
-                                    </section>
+                <?php if (count($profile_person['person_department_topic']) == 1) { ?>
+                <?php
+                } else {
+                ?>
+                    <div class="tab-content" id="workcount-tab-content">
+                        <?php foreach ($profile_person['person_department_detail'] as $key => $row) { ?>
+                            <div class="tab-pane multi-tab fade <?= $key == 0 ? 'show active' : '' ?> department-<?php echo htmlspecialchars($row->pos_dp_id); ?>-ct" id="work-count-<?= $row->pos_dp_id ?>" role="tabpanel" aria-labelledby="department-<?php echo htmlspecialchars($row->pos_dp_id); ?>-tab">
+                                <div class="card" style="min-height: 150px; max-height: 250px;">
+                                    <div class="card-body">
+                                        <section class="section dashboard">
+                                            <div class="row">
+                                                <br>
+                                                <div class="progress-layout font-18">
+                                                    <div class=" row">
+                                                        <div class="col-md-12 col-12 mb-2">
+                                                            จำนวนอายุงาน
+                                                        </div>
+                                                        <div class="col-md-6 col-6 text-start text-secondary" style="padding-left: 34px;">
+                                                            วันที่เริ่มปฏิบัติงาน
+                                                        </div>
+                                                        <div class="col-md-6 col-6 text-secondary">
+                                                            <?php 
+                                                                if($row->pos_work_start_date != ""){
+                                                                    echo fullDateTH3($row->pos_work_start_date);
+                                                                }
+                                                                else{
+                                                                    echo "ไม่ระบุ";
+                                                                }
+                                                            ?>
+                                                        </div>
+                                                        <div class="col-md-6 col-6 text-start text-secondary" style="padding-left: 34px;">
+                                                            จำนวนวัน
+                                                        </div>
+                                                        <?php // กำหนดวันที่เริ่มต้น
+                                                        $pos_work_start_date = new DateTime($row->pos_work_start_date);
+
+                                                        // กำหนดวันปัจจุบัน
+                                                        $current_date = new DateTime();
+
+                                                        // คำนวณความแตกต่าง
+                                                        $interval = $pos_work_start_date->diff($current_date);
+
+                                                        // แสดงผลลัพธ์
+                                                        $result_work = $interval->y . " ปี " . $interval->m . " เดือน " . $interval->d . " วัน"; ?>
+                                                        <div class="col-md-6 col-6 text-secondary" id="trail-day">
+                                                           <?= $result_work ?>
+                                                        </div>
+                                                        <div class="col-md-12 col-12 text-end font-12">
+                                                            <i class="bi bi-clock"></i>&nbsp;&nbsp;วัน
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    </div>
                                 </div>
                             </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                <?php if ($profile_person['person_license_list']) : ?>
-                    <div class="card">
-                        <div class="card-body">
-                            <section class="section dashboard">
-                                <div class="row">
-                                    <?php foreach ($profile_person['person_license_list'] as $entry) {
-                                        list($textColor, $iconStyle) = getCardColor($entry->licn_end_date);
-                                        $formattedStartDate = abbreDate2($entry->licn_start_date);
-                                        $formattedEndDate = ($entry->licn_end_date == "9999-12-31" ? "ตลอดชีพ" : abbreDate2($entry->licn_end_date));
-                                    ?>
-                                        <div class="col-md-12">
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <div class="card info-card card-license">
-                                                        <?php if ($textColor === 'text-danger') { ?>
-                                                            <div class="filter noti-card-license pulsating-circle">
-                                                                <i class="bi-bell-fill font-24" style="color: #dc3545;"></i>
-                                                            </div>
-                                                        <?php } ?>
-                                                        <div class="card-body">
-                                                            <h5 class="card-title">ใบประกอบวิชาชีพ <span>| <?php echo htmlspecialchars($entry->voc_name); ?></span></h5>
-                                                            <div class="d-flex align-items-center">
-                                                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center" <?php echo $iconStyle; ?>>
-                                                                    <i class="bx bx-plus-medical"></i>
+                    <?php
+                        }
+                    }
+                    ?>
+                    </div>
+
+                    <?php if ($profile_person['person_license_list']) : ?>
+                        <div class="card">
+                            <div class="card-body">
+                                <section class="section dashboard">
+                                    <div class="row">
+                                        <?php foreach ($profile_person['person_license_list'] as $entry) {
+                                            list($textColor, $iconStyle) = getCardColor($entry->licn_end_date);
+                                            $formattedStartDate = abbreDate2($entry->licn_start_date);
+                                            $formattedEndDate = ($entry->licn_end_date == "9999-12-31" ? "ตลอดชีพ" : abbreDate2($entry->licn_end_date));
+                                        ?>
+                                            <div class="col-md-12">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="card info-card card-license">
+                                                            <?php if ($textColor === 'text-danger') { ?>
+                                                                <div class="filter noti-card-license pulsating-circle">
+                                                                    <i class="bi-bell-fill font-24" style="color: #dc3545;"></i>
                                                                 </div>
-                                                                <div class="ps-3">
-                                                                    <h6><?php echo htmlspecialchars($entry->licn_code); ?></h6>
-                                                                    <span class="<?php echo $textColor; ?> small pt-1 fw-bold">
-                                                                        <?php
-                                                                        if ($formattedEndDate != "ตลอดชีพ") {
-                                                                            echo "หมดอายุวันที่ " . htmlspecialchars($formattedEndDate);
-                                                                        }
-                                                                        ?>
-                                                                    </span>
+                                                            <?php } ?>
+                                                            <div class="card-body">
+                                                                <h5 class="card-title">ใบประกอบวิชาชีพ <span>| <?php echo htmlspecialchars($entry->voc_name); ?></span></h5>
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center" <?php echo $iconStyle; ?>>
+                                                                        <i class="bx bx-plus-medical"></i>
+                                                                    </div>
+                                                                    <div class="ps-3">
+                                                                        <h6><?php echo htmlspecialchars($entry->licn_code); ?></h6>
+                                                                        <span class="<?php echo $textColor; ?> small pt-1 fw-bold">
+                                                                            <?php
+                                                                            if ($formattedEndDate != "ตลอดชีพ") {
+                                                                                echo "หมดอายุวันที่ " . htmlspecialchars($formattedEndDate);
+                                                                            }
+                                                                            ?>
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-                            </section>
+                                        <?php } ?>
+                                    </div>
+                                </section>
+                            </div>
                         </div>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
             </div>
         </div>
         <!-- col-md-3 -->
@@ -655,7 +701,26 @@ function getCardColor($endDate)
         }).fail(function(jqXHR, textStatus, errorThrown) {});
         // Example call to the function with a specific id; // Replace 1 with the actual ID you want to pass
     });
+    document.querySelectorAll('.dapartment-tab').forEach(button => {
+        button.addEventListener('click', function() {
+            // ดึงรายการเป้าหมายใน data-bs-target แล้วแยกตาม ", "
+            const targets = this.getAttribute('data-bs-target').split(', ');
 
+
+            // ซ่อน tab-pane ทั้งหมดก่อน
+            document.querySelectorAll('.multi-tab').forEach(tab => {
+                tab.classList.remove('show', 'active');
+            });
+
+            // แสดง element ที่ตรงกับ target ทั้งหมด
+            targets.forEach(target => {
+                document.querySelectorAll(target).forEach(te => {
+                    // เพิ่ม class 'show' และ 'active' เพื่อให้แสดงผล
+                    te.classList.add('show', 'active');
+                });
+            });
+        });
+    });
     document.addEventListener("DOMContentLoaded", function(event) {
         /**
          * Event nav menu

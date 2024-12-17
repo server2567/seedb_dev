@@ -263,6 +263,9 @@ function show_case_by_lapg_type(){
         $("#div_select_ps").hide();
         $("#structure-container").show();
         $("#approve-group-detail-container").hide();
+        var stde_id = $("#select_stde").val();
+        get_structure_leave_approve_group_detail(stde_id);
+
     }
     else if(lapg_type == "hire"){
         $("#div_select_dp_id").hide();
@@ -272,6 +275,7 @@ function show_case_by_lapg_type(){
         $("#div_select_ps").hide();
         $("#structure-container").hide();
         $("#approve-group-detail-container").show();
+        addRowToApproveGroupPerson('render');
     }
     else {
         $("#div_select_dp_id").hide();
@@ -281,6 +285,7 @@ function show_case_by_lapg_type(){
         $("#div_select_ps").show();
         $("#structure-container").hide();
         $("#approve-group-detail-container").show();
+        addRowToApproveGroupPerson('render');
     }
 }
 
@@ -405,13 +410,17 @@ var globalData;
 // Main function to generate table and add event listeners
 function get_structure_leave_approve_group_detail(stde_id) {
     var stuc_id = $("#select_stuc").val();
+    var lapg_type = $("#lapg_type").val();
+    var select_dp_id = $("#select_dp_id").val();
 
     $.ajax({
         url: '<?php echo site_url() . "/" . $controller_dir; ?>get_structure_detail_by_level_asc',
         type: 'POST',
         data: {
             stuc_id: stuc_id,
-            stde_id: stde_id
+            stde_id: stde_id,
+            lapg_type : lapg_type,
+            dp_id : select_dp_id
         },
         success: function(data) {
             globalData = JSON.parse(data);
@@ -511,7 +520,7 @@ function get_structure_leave_approve_group_detail(stde_id) {
             renderApproveGroupDetail();
             addRowToApproveGroup();
             renderApproveGroupPerson();
-            addRowToApproveGroupPerson();
+            addRowToApproveGroupPerson('render');
         },
         error: function(xhr, status, error) {
             dialog_error({
@@ -751,7 +760,7 @@ function renderApproveGroupPerson() {
     $('#approve-group-person-container').empty(); // Clear any existing content
 
     const table = `
-            <button type="button" onclick="addRowToApproveGroupPerson()" class="btn btn-primary btn-md mb-2" title="คลิกเพื่อเพิ่มผู้เข้าร่วม" data-toggle="tooltip" data-placement="top">เพิ่มรายชื่อบุคลากร</button>
+            <button type="button" onclick="addRowToApproveGroupPerson('insert')" class="btn btn-primary btn-md mb-2" title="คลิกเพื่อเพิ่มผู้เข้าร่วม" data-toggle="tooltip" data-placement="top">เพิ่มรายชื่อบุคลากร</button>
                 <table class="table table-striped table-bordered table-hover" id="approve-group-person-table">
                     <thead>
                         <tr>
@@ -774,43 +783,126 @@ function renderApproveGroupPerson() {
 }
 
 // Function to add a row in approve-group-person-table
-function addRowToApproveGroupPerson() {
+function addRowToApproveGroupPerson(action="") {
     const tableBody = $('#approve-group-person-table tbody');
-    const newRowIndex = tableBody.find('tr').length;
+    var lapg_type = $('#lapg_type').val();
+    console.log(lapg_type);
+    console.log(action);
+    if(lapg_type == "stuc"){
+        if(action == 'insert'){
+            const newRowIndex = tableBody.find('tr').length;
 
-    const selectOptions = globalData.select_person.map(person => 
-        `<option value="${person.ps_id}">${person.pf_name}${person.ps_fname} ${person.ps_lname}</option>`
-    ).join('');
+            const selectOptions = globalData.select_person_stuc.map(person => 
+                `<option value="${person.ps_id}">${person.pf_name}${person.ps_fname} ${person.ps_lname}</option>`
+            ).join('');
 
-    const newRow = `
-        <tr>
-            <td class="text-center"></td>
-            <td>
-                <select class="select2 select-approve-group-person-ps" id="approve_group_person_select_structure_ps_${newRowIndex}" onchange="updateApproveGroupPersonRowDetails(this, '${newRowIndex}')">
-                    ${selectOptions}
-                </select>
-            </td>
-            <td id="approve_group_person_position_${newRowIndex}"></td>
-            <td id="approve_group_person_admin_position_${newRowIndex}"></td>
-            <td class="text-center" id="approve_group_person_work_line_${newRowIndex}"></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-danger btn-md" onclick="deleteApproveGroupPersonRow(this)" title="คลิกเพื่อลบข้อมูล" data-toggle="tooltip" data-placement="top">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-            <!-- Hidden inputs to store ps_id -->
-            <input type="hidden" name="approve_group_person_ps_id[]" id="approve_group_person_ps_id_${newRowIndex}" value="">
-        </tr>`;
+            const newRow = `
+                <tr>
+                    <td class="text-center"></td>
+                    <td>
+                        <select class="select2 select-approve-group-person-ps" id="approve_group_person_select_structure_ps_${newRowIndex}" onchange="updateApproveGroupPersonRowDetails(this, '${newRowIndex}')">
+                            ${selectOptions}
+                        </select>
+                    </td>
+                    <td id="approve_group_person_position_${newRowIndex}"></td>
+                    <td id="approve_group_person_admin_position_${newRowIndex}"></td>
+                    <td class="text-center" id="approve_group_person_work_line_${newRowIndex}"></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-md" onclick="deleteApproveGroupPersonRow(this)" title="คลิกเพื่อลบข้อมูล" data-toggle="tooltip" data-placement="top">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                    <!-- Hidden inputs to store ps_id -->
+                    <input type="hidden" name="approve_group_person_ps_id[]" id="approve_group_person_ps_id_${newRowIndex}" value="">
+                </tr>`;
+
+            tableBody.append(newRow);
+
+            // Initialize Select2 for the new row's dropdown
+            initializeSelect2(`#approve_group_person_select_structure_ps_${newRowIndex}`);
+
+            // Call the function to show details for the first selected person by default
+            const selectElement = document.getElementById(`approve_group_person_select_structure_ps_${newRowIndex}`);
+            updateApproveGroupPersonRowDetails(selectElement, newRowIndex);
+        }
+        else{
+            tableBody.empty(); // Clear existing rows if needed
+            globalData.select_person_stuc.forEach((person, index) => {
+                // Create a row for each person in globalData.select_person
+                const newRow = `
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td>
+                            <select class="select2 select-approve-group-person-ps" id="approve_group_person_select_structure_ps_${index}" onchange="updateApproveGroupPersonRowDetails(this, '${index}')">
+                                <option value="${person.ps_id}">${person.pf_name}${person.ps_fname} ${person.ps_lname}</option>
+                            </select>
+                        </td>
+                        <td id="approve_group_person_position_${index}"></td>
+                        <td id="approve_group_person_admin_position_${index}"></td>
+                        <td class="text-center" id="approve_group_person_work_line_${index}"></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-md" onclick="deleteApproveGroupPersonRow(this)" title="คลิกเพื่อลบข้อมูล" data-toggle="tooltip" data-placement="top">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                        <!-- Hidden inputs to store ps_id -->
+                        <input type="hidden" name="approve_group_person_ps_id[]" id="approve_group_person_ps_id_${index}" value="${person.ps_id}">
+                    </tr>`;
+
+                // Append the row to the table body
+                tableBody.append(newRow);
+
+                // Initialize Select2 for each new row's dropdown
+                initializeSelect2(`#approve_group_person_select_structure_ps_${index}`);
+
+                // Optionally, update row details based on default selection
+                const selectElement = document.getElementById(`approve_group_person_select_structure_ps_${index}`);
+                updateApproveGroupPersonRowDetails(selectElement, index);
+            });
+        }
+    }
+    else{
+
+        if(action == 'render'){
+            tableBody.empty(); // Clear existing rows if needed
+        }
+        const newRowIndex = tableBody.find('tr').length;
+
+        const selectOptions = globalData.select_person.map(person => 
+            `<option value="${person.ps_id}">${person.pf_name}${person.ps_fname} ${person.ps_lname}</option>`
+        ).join('');
+
+        const newRow = `
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <select class="select2 select-approve-group-person-ps" id="approve_group_person_select_structure_ps_${newRowIndex}" onchange="updateApproveGroupPersonRowDetails(this, '${newRowIndex}')">
+                        ${selectOptions}
+                    </select>
+                </td>
+                <td id="approve_group_person_position_${newRowIndex}"></td>
+                <td id="approve_group_person_admin_position_${newRowIndex}"></td>
+                <td class="text-center" id="approve_group_person_work_line_${newRowIndex}"></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-md" onclick="deleteApproveGroupPersonRow(this)" title="คลิกเพื่อลบข้อมูล" data-toggle="tooltip" data-placement="top">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+                <!-- Hidden inputs to store ps_id -->
+                <input type="hidden" name="approve_group_person_ps_id[]" id="approve_group_person_ps_id_${newRowIndex}" value="">
+            </tr>`;
+
+        tableBody.append(newRow);
+
+        // Initialize Select2 for the new row's dropdown
+        initializeSelect2(`#approve_group_person_select_structure_ps_${newRowIndex}`);
+
+        // Call the function to show details for the first selected person by default
+        const selectElement = document.getElementById(`approve_group_person_select_structure_ps_${newRowIndex}`);
+        updateApproveGroupPersonRowDetails(selectElement, newRowIndex);
+    }
+
     
-    tableBody.append(newRow);
-
-    // Initialize Select2 for the new row's dropdown
-    initializeSelect2(`#approve_group_person_select_structure_ps_${newRowIndex}`);
-
-    // Call the function to show details for the first selected person by default
-    const selectElement = document.getElementById(`approve_group_person_select_structure_ps_${newRowIndex}`);
-    updateApproveGroupPersonRowDetails(selectElement, newRowIndex);
-
     // Reindex the rows after adding a new row
     reindexApproveGroupPersonRows();
 }

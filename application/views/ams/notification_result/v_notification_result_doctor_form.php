@@ -1005,7 +1005,7 @@
     }
 
     function loadModalExrs(exr_id) {
-        $('#modal-load').modal('show');
+        // $('#modal-load').modal('show');
         $('#modal-content-loading').html(`
             <div class="center-container">
                 <div class="spinner-border text-info" role="status">

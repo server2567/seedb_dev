@@ -395,6 +395,8 @@ class Api_services extends UMS_Controller
         $apm_app_walk = $data['apm_app_walk'];
         $ds_stde_id = $this->get_stde_id($department['ds_stde_name']);
         $apm_ql_code = $data['apm_ql_code'];
+        $apm_patient_in_out = $data['apm_patient_in_out'];
+        
         // $apm_pri_id = $data['apm_pri_id'];
 
         if ($data['apm_pri_id'] == 'ปกติ') {
@@ -411,6 +413,9 @@ class Api_services extends UMS_Controller
           // $apm_app_walk = 'W';
         } else if ($data['apm_pri_id'] == 'นัดหมายแพทย์') {
           $apm_pri_id = '4';
+          // $apm_app_walk = 'A';
+        } else if ($data['apm_pri_id'] == 'ผ่าตัด') {
+          $apm_pri_id = '6';
           // $apm_app_walk = 'A';
         } else {
           $apm_pri_id = '5';
@@ -441,6 +446,7 @@ class Api_services extends UMS_Controller
         $this->que->group_end();
         $this->que->where('apm_date', $data['apm_date']);
         $this->que->where('apm_stde_id', $ds_stde_id);
+        $this->que->where('apm_ps_id', $apm_ps_id);
         $this->que->where('apm_sta_id != 9');
         // $this->que->order_by('apm_id');
         $appointment_query = $this->que->get('que_appointment');
@@ -463,14 +469,29 @@ class Api_services extends UMS_Controller
             'apm_dp_id' => $apm_dp_id,
             'apm_ps_id' => $apm_ps_id, // ใช้ค่า apm_ps_id ที่ได้จากการค้นหา หรือเป็น null ถ้าไม่พบ
             'apm_update_date' => date('Y-m-d H:i:s')
+            // 'apm_patient_in_out' => $apm_patient_in_out
           );
+
+          if (empty($apm_ps_id)) {
+            $update_data['apm_ps_active'] = 'N';
+          } else {
+            $update_data['apm_ps_active'] = 'Y';
+          }
+
           $this->que->where('apm_id', $apm_id);
           $this->que->update('que_appointment', $update_data);
           // echo $this->que->last_query();
           $last_appointment_id = $apm_id;
         } else {
           // สร้างการนัดหมายใหม่
-          $last_appointment_id = $this->M_que_appointment->insert_appointment_api($patiet, $apm_visit, $apm_app_walk, $apm_ntf_id, $apm_date, $apm_sta_id, $apm_patient_type, $ds_stde_id, $apm_ql_code, $apm_pri_id, $apm_dp_id, $apm_ps_id, $apm_time);
+          $apm_patient_in_out_date = null;
+          
+          if (empty($apm_ps_id)) {
+            $apm_ps_active = 'N';
+          } else {
+            $apm_ps_active = 'Y';
+          }
+          $last_appointment_id = $this->M_que_appointment->insert_appointment_api($patiet, $apm_visit, $apm_app_walk, $apm_ntf_id, $apm_date, $apm_sta_id, $apm_patient_type, $ds_stde_id, $apm_ql_code, $apm_pri_id, $apm_dp_id, $apm_ps_id, $apm_time, $apm_patient_in_out,$apm_patient_in_out_date,$apm_ps_active);
           // echo $this->que->last_query();
         }
 
@@ -659,7 +680,7 @@ class Api_services extends UMS_Controller
 
         if ($check_visit->num_rows() > 0) {
           $appointment = $check_visit->row();
-
+          if (empty($appointment->apm_rm_code)) {
           // อัปเดตข้อมูลแถวแรก
           $apm_data = array(
             'apm_ds_id' => isset($data['ds_id']) && !empty($data['ds_id']) ? $data['ds_id'] : NULL,
@@ -668,6 +689,8 @@ class Api_services extends UMS_Controller
           $this->que->where('apm_id', $appointment->apm_id);
           $this->que->update('que_appointment', $apm_data);
 
+
+            
           // คิวรีหาเวลา loc_time จาก wts_location
           $loc_time_query = $this->db->query('SELECT loc_time FROM see_wtsdb.wts_location WHERE loc_seq = "2"');
           $loc_time = $loc_time_query->row()->loc_time; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
@@ -681,6 +704,8 @@ class Api_services extends UMS_Controller
           $ntdp_date_end = $start_datetime->format('Y-m-d'); // วันที่ที่ต้องการบันทึก (ซึ่งควรจะเป็นวันเดียวกันกับ apm_date)
 
           // ใช้คำสั่ง JOIN เพื่ออัปเดตตาราง wts_notifications_department
+            $ntdp_date_finish = date('Y-m-d'); // แสดงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
+            $ntdp_time_finish = date('H:i:s');
           $this->db->query(
             "UPDATE see_wtsdb.wts_notifications_department w
                 JOIN (
@@ -696,8 +721,8 @@ class Api_services extends UMS_Controller
                     w.ntdp_sta_id = ?",
                 array(
                   $data['apm_visit'],          // พารามิเตอร์ apm_visit
-                  $data['ntdp_date_start'],    // วันที่เสร็จสิ้น (date_finish)
-                  $data['ntdp_time_start'],    // เวลาเสร็จสิ้น (time_finish)
+                    $ntdp_date_finish,    // วันที่เสร็จสิ้น (date_finish)
+                    $ntdp_time_finish,          // เวลาเสร็จสิ้น (time_finish)
                   '2'                          // สถานะ (sta_id = 2)
               )
           );
@@ -728,8 +753,9 @@ class Api_services extends UMS_Controller
             );
             // ถ้า ntdp_in_out == 1 ให้เพิ่มค่า ntdp_date_finish และ ntdp_time_finish แทน
             if ($data['ntdp_in_out'] == 1) {
-              $wts_data_2['ntdp_date_finish'] = $data['ntdp_date_start'];
-              $wts_data_2['ntdp_time_finish'] = $data['ntdp_time_start'];
+
+                  $wts_data_2['ntdp_date_finish'] = $ntdp_date_finish;
+                  $wts_data_2['ntdp_time_finish'] = $ntdp_time_finish;
               $this->que->where('apm_id', $appointment->apm_id);
               $this->que->update('que_appointment', array('apm_sta_id' => 15));
             }
@@ -760,8 +786,8 @@ class Api_services extends UMS_Controller
             $ntdp_sta_id_1 = '2';
 
             $wts_update_data = array(
-              'ntdp_date_finish' => $ntdp_date_end_1,
-              'ntdp_time_finish' => $ntdp_time_end_1,
+                'ntdp_date_finish' => $ntdp_date_finish,
+                'ntdp_time_finish' => $ntdp_time_finish,
               'ntdp_sta_id' => $ntdp_sta_id_1
             );
 
@@ -804,8 +830,8 @@ class Api_services extends UMS_Controller
             );
             // ถ้า ntdp_in_out == 1 ให้เพิ่มค่า ntdp_date_finish และ ntdp_time_finish แทน
             if ($data['ntdp_in_out'] == 1) {
-              $wts_data['ntdp_date_finish'] = $data['ntdp_date_start'];
-              $wts_data['ntdp_time_finish'] = $data['ntdp_time_start'];
+                $wts_data['ntdp_date_finish'] = $ntdp_date_finish;
+                $wts_data['ntdp_time_finish'] = $ntdp_time_finish;
               $this->que->where('apm_id', $ntdp_apm_id);
               $this->que->update('que_appointment', array('apm_sta_id' => 15));
             }
@@ -844,7 +870,9 @@ class Api_services extends UMS_Controller
           get_url_line_service($url_service_line, $line_data); // Line helper
 
           $response = array('status' => 'success', 'message' => 'First row updated and notification recorded.');
-
+          } else {
+            $this->location_step10();
+          }
         } else {
           // กรณีไม่พบการนัดหมายด้วย apm_visit
           $response = array('status' => 'error', 'message' => 'No appointment found for the given visit.');
@@ -898,6 +926,8 @@ class Api_services extends UMS_Controller
         $check_visit = $this->que->query("SELECT * FROM que_appointment WHERE apm_visit = ?", array($data['apm_visit']));
 
         if ($check_visit->num_rows() > 0) {
+          $appointment = $check_visit->row();
+          if (empty($appointment->apm_rm_code)) {
           foreach ($check_visit->result() as $appointment) {
 
             // อัปเดตข้อมูลแถวแรก
@@ -1124,7 +1154,9 @@ class Api_services extends UMS_Controller
 
           // ส่งผลลัพธ์กลับในรูปแบบ JSON
           $response = array('status' => 'success', 'message' => 'Location and time successfully recorded for all appointments.');
-
+        } else {
+          $this->location_step10();
+        }
         } else {
           $response = array('status' => 'error', 'message' => 'Appointment visit not found.');
         }
@@ -1346,9 +1378,11 @@ class Api_services extends UMS_Controller
         $check_visit = $this->que->query("SELECT * FROM que_appointment WHERE apm_visit = ? AND apm_ps_id = ? ", array($data['apm_visit'], $person->ps_id));
         // echo $this->que->last_query(); die;
         // pre($check_visit->result_array()); die;
-        // ตรวจสอบว่าพบข้อมูลการนัดหมายหรือไม่
+        // ตรวจสอบว่าพบข้อมูลการนัดหมายหรือไม
+
         if ($check_visit->num_rows() > 0) {
           $appointment = $check_visit->row();
+          if (empty($appointment->apm_rm_code)) {
 
           // ตรวจสอบว่า ap_his_id มีอยู่ในตาราง ams_appointment หรือไม่
           $appointment_query = $this->ams->query("SELECT * FROM ams_appointment 
@@ -1592,6 +1626,9 @@ class Api_services extends UMS_Controller
 
             $response = array('status' => 'success', 'message' => 'Appointment created successfully.');
           }
+        } else {
+          $this->location_step10();
+        }
           // } else {
           //   // ไม่พบบุคคลตามชื่อและนามสกุล
           //   $response = array('status' => 'error', 'message' => 'Person not found.');
@@ -1634,15 +1671,354 @@ class Api_services extends UMS_Controller
         // ตรวจสอบว่าพบข้อมูลการนัดหมายหรือไม่
         if ($check_visit->num_rows() > 0) {
           // $appointment = $check_visit->row();
-
           foreach ($check_visit->result() as $appointment) {
+            // Check if `apm_id` already has an `apm_rm_code`
+            $existing_apm = $this->que->select('apm_rm_code')
+                                      ->from('que_appointment')
+                                      ->where('apm_id', $appointment->apm_id)
+                                      ->get()
+                                      ->row();
+        
+            if (empty($existing_apm->apm_rm_code)) {
+                // Fetch the latest `apm_rm_code` for today and increment it
+                $today = date('Y-m-d');
+                $last_code = $this->que->select('apm_rm_code')
+                                       ->from('que_appointment')
+                                       ->where('apm_date', $today)
+                                       ->where('apm_patient_in_out', 'OPD')
+                                       ->order_by('apm_rm_code', 'DESC')
+                                       ->limit(1)
+                                       ->get()
+                                       ->row();
+        
+                // Generate the new code
+                $new_code = $last_code ? str_pad((int)$last_code->apm_rm_code + 1, 3, '0', STR_PAD_LEFT) : '001';
+                
+                // Set `apm_data` based on `ntdp_loc_Id`
+                $apm_sta_id = 10; // ค่าเริ่มต้น
 
-            $apm_data = array(
-              'apm_sta_id' => 10
-            );
-            $this->que->where('apm_id', $appointment->apm_id);
-            $this->que->update('que_appointment', $apm_data);
+                    if (
+                          ($data['ntdp_loc_Id'] == '10' || $data['ntdp_loc_Id'] == '11') && 
+                          in_array($data['ntdp_loc_ft_Id'], ['36', '32', '22', '8', '23', '24', '9', '10', '6', '7', '20', '21','35','27'])
+                      ) {
+                          $apm_sta_id = 21;
+                      } else if($data['ntdp_loc_Id'] == '10' && ($data['ntdp_loc_ft_Id'] == '33' ||  $data['ntdp_loc_ft_Id'] == '34' ||  $data['ntdp_loc_ft_Id'] == '13' || $data['ntdp_loc_ft_Id'] == '37')) {
+                          $apm_sta_id = 16; // ย้ายมาอยู่ก่อน
+                      } else if ($data['ntdp_loc_Id'] == '3' && ($data['ntdp_loc_ft_Id'] == '33' || $data['ntdp_loc_ft_Id'] == '34')) {
+                          $apm_sta_id = 16; // เพิ่มเงื่อนไขเฉพาะสำหรับ loc_Id = 3
+                      } else if ($data['ntdp_loc_Id'] == '10' || $data['ntdp_loc_Id'] == '3') {
+                          $apm_sta_id = 16;
+                      } elseif (in_array($data['ntdp_loc_Id'], ['11', '13']) && ($data['ntdp_loc_ft_Id'] == '11' || $data['ntdp_loc_ft_Id'] == '12')) {
+                          $apm_sta_id = 17;
+                      } else if($data['ntdp_loc_Id'] == '11' && $data['ntdp_loc_ft_Id'] == '13') {
+                          $apm_sta_id = 16;
+                      } else if($data['ntdp_loc_Id'] == '13' && $data['ntdp_loc_ft_Id'] == '13') {
+                          $apm_sta_id = 16;
+                      } else if($data['ntdp_loc_Id'] == '10' && ($data['ntdp_loc_ft_Id'] == '33' ||  $data['ntdp_loc_ft_Id'] == '34')) {
+                        $apm_sta_id = 16;
+                      }
+                  
+                $apm_data = array(
+                      'apm_sta_id' => $apm_sta_id,
+                    'apm_rm_time' => date('H:i:s')
+                );
+        
+                  if (in_array($data['ntdp_loc_Id'], ['10', '11', '13']) && in_array($data['ntdp_loc_ft_Id'], ['11', '12', '13'])) {
+                    $apm_data['apm_rm_code'] = $new_code;
+                }
+        
+                // Update `que_appointment`
+                $this->que->where('apm_id', $appointment->apm_id);
+                $this->que->update('que_appointment', $apm_data);
 
+                if($data['ntdp_loc_Id'] == '10' || ($data['ntdp_loc_Id'] == '10' && ($data['ntdp_loc_ft_Id'] == '11' || $data['ntdp_loc_ft_Id'] == '12'))){
+                  // ถ้าครั้งแรก
+                  
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '11' || ($data['ntdp_loc_Id'] == '13' && ($data['ntdp_loc_ft_Id'] == '12' || $data['ntdp_loc_ft_Id'] == '11'))) {
+                  $qus_data = array(
+                    'qus_status' => '1',
+                    'qus_channel' => '9',
+                    'qus_seq' => '1',
+                    'qus_apm_id' => $appointment->apm_id,
+                    'qus_app_walk'=> $appointment->apm_app_walk
+                  );
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->insert('wts_queue_seq', $qus_data);
+
+                  // $check_qus_apm_id = $this->que->query("SELECT * FROM wts_queue_seq WHERE qus_apm_id = ?", array($appointment->apm_id));
+                  // if($check_qus_apm_id->num_rows() > 0) { // ตรวจสอบว่ามีผลลัพธ์หรือไม่
+                    $qus_data = array(
+                      'qus_status' => '1',
+                      'qus_channel' => '9'
+                    );
+  
+                    $this->wts->where('qus_apm_id', $appointment->apm_id);
+                    $this->wts->update('wts_queue_seq', $qus_data);
+                  // }
+                  // echo $this->wts->last_query();
+                } else if($data['ntdp_loc_Id'] == '13' && $data['ntdp_loc_ft_Id'] == '13') {
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6',
+                    'qus_seq' => '1',
+                    'qus_apm_id' => $appointment->apm_id,
+                    'qus_app_walk'=> $appointment->apm_app_walk
+                  );
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->insert('wts_queue_seq', $qus_data);
+                  // $check_qus_apm_id = $this->que->query("SELECT * FROM wts_queue_seq WHERE qus_apm_id = ?", array($appointment->apm_id));
+                  // if($check_qus_apm_id->num_rows() > 0) { // ตรวจสอบว่ามีผลลัพธ์หรือไม่
+                    $qus_data = array(
+                      'qus_status' => '2',
+                      'qus_channel' => '6'
+                    );
+  
+                    $this->wts->where('qus_apm_id', $appointment->apm_id);
+                    $this->wts->update('wts_queue_seq', $qus_data);
+                  // }
+                  // echo $this->wts->last_query();
+                } else if($data['ntdp_loc_Id'] == '11' && (
+                  $data['ntdp_loc_ft_Id'] == '13' || 
+                  $data['ntdp_loc_ft_Id'] == '36' || 
+                  $data['ntdp_loc_ft_Id'] == '32' ||
+                  $data['ntdp_loc_ft_Id'] == '22' ||
+                  $data['ntdp_loc_ft_Id'] == '8' ||
+                  $data['ntdp_loc_ft_Id'] == '23' ||
+                  $data['ntdp_loc_ft_Id'] == '24' ||
+                  $data['ntdp_loc_ft_Id'] == '9' ||
+                  $data['ntdp_loc_ft_Id'] == '10' ||
+                  $data['ntdp_loc_ft_Id'] == '6' ||
+                  $data['ntdp_loc_ft_Id'] == '7' ||
+                  $data['ntdp_loc_ft_Id'] == '20' ||
+                  $data['ntdp_loc_ft_Id'] == '21')){
+                  $qus_data = array(
+                    'qus_status' => '1',
+                    'qus_channel' => '9'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                }
+                // die;
+            } else {
+
+                  $apm_sta_id = $appointment->apm_sta_id;
+
+                  if (
+                    ($data['ntdp_loc_Id'] == '10' || $data['ntdp_loc_Id'] == '11') && 
+                    in_array($data['ntdp_loc_ft_Id'], ['36', '32', '22', '8', '23', '24', '9', '10', '6', '7', '20', '21', '35','27'])
+                  ) {
+                      $apm_sta_id = 21;
+                      echo "Condition 1 matched. apm_sta_id = 21";
+                  } else if ($data['ntdp_loc_Id'] == '10' && in_array($data['ntdp_loc_ft_Id'], ['33', '34', '13', '37'])) {
+                      $apm_sta_id = 16;
+                      echo "Condition 2 matched. apm_sta_id = 16";
+                  } else if ($data['ntdp_loc_Id'] == '3' && in_array($data['ntdp_loc_ft_Id'], ['33', '34'])) {
+                      $apm_sta_id = 16;
+                      echo "Condition 3 matched. apm_sta_id = 16";
+                  } else if ($data['ntdp_loc_Id'] == '11' && $data['ntdp_loc_ft_Id'] == '13') {
+                      $apm_sta_id = 16;
+                      echo "Condition 4 matched. apm_sta_id = 16";
+                  } else if ($data['ntdp_loc_Id'] == '13' && $data['ntdp_loc_ft_Id'] == '13') {
+                      $apm_sta_id = 16;
+                      echo "Condition 5 matched. apm_sta_id = 16";
+                  } else if (in_array($data['ntdp_loc_Id'], ['11', '13']) && in_array($data['ntdp_loc_ft_Id'], ['11', '12'])) {
+                      $apm_sta_id = 16;
+                      echo "Condition 6 matched. apm_sta_id = 16";
+                  } else if ($data['ntdp_loc_Id'] == '10' || $data['ntdp_loc_Id'] == '3') {
+                      $apm_sta_id = 17;
+                      echo "Condition 7 matched. apm_sta_id = 17";
+                  } else if ($data['ntdp_loc_ft_Id'] == '13') {
+                      $apm_sta_id = 16;
+                      echo "Condition 8 matched. apm_sta_id = 16";
+                  } else if (in_array($data['ntdp_loc_ft_Id'], ['11', '12'])) {
+                      $apm_sta_id = 17;
+                      echo "Condition 9 matched. apm_sta_id = 17";
+                  }
+                
+                  
+                $apm_data = array(
+                      'apm_sta_id' => $apm_sta_id,
+                      'apm_rm_time' => date('H:i:s')
+                );
+        
+                  // Update `que_appointment`
+                $this->que->where('apm_id', $appointment->apm_id);
+                $this->que->update('que_appointment', $apm_data);
+                  // echo $this->que->last_query(); die;
+
+                // Set `apm_data` without `apm_rm_code`
+                // $apm_data = array(
+                //     'apm_sta_id' => ($data['ntdp_loc_Id'] == '10' ) ? 17 : (($data['ntdp_loc_Id'] == '11' || $data['ntdp_loc_Id'] == '13' || $data['ntdp_loc_Id'] == '3') ? 16 : 10)
+                // );
+        
+                // $this->que->where('apm_id', $appointment->apm_id);
+                // $this->que->update('que_appointment', $apm_data);
+
+                if($data['ntdp_loc_Id'] == '10' && $data['ntdp_loc_ft_Id'] == '37'){
+                  $qus_data = array(
+                    'qus_status' => '4',
+                    'qus_channel' => '5'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+
+                } else if($data['ntdp_loc_Id'] == '10' && $data['ntdp_loc_ft_Id'] == '11'){
+                  $qus_data = array(
+                    'qus_status' => '3',
+                    'qus_channel' => '7'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '11' && (
+                  $data['ntdp_loc_ft_Id'] == '13' || 
+                  $data['ntdp_loc_ft_Id'] == '36' || 
+                  $data['ntdp_loc_ft_Id'] == '32' ||
+                  $data['ntdp_loc_ft_Id'] == '22' ||
+                  $data['ntdp_loc_ft_Id'] == '8' ||
+                  $data['ntdp_loc_ft_Id'] == '23' ||
+                  $data['ntdp_loc_ft_Id'] == '24' ||
+                  $data['ntdp_loc_ft_Id'] == '9' ||
+                  $data['ntdp_loc_ft_Id'] == '10' ||
+                  $data['ntdp_loc_ft_Id'] == '6' ||
+                  $data['ntdp_loc_ft_Id'] == '7' ||
+                  $data['ntdp_loc_ft_Id'] == '20' ||
+                  $data['ntdp_loc_ft_Id'] == '21' ||
+                  $data['ntdp_loc_ft_Id'] == '33' || 
+                  $data['ntdp_loc_ft_Id'] == '34')){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '13' && $data['ntdp_loc_ft_Id'] == '11'){
+                  $qus_data = array(
+                    'qus_status' => '1',
+                    'qus_channel' => '9'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '13' && (
+                          $data['ntdp_loc_ft_Id'] == '36' || 
+                          $data['ntdp_loc_ft_Id'] == '32' ||
+                          $data['ntdp_loc_ft_Id'] == '22' ||
+                          $data['ntdp_loc_ft_Id'] == '8' ||
+                          $data['ntdp_loc_ft_Id'] == '23' ||
+                          $data['ntdp_loc_ft_Id'] == '24' ||
+                          $data['ntdp_loc_ft_Id'] == '9' ||
+                          $data['ntdp_loc_ft_Id'] == '10' ||
+                          $data['ntdp_loc_ft_Id'] == '6' ||
+                          $data['ntdp_loc_ft_Id'] == '7' ||
+                          $data['ntdp_loc_ft_Id'] == '20' ||
+                          $data['ntdp_loc_ft_Id'] == '21' ||
+                          $data['ntdp_loc_ft_Id'] == '33' || 
+                          $data['ntdp_loc_ft_Id'] == '34')){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+                  
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '13' && $data['ntdp_loc_ft_Id'] == '13'){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                  } else if($data['ntdp_loc_cf_Id'] == '6' && $data['ntdp_loc_Id'] == '13' && ($data['ntdp_loc_ft_Id'] == '11' || $data['ntdp_loc_ft_Id'] == '12')){
+                  $qus_data = array(
+                    'qus_status' => '1',
+                    'qus_channel' => '7'
+                  );
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_cf_Id'] == '6' && $data['ntdp_loc_Id'] == '13' && (
+                  $data['ntdp_loc_ft_Id'] == '13' || 
+                  $data['ntdp_loc_ft_Id'] == '36' || 
+                  $data['ntdp_loc_ft_Id'] == '32' ||
+                  $data['ntdp_loc_ft_Id'] == '22' ||
+                  $data['ntdp_loc_ft_Id'] == '8' ||
+                  $data['ntdp_loc_ft_Id'] == '23' ||
+                  $data['ntdp_loc_ft_Id'] == '24' ||
+                  $data['ntdp_loc_ft_Id'] == '9' ||
+                  $data['ntdp_loc_ft_Id'] == '10' ||
+                  $data['ntdp_loc_ft_Id'] == '6' ||
+                  $data['ntdp_loc_ft_Id'] == '7' ||
+                  $data['ntdp_loc_ft_Id'] == '20' ||
+                  $data['ntdp_loc_ft_Id'] == '21' ||
+                  $data['ntdp_loc_ft_Id'] == '33' || 
+                  $data['ntdp_loc_ft_Id'] == '34')){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '10' && (
+                  $data['ntdp_loc_ft_Id'] == '13' || 
+                  $data['ntdp_loc_ft_Id'] == '36' || 
+                  $data['ntdp_loc_ft_Id'] == '32' ||
+                  $data['ntdp_loc_ft_Id'] == '22' ||
+                  $data['ntdp_loc_ft_Id'] == '8' ||
+                  $data['ntdp_loc_ft_Id'] == '23' ||
+                  $data['ntdp_loc_ft_Id'] == '24' ||
+                  $data['ntdp_loc_ft_Id'] == '9' ||
+                  $data['ntdp_loc_ft_Id'] == '10' ||
+                  $data['ntdp_loc_ft_Id'] == '6' ||
+                  $data['ntdp_loc_ft_Id'] == '7' ||
+                  $data['ntdp_loc_ft_Id'] == '20' ||
+                  $data['ntdp_loc_ft_Id'] == '21' || 
+                  $data['ntdp_loc_ft_Id'] == '33' || 
+                  $data['ntdp_loc_ft_Id'] == '34')){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '3' ){
+                  $qus_data = array(
+                    'qus_status' => '4',
+                    'qus_channel' => '5'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '2' && ($data['ntdp_loc_ft_Id'] == '11' ||  $data['ntdp_loc_ft_Id'] == '12')){
+                  $qus_data = array(
+                    'qus_status' => '3',
+                    'qus_channel' => '7'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                } else if($data['ntdp_loc_Id'] == '2' && $data['ntdp_loc_ft_Id'] == '10'){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                }
+
+            }
             // จากนั้น Insert ข้อมูลใหม่สำหรับ seq 2
             // คิวรีหาเวลา loc_time จาก wts_location
             $loc_time_query = $this->db->query('SELECT loc_time FROM see_wtsdb.wts_location WHERE loc_seq = "9"');
@@ -1740,6 +2116,7 @@ class Api_services extends UMS_Controller
             // อัปเดต apm_sta_id เป็น 4 ในตาราง que_appointment
             $this->que->where('apm_visit', $data['apm_visit']);
             $this->que->update('que_appointment', array('apm_sta_id' => 4));
+
           }
 
           $que_info = $this->que->query('SELECT * FROM que_appointment WHERE apm_visit = "' . $data['apm_visit'] . '"')->row();
@@ -1780,6 +2157,7 @@ class Api_services extends UMS_Controller
 
   public function location_step11()
   {
+    die;
     $this->load->model('que/M_que_appointment');
     $this->load->model('wts/M_wts_notifications_department');
     $this->load->model('que/M_que_code_list');
@@ -2032,22 +2410,52 @@ class Api_services extends UMS_Controller
             $apm_pri_id = '3';
           } else if ($data['apm_pri_id'] == 'นัดหมายแพทย์') {
             $apm_pri_id = '4';
+          } else if ($data['apm_pri_id'] == 'ผ่าตัด') {
+              $apm_pri_id = '6';
           } else {
             $apm_pri_id = '5';
           }
 
-          // อัปเดตข้อมูลทั้งหมดที่มี `apm_visit` ตรงกัน
-          $apm_data = array(
-            'apm_pri_id' => $apm_pri_id
-          );
-          $this->que->where('apm_visit', $data['apm_visit']);
-          if ($this->que->update('que_appointment', $apm_data)) {
-            // แสดงข้อความเมื่ออัปเดตสำเร็จ
-            echo json_encode(array('status' => 'success', 'message' => 'success update apm_pri_id'));
+          if($apm_pri_id == '4' || $apm_pri_id == '1' || $apm_pri_id == '6' || $apm_pri_id == '3') {
+            // อัปเดตข้อมูลทั้งหมดที่มี `apm_visit` ตรงกัน A
+            $apm_data = array( 
+              'apm_pri_id' => $apm_pri_id
+            );
+            $this->que->where('apm_visit', $data['apm_visit']);
+            $this->que->update('que_appointment', $apm_data);
+
+            $check_visit_row = $check_visit->row(); // ดึงแถวแรก
+            
+            $wts_que = array(
+              'qus_app_walk' => 'A',
+            );
+            $this->wts->where('qus_apm_id', $check_visit_row->apm_id);
+            $this->wts->update('wts_queue_seq', $wts_que);
+
           } else {
-            // แสดงข้อความเมื่ออัปเดตล้มเหลว
-            echo json_encode(array('status' => 'error', 'message' => 'failed to update apm_pri_id'));
+            // อัปเดตข้อมูลทั้งหมดที่มี `apm_visit` ตรงกัน
+            $apm_data = array(
+              'apm_pri_id' => $apm_pri_id
+            );
+            $this->que->where('apm_visit', $data['apm_visit']);
+            $this->que->update('que_appointment', $apm_data);
+
+            $check_visit_row = $check_visit->row(); // ดึงแถวแรก
+            
+            $wts_que = array(
+              'qus_app_walk' => 'W',
+            );
+            $this->wts->where('qus_apm_id', $check_visit_row->apm_id);
+            $this->wts->update('wts_queue_seq', $wts_que);
           }
+
+          // if ($this->que->update('que_appointment', $apm_data)) {
+                  //     // แสดงข้อความเมื่ออัปเดตสำเร็จ
+                  //     echo json_encode(array('status' => 'success', 'message' => 'success update apm_pri_id'));
+          // } else {
+                  //     // แสดงข้อความเมื่ออัปเดตล้มเหลว
+                  //     echo json_encode(array('status' => 'error', 'message' => 'failed to update apm_pri_id'));
+          // }
         } else {
           // แสดงข้อความเมื่อไม่พบ `apm_visit`
           echo json_encode(array('status' => 'error', 'message' => 'apm_visit not found'));
@@ -2117,6 +2525,679 @@ class Api_services extends UMS_Controller
           echo json_encode(['status' => 'error', 'message' => 'Failed to update apm_sta_id']);
       }
   }
+
+  public function update_department(){
+    $this->load->model('que/M_que_appointment');
+    $this->load->model('wts/M_wts_notifications_department');
+    $this->load->model('que/M_que_code_list');
+    $this->load->model('wts/M_wts_base_route_department');
+
+    // รับข้อมูลจาก request
+    $data = json_decode(file_get_contents('php://input'), true);
+    // pre($data); die;
+    if (!$data) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'No data received']);
+        return;
+    }
+
+    if (!isset($data['apm_visit'])) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'apm_visit is required']);
+        return;
+    }
+
+    $ps_fname = $data['ps_fname'] ?: null;
+    $ps_lname = $data['ps_lname'] ?: null;
+    if ($ps_fname) {
+      $ps_fname = explode('.', $ps_fname);
+      $ps_fname_ex = trim(end($ps_fname)); // ใช้ส่วนหลังสุดของชื่อหลังจากตัดจุดออก และตัดช่องว่างข้างหน้าและข้างหลังออก
+    } else {
+      $ps_fname_ex = null;
+    }
+    $person_query = null;
+    if ($ps_fname_ex && $ps_lname) {
+      $person_query = $this->hr->query("SELECT * FROM hr_person WHERE ps_fname LIKE ? AND ps_lname LIKE ?", array('%' . $ps_fname_ex . '%', '%' . $ps_lname . '%'))->row();
+    }
+
+    $apm_ps_id = $person_query ? $person_query->ps_id : null; // ถ้าไม่พบหรือเป็น null ให้เป็น null
+    // pre($data['ds_stde_name']);
+    // ค้นหา stde_id จากชื่อ
+    if($data['ds_stde_name'] === 'รับยาต่อเนื่อง' || $data['ds_stde_name'] === 'Lidspa_ไม่พบแพทย์'){
+
+      $ds_stde_id = null;
+    } else {
+    $ds_stde_id = $this->get_stde_id($data['ds_stde_name']);
+    }
+
+    // if (!$ds_stde_id) {
+    //     http_response_code(404);
+    //     echo json_encode(['status' => 'error', 'message' => 'Invalid ds_stde_name']);
+    //     return;
+    // }
+    // ตรวจสอบการมีอยู่ของข้อมูล que_appointment
+    $check_visit = $this->que->get_where('que_appointment', [
+        'apm_visit' => $data['apm_visit']
+    ]);
+
+    if ($check_visit->num_rows() === 0) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'apm_visit not found']);
+        return;
+    }
+
+    // อัปเดตสถานะ apm_sta_id เป็น 9
+
+    $update_data = ['apm_ps_id' => $apm_ps_id, 'apm_stde_id' => $ds_stde_id];
+    $this->que->where('apm_visit', $data['apm_visit']);
+
+    if ($this->que->update('que_appointment', $update_data)) {
+        http_response_code(200);
+        echo json_encode(['status' => 'success', 'message' => 'success update apm_sta_id']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to update apm_sta_id']);
+    }
+
+
+  }
+
+  public function update_patient_in_out()
+  {
+    $this->load->model('que/M_que_appointment');
+    $this->load->model('wts/M_wts_notifications_department');
+    $this->load->model('que/M_que_code_list');
+    $this->load->model('wts/M_wts_base_route_department');
+
+    // รับค่าจาก request ที่ส่งมา
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    // ตรวจสอบว่ามีการส่งข้อมูลเข้ามาหรือไม่
+    if ($data) {
+        if (isset($data['apm_visit'])) {
+            // ค้นหาแถวที่มี `apm_visit` ตรงกัน
+            $check_visit = $this->que->query("SELECT RIGHT(apm_ql_code, 3) AS last_three_chars FROM que_appointment WHERE apm_visit = ?", array($data['apm_visit']));
+            if ($check_visit->num_rows() > 0) {
+              $check_row = $check_visit->row(); // ดึงแถวแรกของผลลัพธ์
+
+              $new_ql_code_prefix = 'I-' . date('dm') . '-'; // สร้างคำนำหน้าใหม่
+              $updated_ql_code = $new_ql_code_prefix . $check_row->last_three_chars;
+          
+              $apm_data = array(
+                  'apm_patient_in_out' => $data['apm_patient_in_out'],
+                  'apm_patient_in_out_date' => date('Y-m-d H:i:s'),
+                  'apm_ql_code' => $updated_ql_code // บันทึกค่าใหม่ลงไป
+              );
+              $this->que->where('apm_visit', $data['apm_visit']);
+              if ($this->que->update('que_appointment', $apm_data)) {
+                    // แสดงข้อความเมื่ออัปเดตสำเร็จ
+                    echo json_encode(array('status' => 'success', 'message' => 'success update apm_patient_in_out'));
+                } else {
+                    // แสดงข้อความเมื่ออัปเดตล้มเหลว
+                    echo json_encode(array('status' => 'error', 'message' => 'failed to update apm_patient_in_out'));
+                }
+            } else {
+                // แสดงข้อความเมื่อไม่พบ `apm_visit`
+                echo json_encode(array('status' => 'error', 'message' => 'apm_visit not found'));
+            }
+        } else {
+            // แสดงข้อความเมื่อไม่ได้ส่ง `apm_visit`
+            echo json_encode(array('status' => 'error', 'message' => 'apm_visit is required'));
+        }
+    } else {
+        // แสดงข้อความเมื่อไม่ได้รับข้อมูล
+        echo json_encode(array('status' => 'error', 'message' => 'no data received'));
+    }
+  }
+
+  public function update_ipd_in_out() // ออกจากห้อง IPD มาชำระเงิน หรือรับยา
+  {
+    $this->load->model('que/M_que_appointment');
+    $this->load->model('wts/M_wts_notifications_department');
+    $this->load->model('que/M_que_code_list');
+    $this->load->model('wts/M_wts_base_route_department');
+
+    // รับค่าจาก request ที่ส่งมา
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    // ตรวจสอบว่ามีการส่งข้อมูลเข้ามาหรือไม่
+    if ($data) {
+      if (isset($data['apm_visit'])) {
+        // ค้นหาแถวที่มี `apm_visit` ตรงกัน
+        $check_visit = $this->que->query("SELECT * FROM que_appointment WHERE apm_visit = ?", array($data['apm_visit']));
+
+        if ($check_visit->num_rows() > 0) {
+          $appointment = $check_visit->row();
+
+          // อัปเดตข้อมูลแถวแรก
+          $apm_data = array(
+            'apm_sta_id' => 20,
+            'apm_date' => date('Y-m-d'),
+            'apm_time' => date('H:i')
+          );
+          $this->que->where('apm_id', $appointment->apm_id);
+          $this->que->update('que_appointment', $apm_data);
+
+          if($data['ntdp_loc_ft_Id'] == '11' || $data['ntdp_loc_ft_Id'] == '12' || $data['ntdp_loc_ft_Id'] == '13'){
+            $existing_apm = $this->que->select('apm_rm_code')
+                                      ->from('que_appointment')
+                                      ->where('apm_id', $appointment->apm_id)
+                                      ->get()
+                                      ->row();
+        
+            if (empty($existing_apm->apm_rm_code)) {
+
+                // Fetch the latest `apm_rm_code` for today and increment it
+                $today = date('Y-m-d');
+                $last_code = $this->que->select('apm_rm_code')
+                                       ->from('que_appointment')
+                                       ->where('apm_date', $today)
+                                       ->order_by('apm_rm_code', 'DESC')
+                                       ->limit(1)
+                                       ->get()
+                                       ->row();
+                // Generate the new code
+                $new_code = $last_code ? str_pad((int)$last_code->apm_rm_code + 1, 3, '0', STR_PAD_LEFT) : '001';
+                
+                // Set `apm_data` based on `ntdp_loc_Id`
+                $apm_data = array(
+                    'apm_sta_id' => ($data['ntdp_loc_ft_Id'] == '10') ? 16 : (($data['ntdp_loc_ft_Id'] == '11') ? 17 : 10),
+                    'apm_rm_time' => date('H:i:s')
+                );
+        
+                // if (in_array($data['ntdp_loc_ft_Id'], ['10', '11'])) {
+                //     $apm_data['apm_rm_code'] = $new_code;
+                // }
+                if (in_array($data['ntdp_loc_Id'], ['10', '11', '13']) && in_array($data['ntdp_loc_ft_Id'], ['11', '12', '13'])) {
+                    $apm_data['apm_rm_code'] = $new_code;
+                }
+                // Update `que_appointment`
+                $this->que->where('apm_id', $appointment->apm_id);
+                $this->que->update('que_appointment', $apm_data);
+
+                if($data['ntdp_loc_ft_Id'] == '10'){
+                  // ถ้าครั้งแรก
+                  
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                
+                } else if($data['ntdp_loc_ft_Id'] == '11') {
+                  $qus_data = array(
+                    'qus_status' => '1',
+                    'qus_channel' => '9'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                }
+                
+            } else {
+                // Set `apm_data` without `apm_rm_code`
+                $apm_data = array(
+                    'apm_sta_id' => ($data['ntdp_loc_ft_Id'] == '10') ? 16 : (($data['ntdp_loc_ft_Id'] == '11') ? 17 : 10)
+                );
+        
+                $this->que->where('apm_id', $appointment->apm_id);
+                $this->que->update('que_appointment', $apm_data);
+
+                if($data['ntdp_loc_ft_Id'] == '10' && $data['ntdp_loc_ft_Id'] == '37'){
+                  $qus_data = array(
+                    'qus_status' => '4',
+                    'qus_channel' => '5'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+
+                } else if($data['ntdp_loc_ft_Id'] == '10'){
+                  $qus_data = array(
+                    'qus_status' => '2',
+                    'qus_channel' => '6'
+                  );
+
+                  $this->wts->where('qus_apm_id', $appointment->apm_id);
+                  $this->wts->update('wts_queue_seq', $qus_data);
+                }
+
+
+            }
+
+          }
+
+
+
+          // คิวรีหาเวลา loc_time จาก wts_location
+          $loc_time_query = $this->db->query('SELECT loc_time FROM see_wtsdb.wts_location WHERE loc_seq = "12"');
+          $loc_time = $loc_time_query->row()->loc_time; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
+          // แปลงเวลาจาก apm_date และ ntdp_time_start
+          $start_datetime = new DateTime(date('Y-m-d') . ' ' . date('H:i:s'));
+          // เพิ่มเวลาจาก loc_time
+          $start_datetime->modify('+' . $loc_time . ' minutes');
+
+          // คำนวณค่า ntdp_time_end และ ntdp_date_end
+          $ntdp_time_end = $start_datetime->format('H:i:s'); // เวลาที่ต้องการบันทึก
+          $ntdp_date_end = $start_datetime->format('Y-m-d'); // วันที่ที่ต้องการบันทึก (ซึ่งควรจะเป็นวันเดียวกันกับ apm_date)
+
+          // ใช้คำสั่ง JOIN เพื่ออัปเดตตาราง wts_notifications_department
+          $this->db->query(
+            "UPDATE see_wtsdb.wts_notifications_department w
+                JOIN (
+                    SELECT ntdp_id 
+                    FROM see_wtsdb.wts_notifications_department w
+                    JOIN see_quedb.que_appointment q ON w.ntdp_apm_id = q.apm_id
+                    WHERE q.apm_visit = ? 
+                    ORDER BY w.ntdp_seq DESC 
+                    LIMIT 1
+                ) latest ON w.ntdp_id = latest.ntdp_id
+                SET w.ntdp_date_finish = ?, 
+                    w.ntdp_time_finish = ?, 
+                    w.ntdp_sta_id = ?",
+                array(
+                  $appointment->apm_visit,          // พารามิเตอร์ apm_visit
+                  $ntdp_date_end,    // วันที่เสร็จสิ้น (date_finish)
+                  $ntdp_time_end,    // เวลาเสร็จสิ้น (time_finish)
+                  '2'                          // สถานะ (sta_id = 2)
+              )
+          );
+
+          // echo $this->db->last_query(); die;
+          // Insert ข้อมูลใหม่ใน wts_notifications_department สำหรับแถวแรก
+          foreach ($check_visit->result() as $appointment) {
+
+            $wts_data_2 = array(
+              'ntdp_apm_id' => $appointment->apm_id,
+              'ntdp_seq' => '12',
+              'ntdp_date_start' => $ntdp_date_end,
+              'ntdp_time_start' => $ntdp_time_end,
+              'ntdp_date_end' => $ntdp_date_end,
+              'ntdp_time_end' => $ntdp_time_end,
+              'ntdp_sta_id' => '2',
+              'ntdp_in_out' => 0,
+              'ntdp_loc_cf_Id' => $data['ntdp_loc_cf_Id'],
+              'ntdp_loc_Id' => $data['ntdp_loc_Id'],
+              'ntdp_loc_ft_Id' => $data['ntdp_loc_ft_Id'],
+              'ntdp_function' => 'update_ipd_in_out'
+            );
+
+            $this->wts->insert('wts_notifications_department', $wts_data_2);
+            // echo $this->wts->last_query();
+          }
+          // die;
+          $room_query = $this->db->query("SELECT * FROM see_eqsdb.eqs_room 
+                    LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
+                    WHERE rm_his_id = ? AND rm_stde_id IS NOT NULL", array($data['ntdp_loc_ft_Id']));
+          // ถ้าพบ room ข้อมูล
+          if ($room_query->num_rows() > 0) {
+            // อัปเดต apm_sta_id เป็น 4 ในตาราง que_appointment
+            $this->que->where('apm_visit', $data['apm_visit']);
+            $this->que->update('que_appointment', array('apm_sta_id' => 4));
+            // Insert ข้อมูลใหม่สำหรับ seq 2
+
+            $ntdp = $this->db->query('SELECT * FROM see_wtsdb.wts_notifications_department WHERE ntdp_apm_id = "' . $appointment->apm_id . '" ORDER BY ntdp_id DESC LIMIT 1');
+            $ntdp_desc = $ntdp->row()->ntdp_apm_id; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
+            $ntdp_desc_id = $ntdp->row()->ntdp_id; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
+            $ntdp_desc_seq = $ntdp->row()->ntdp_seq; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
+
+            // อัปเดตข้อมูลสำหรับ seq 1 ในตาราง wts_notifications_department
+            $ntdp_apm_id_1 = $appointment->apm_id;  // ใช้ apm_id ที่ค้นพบได้
+            $ntdp_seq_1 = $ntdp_desc_seq;
+            $ntdp_date_end_1 = $ntdp_date_end;
+            $ntdp_time_end_1 = $ntdp_time_end;
+            $ntdp_sta_id_1 = '2';
+
+            $wts_update_data = array(
+              'ntdp_date_finish' => $ntdp_date_end_1,
+              'ntdp_time_finish' => $ntdp_time_end_1,
+              'ntdp_sta_id' => $ntdp_sta_id_1
+            );
+
+            // Update ข้อมูลในตาราง wts_notifications_department ที่มี seq = 1 และ apm_id ที่ตรงกัน
+            $this->wts->where('ntdp_apm_id', $ntdp_apm_id_1);
+            $this->wts->where('ntdp_seq', $ntdp_seq_1);
+            $this->wts->update('wts_notifications_department', $wts_update_data);
+
+            $ntdp_apm_id = $ntdp_desc;  // ใช้ apm_id ที่ค้นพบได้
+            $ntdp_seq = '6';
+            $ntdp_date_start = $ntdp_date_end_1;
+            $ntdp_time_start = $ntdp_time_end_1;
+            $ntdp_sta_id = '2';
+            $ntdp_in_out = 0;
+            $ntdp_loc_cf_Id = $data['ntdp_loc_cf_Id'];
+            $ntdp_loc_ft_Id = $data['ntdp_loc_ft_Id'];
+            $ntdp_loc_Id = $data['ntdp_loc_Id'];
+            $wts_data = array(
+              'ntdp_apm_id' => $ntdp_apm_id,
+              'ntdp_seq' => $ntdp_seq,
+              'ntdp_date_start' => $ntdp_date_start,
+              'ntdp_time_start' => $ntdp_time_start,
+              'ntdp_date_end' => $ntdp_date_end,
+              'ntdp_time_end' => $ntdp_time_end,
+              'ntdp_sta_id' => $ntdp_sta_id,
+              'ntdp_in_out' => $ntdp_in_out,
+              'ntdp_loc_cf_Id' => $ntdp_loc_Id,
+              'ntdp_loc_Id' => 6,
+              'ntdp_loc_ft_Id' => $ntdp_loc_ft_Id,
+              'ntdp_function' => 'update_ipd_in_out'
+            );
+
+            // Insert ข้อมูลลงในตาราง wts_notifications_department
+            $this->wts->insert('wts_notifications_department', $wts_data);
+
+            if (!empty($appointment->apm_ps_id)) {
+              // 1 get qus_psrm_id
+              $this->load->model('hr/m_hr_person_room');
+              $params = ['date' => $appointment->apm_date, 'ps_id' => $appointment->apm_ps_id,];
+              $psrm = $this->m_hr_person_room->get_by_date_and_ps_id($params)->result_array();
+
+              // 2 insert m_wts_queue_seq
+              if (!empty($psrm)) {
+                $this->load->model('wts/m_wts_queue_seq');
+                $this->m_wts_queue_seq->qus_psrm_id = $psrm[0]['psrm_id'];
+                $this->m_wts_queue_seq->qus_apm_id = $appointment->apm_id;
+                $this->m_wts_queue_seq->qus_app_walk = $appointment->apm_app_walk;
+                $this->m_wts_queue_seq->insert_seq_by_max_psrm_id();
+              }
+            }
+          }
+
+          $que_info = $this->que->query('SELECT * FROM que_appointment WHERE apm_visit = "' . $data['apm_visit'] . '"')->row();
+
+          // ส่งไลน์
+          $line_data = array(
+            "msst_id" => $this->config->item('message_que_line_id'),
+            "pt_id" => $que_info->apm_pt_id,
+            "apm_id" => $que_info->apm_id,
+            "ntdp_loc_Id" => $data['ntdp_loc_Id'],
+            "ntdp_loc_ft_Id" => $data['ntdp_loc_ft_Id']
+          );
+
+          $url_service_line = site_url() . "/" . $this->config->item('line_service_dir') . "send_message_que_to_patient";
+          get_url_line_service($url_service_line, $line_data); // Line helper
+
+          $response = array('status' => 'success', 'message' => 'First row updated and notification recorded.');
+
+        } else {
+          // กรณีไม่พบการนัดหมายด้วย apm_visit
+          $response = array('status' => 'error', 'message' => 'No appointment found for the given visit.');
+        }
+      } else {
+        // กรณีไม่มี apm_visit
+        $response = array('status' => 'error', 'message' => 'Missing apm_visit field.');
+      }
+    } else {
+      // กรณีไม่มีข้อมูลส่งเข้ามา
+      $response = array('status' => 'error', 'message' => 'No data received.');
+    }
+
+    // ส่งผลลัพธ์กลับในรูปแบบ JSON
+    $this->output
+      ->set_content_type('application/json')
+      ->set_output(json_encode($response));
+  }
+
+  public function visit_in_out()
+  { // ตอนที่ดึกแพทย์กลับมาขอใบรับรอง 
+      $this->load->model('que/M_que_appointment');
+      $this->load->model('wts/M_wts_notifications_department');
+      $this->load->model('que/M_que_code_list');
+      $this->load->model('wts/M_wts_base_route_department');
+  
+      // รับค่าจาก request ที่ส่งมา
+      $data = json_decode(file_get_contents('php://input'), true);
+  
+      // ตรวจสอบว่ามีการส่งข้อมูลเข้ามาหรือไม่
+      if ($data) {
+          // ตรวจสอบว่า apm_visit ถูกส่งเข้ามาหรือไม่
+          if (isset($data['apm_visit'])) {
+              // ค้นหาการนัดหมายใน que_appointment โดยใช้ apm_visit
+              $check_visit = $this->que->query("SELECT * FROM que_appointment WHERE apm_visit = ?", array($data['apm_visit']));
+  
+              // ตรวจสอบว่าพบข้อมูลการนัดหมายหรือไม่
+              if ($check_visit->num_rows() > 0) {
+                  foreach ($check_visit->result() as $appointment) {
+
+                    // $apm_data = array(
+                    //   'apm_sta_id' => 10
+                    // );
+                    // $this->que->where('apm_id', $appointment->apm_id);
+                    // $this->que->update('que_appointment', $apm_data);
+        
+                    // จากนั้น Insert ข้อมูลใหม่สำหรับ seq 2
+                    // คิวรีหาเวลา loc_time จาก wts_location
+                    $ntdp_date_finish = date('Y-m-d'); // แสดงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
+                    $ntdp_time_finish = date('H:i:s');
+                    $loc_time_query = $this->db->query('SELECT loc_time FROM see_wtsdb.wts_location WHERE loc_seq = "14"');
+                    $loc_time = $loc_time_query->row()->loc_time; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
+                    // แปลงเวลาจาก apm_date และ ntdp_time_start
+                    $start_datetime = new DateTime($appointment->apm_date . ' ' . $ntdp_time_finish);
+                    // เพิ่มเวลาจาก loc_time
+                    $start_datetime->modify('+' . $loc_time . ' minutes');
+        
+                    // คำนวณค่า ntdp_time_end และ ntdp_date_end
+                    $ntdp_time_end = $start_datetime->format('H:i:s'); // เวลาที่ต้องการบันทึก
+                    $ntdp_date_end = $start_datetime->format('Y-m-d'); // วันที่ที่ต้องการบันทึก (ซึ่งควรจะเป็นวันเดียวกันกับ apm_date)
+
+
+                    // อัปเดตข้อมูลสำหรับ seq 1 ในตาราง wts_notifications_department
+                    $ntdp_apm_id_1 = $appointment->apm_id;  // ใช้ apm_id ที่ค้นพบได้
+                    // $ntdp_seq_1 = null;
+                    $ntdp_date_end_1 = $ntdp_date_finish;
+                    $ntdp_time_end_1 = $ntdp_time_finish;
+                    // $ntdp_sta_id_1 = '2';
+        
+                    $wts_update_data = array(
+                      'ntdp_date_finish' => $ntdp_date_end_1,
+                      'ntdp_time_finish' => $ntdp_time_end_1
+                    );
+        
+                    // ค้นหา ntdp_seq ที่มากที่สุดของ ntdp_apm_id ที่ตรงกัน
+                    $this->wts->select('ntdp_seq')
+                      ->from('wts_notifications_department')
+                      ->where('ntdp_apm_id', $ntdp_apm_id_1)
+                      ->order_by('ntdp_id', 'DESC')
+                      ->limit(1);
+        
+                      $query = $this->wts->get();
+        
+                      if ($query->num_rows() > 0) {
+                        $latest_seq = $query->row()->ntdp_seq;
+                    
+                        // อัปเดตข้อมูลในแถวที่มี ntdp_apm_id และ ntdp_seq ล่าสุด
+                    $this->wts->where('ntdp_apm_id', $ntdp_apm_id_1);
+                    $this->wts->where('ntdp_seq', $latest_seq);
+                    $this->wts->update('wts_notifications_department', $wts_update_data);
+                        echo "Update successful.";
+                      } else {
+                          echo "No matching record found.";
+                      }
+        
+                    // if ($data['ntdp_in_out'] == 1) {
+                    //   $loc_out = $this->db->query('SELECT * FROM see_eqsdb.eqs_room WHERE rm_his_id = "' . $data['ntdp_loc_Id'] . '"');
+                    //   $ntdp_loc_Id = $loc_out->row()->rm_loc_id; // สมมติว่า loc_time เป็นค่าจำนวนเวลาในหน่วยนาที
+                    // } else {
+                    //   $ntdp_loc_Id = $data['ntdp_loc_Id'];
+                    // }
+        
+                    $ntdp_apm_id = $appointment->apm_id;  // ใช้ apm_id ที่ค้นพบได้
+                    $ntdp_seq = '14';
+                    $ntdp_date_start = $ntdp_date_end_1;
+                    $ntdp_time_start = $ntdp_time_end_1;
+                    $ntdp_sta_id = '2';
+                    $ntdp_in_out = '0';
+                    $ntdp_loc_cf_Id = '14';
+                    $ntdp_loc_Id = '14';
+                    $ntdp_loc_ft_Id = $data['ntdp_loc_ft_Id'];
+        
+                    $wts_data = array(
+                      'ntdp_apm_id' => $ntdp_apm_id,
+                      'ntdp_seq' => $ntdp_seq,
+                      'ntdp_date_start' => $ntdp_date_start,
+                      'ntdp_time_start' => $ntdp_time_start,
+                      'ntdp_date_end' => $ntdp_date_end,
+                      'ntdp_time_end' => $ntdp_time_end,
+                      'ntdp_sta_id' => $ntdp_sta_id,
+                      'ntdp_in_out' => $ntdp_in_out,
+                      'ntdp_loc_cf_Id' => $ntdp_loc_cf_Id,
+                      'ntdp_loc_Id' => $ntdp_loc_Id,
+                      'ntdp_loc_ft_Id' => $ntdp_loc_ft_Id,
+                      'ntdp_function' => 'visit_in_out'
+                    );
+                    // ถ้า ntdp_in_out == 1 ให้เพิ่มค่า ntdp_date_finish และ ntdp_time_finish แทน
+                    // if ($data['ntdp_in_out'] == 1) {
+                    //   $wts_data['ntdp_date_finish'] = $data['ntdp_date_start'];
+                    //   $wts_data['ntdp_time_finish'] = $data['ntdp_time_start'];
+        
+                    //   $this->que->where('apm_id', $ntdp_apm_id);
+                    //   $this->que->update('que_appointment', array('apm_sta_id' => 15));
+                    // }
+                    // Insert ข้อมูลลงในตาราง wts_notifications_department
+                    $this->wts->insert('wts_notifications_department', $wts_data);
+                  }
+
+
+
+
+                  $check_rm_code = $this->que->query("SELECT * FROM que_appointment WHERE apm_visit = ?", array($data['apm_visit']))->row(); // เปลี่ยนเป็น array
+
+                  if ($data['ntdp_loc_ft_Id'] == '13') {
+                    $apm_sta_id = 16;
+                    
+                    if (empty($check_rm_code->apm_rm_code)) { // ตรวจสอบว่าค่าว่างหรือเป็น null
+                        $today = date('Y-m-d');
+                        $last_code = $this->que->select('apm_rm_code')
+                                               ->from('que_appointment')
+                                               ->where('apm_date', $today)
+                                               ->where('apm_patient_in_out', 'OPD')
+                                               ->order_by('apm_rm_code', 'DESC')
+                                               ->limit(1)
+                                               ->get()
+                                               ->row();
+                
+                        // Generate the new code
+                        $new_code = $last_code ? str_pad((int)$last_code->apm_rm_code + 1, 3, '0', STR_PAD_LEFT) : '001';
+
+                        $qus_data = array(
+                          'qus_status' => '2',
+                          'qus_channel' => '6',
+                          'qus_seq' => '1',
+                          'qus_apm_id' => $appointment->apm_id,
+                          'qus_app_walk'=> $appointment->apm_app_walk
+                        );
+                        $this->wts->where('qus_apm_id', $appointment->apm_id);
+                        $this->wts->insert('wts_queue_seq', $qus_data);
+                        
+                    } else {
+                        $new_code = $check_rm_code->apm_rm_code;
+                        
+                        $qus_data = array(
+                          'qus_status' => '2',
+                          'qus_channel' => '6'
+                        );
+      
+                        $this->wts->where('qus_apm_id', $appointment->apm_id);
+                        $this->wts->update('wts_queue_seq', $qus_data);
+                      }
+                
+                    echo "Condition 8 matched. apm_sta_id = 16";
+                } else if (in_array($data['ntdp_loc_ft_Id'], ['11', '12'])) {
+                    $apm_sta_id = 17;
+                    if (empty($check_rm_code->apm_rm_code)) { // ตรวจสอบว่าค่าว่างหรือเป็น null
+                        $today = date('Y-m-d');
+                        $last_code = $this->que->select('apm_rm_code')
+                                               ->from('que_appointment')
+                                               ->where('apm_date', $today)
+                                               ->where('apm_patient_in_out', 'OPD')
+                                               ->order_by('apm_rm_code', 'DESC')
+                                               ->limit(1)
+                                               ->get()
+                                               ->row();
+                
+                        // Generate the new code
+                        $new_code = $last_code ? str_pad((int)$last_code->apm_rm_code + 1, 3, '0', STR_PAD_LEFT) : '001';
+
+                        $qus_data = array(
+                          'qus_status' => '1',
+                          'qus_channel' => '9',
+                          'qus_seq' => '1',
+                          'qus_apm_id' => $appointment->apm_id,
+                          'qus_app_walk'=> $appointment->apm_app_walk
+                        );
+                        $this->wts->where('qus_apm_id', $appointment->apm_id);
+                        $this->wts->insert('wts_queue_seq', $qus_data);
+                    } else {
+                      $new_code = $check_rm_code->apm_rm_code;
+                      $qus_data = array(
+                        'qus_status' => '1',
+                        'qus_channel' => '9'
+                      );
+    
+                      $this->wts->where('qus_apm_id', $appointment->apm_id);
+                      $this->wts->update('wts_queue_seq', $qus_data);
+                    }
+                
+                    echo "Condition 9 matched. apm_sta_id = 17";
+                }
+                  
+                  $apm_data = array(
+                      'apm_sta_id' => $apm_sta_id,
+                      'apm_rm_time' => date('H:i:s'),
+                      'apm_rm_code' => $new_code
+                  );
+                  // Update `que_appointment`
+                  $this->que->where('apm_id', $appointment->apm_id);
+                  $this->que->update('que_appointment', $apm_data);
+
+
+                  $room_query = $this->db->query("SELECT * FROM see_eqsdb.eqs_room 
+                    LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
+                    WHERE rm_his_id = ? AND rm_stde_id IS NOT NULL", array($data['ntdp_loc_ft_Id']));
+                  // ถ้าพบ room ข้อมูล
+                  if ($room_query->num_rows() > 0) {
+                    // อัปเดต apm_sta_id เป็น 4 ในตาราง que_appointment
+                    $this->que->where('apm_id', $ntdp_apm_id);
+                    $this->que->update('que_appointment', array('apm_sta_id' => 4));
+                  }
+        
+                  $que_info = $this->que->query('SELECT * FROM que_appointment WHERE apm_visit = "' . $data['apm_visit'] . '"')->row();
+        
+                  // ส่งไลน์
+                  $line_data = array(
+                    "msst_id" => $this->config->item('message_que_line_id'),
+                    "pt_id" => $que_info->apm_pt_id,
+                    "apm_id" => $que_info->apm_id,
+                    "ntdp_loc_Id" => $ntdp_loc_Id,
+                    "ntdp_loc_ft_Id" => $ntdp_loc_ft_Id
+                  );
+        
+                  $url_service_line = site_url() . "/" . $this->config->item('line_service_dir') . "send_message_que_to_patient";
+                  get_url_line_service($url_service_line, $line_data); // Line helper
+        
+                  // ส่งผลลัพธ์กลับในรูปแบบ JSON
+                  $response = array('status' => 'success', 'message' => 'Location and time successfully recorded.');
+
+              } else {
+                  // กรณีไม่พบการนัดหมายด้วย apm_visit
+                  $response = array('status' => 'error', 'message' => 'Appointment visit not found.');
+              }
+          } else {
+              // กรณีที่ไม่มีการส่ง apm_visit เข้ามา
+              $response = array('status' => 'error', 'message' => 'Missing apm_visit field.');
+          }
+      } else {
+          // กรณีที่ไม่มีข้อมูลส่งเข้ามา
+          $response = array('status' => 'error', 'message' => 'No data received.');
+      }
+  
+      // ส่งผลลัพธ์กลับในรูปแบบ JSON
+      $this->output->set_content_type('application/json')->set_output(json_encode($response));
+  }
+
+
 }
 
 ?>

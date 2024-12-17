@@ -10,7 +10,7 @@
                 <div class="accordion-body">
                     <form class="row g-3" method="get">
                         <div class="col-md-3">
-                            <label for="select_dp_id" class="form-label required">หน่วยงาน</label>
+                            <label for="select_dp_id" class="form-label">หน่วยงาน</label>
                             <select class="form-select select2" data-placeholder="-- กรุณาเลือกหน่วยงาน --" name="select_dp_id" id="select_dp_id">
                                 <?php
                                 foreach ($base_ums_department_list as $key => $row) {
@@ -21,7 +21,7 @@
                                 ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <!-- <div class="col-md-3">
                             <label for="select_adline_id" class="form-label">ประเภทบุคลากร</label>
                             <select class="form-select select2" name="select_hire_id" id="select_hire_id">
                                 <option value="all" selected>ทั้งหมด</option>
@@ -34,8 +34,31 @@
                                     }
                                 ?>
                             </select>
-                        </div>
+                        </div> -->
                         <div class="col-md-3">
+                            <label for="select_adline_id" class="form-label">สายปฏิบัติงาน</label>
+                            <select class="form-select select2" name="select_hire_id" id="select_hire_id">
+                                <?php
+                                    // Assuming $hire_is_medical is already available as an array
+                                    $medical_types = [
+                                        'M'  => 'สายการแพทย์',
+                                        'N'  => 'สายการพยาบาล',
+                                        'SM' => 'สายสนับสนุนทางการแพทย์',
+                                        'T'  => 'สายเทคนิคและบริการ',
+                                        'A'  => 'สายบริหาร'
+                                    ];
+                                    echo '<option value="all">ทั้งหมด</option>';
+                                    // Loop through hire_is_medical and display corresponding options
+                                    foreach ($this->session->userdata('hr_hire_is_medical') as $value) {
+                                        $type = $value['type'];
+                                        if (isset($medical_types[$type])) {
+                                            echo '<option value="' . $type . '">' . $medical_types[$type] . '</option>';
+                                        }
+                                    }
+                                ?>
+                            </select>
+                        </div>
+                        <!-- <div class="col-md-3">
                             <label for="SearchFirstName" class="form-label">ตำแหน่งในการบริหารงาน</label>
                             <select class="select2" name="select_admin_id" id="select_admin_id">
                                 <option value="all" selected>ทั้งหมด</option>
@@ -47,6 +70,14 @@
                                 <?php
                                 }
                                 ?>
+                            </select>
+                        </div> -->
+                        <div class="col-md-3">
+                            <label for="SearchFirstName" class="form-label">ประเภทการทำงาน</label>
+                            <select class="form-select select2" name="select_hire_type" id="select_hire_type">
+                                <option value="all" selected>ทั้งหมด</option>
+                                <option value="1">ปฏิบัติงานเต็มเวลา (Full-Time)</option>
+                                <option value="2">ปฏิบัติงานบางเวลา (Part-Time)</option>
                             </select>
                         </div>
                         <!-- <div class="col-md-3">
@@ -122,8 +153,8 @@
         // Initialize DataTable
         var dataTable = $('#person_list').DataTable();
 
-        var admin_id = $('#select_admin_id').val();
         var hire_id = $('#select_hire_id').val();
+        var hire_type = $('#select_hire_type').val();
         var status_id = $('#select_status_id').val();
         var dp_id = $('#select_dp_id').val();
 
@@ -132,10 +163,10 @@
             url: '<?php echo site_url() . "/" . $controller_dir; ?>get_profile_user_list',
             type: 'GET',
             data: {
-                admin_id: admin_id,
+                dp_id: dp_id,
                 hire_id: hire_id,
-                status_id: status_id,
-                dp_id: dp_id
+                hire_type: hire_type,
+                status_id: status_id
             },
             success: function(data) {
                 // Clear existing DataTable data
@@ -189,7 +220,7 @@
     }
 
     // Event listeners for select dropdowns
-    $('#select_dp_id, #select_admin_id, #select_hire_id, #select_status_id').on('change', function() {
+    $('#select_dp_id, #select_hire_type, #select_hire_id, #select_status_id').on('change', function() {
         // Update DataTable when a select dropdown changes
         updateDataTable();
     });

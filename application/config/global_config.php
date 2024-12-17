@@ -66,4 +66,10 @@ $config['site_logo'] = "img/logo2.png";
 $config['site_name_th'] = "โรงพยาบาลจักษุสุราษฎร์";
 $config['site_name_eng'] = "Surat Eye Hospital";
 
+
+$config['his_host'] = '110.78.42.35';
+$config['his_dbname'] = 'hoseye_boom';
+$config['his_dbname_tab'] = '_067ab11de870a006';
+$config['his_username'] = 'dbonline';
+$config['his_password'] = '#$Bun@dbpc2024';
 ?>

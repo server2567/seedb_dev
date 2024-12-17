@@ -140,17 +140,20 @@ class Profile_official extends Profile_Controller
 		$data['session_mn_active_url'] = $this->mn_active_url; // set session_mn_active_url / breadcrumb
 		$data['status_response'] = $this->config->item('status_response_show');
 		$dp_id = $this->input->get('dp_id');
-		// pre($this->session->userdata('hr_hire_is_medical'));
-		$admin_id = $this->input->get('admin_id');
 		$hire_id = $this->input->get('hire_id');
+		$hire_type = $this->input->get('hire_type');
 		$status_id = $this->input->get('status_id');
-		$result = $this->M_hr_person->get_all_profile_data($dp_id, $admin_id, $hire_id, $status_id)->result();
+
+		$result = $this->M_hr_person->get_all_profile_data_by_param($dp_id, $hire_id, $hire_type, $status_id)->result();
 		foreach ($result as $key => $row) {
 			$array = array();
 			$row->ps_id = encrypt_id($row->ps_id);
 			$admin_name = json_decode($row->admin_position, true);
 			if ($admin_name) {
 				foreach ($admin_name as $value) {
+					if (is_string($value)) {
+						$value = json_decode($value, true);
+					}
 					if ($value['admin_name']) {
 						$array[] = $value['admin_name'];
 					}
@@ -252,7 +255,11 @@ class Profile_official extends Profile_Controller
 			$this->M_hr_person_position->pos_active = "N";		//สถานะการใช้งานข้อมูล [ปิด]
 			$this->update_seq_order_data($ps_id, $dp_id); // อัพเดทลำดับการแสดงผล
 		}
-
+		if (isset($profile_official_form["pos_public_display_" . $dp_id]) && $profile_official_form["pos_public_display_" . $dp_id] == "on") {
+			$this->M_hr_person_position->pos_public_display = 1;		//สถานะการใช้งานข้อมูล [เปิด]
+		} else {
+			$this->M_hr_person_position->pos_public_display = 0;
+		}
 		$this->M_hr_person_position->pos_status = $pos_status;	//สถานะปัจจุบัน 1=> ปฏิบัติงานอยู่, 2=> ลาออกแล้ว	
 		$this->M_hr_person_position->pos_work_start_date = splitDateForm1($profile_official_form["pos_work_start_date_" . $dp_id]);	//วันที่เริ่มปฏิบัติงาน 
 
@@ -322,7 +329,6 @@ class Profile_official extends Profile_Controller
 		$this->M_hr_person_position->pos_desc = $profile_official_form["pos_desc_" . $dp_id];	//หมายเหตุ 
 		$this->M_hr_person_position->pos_update_user = $this->session->userdata('us_id');	//รหัสผู้แก้ไข (USID)
 		$this->M_hr_person_position->pos_update_date = get_datetime_db();	//วันที่แก้ไข
-
 		$this->M_hr_person_position->update();
 		$data['pos_ps_list'] = $this->M_hr_person_position->get_position_by_ps_id($ps_id)->result();
 
@@ -343,6 +349,8 @@ class Profile_official extends Profile_Controller
 		$this->M_hr_person->get_by_key(true);
 		if ($this->M_hr_person->ps_status != $final_status) {
 			$this->M_hr_person->ps_status = $final_status; //สถานะปัจจุบัน 1=> ปฏิบัติงานอยู่, 2=> ลาออกแล้ว	
+			$this->M_hr_person->ps_update_user = $this->session->userdata('us_id');	//รหัสผู้แก้ไข (USID)
+			$this->M_hr_person->ps_update_date = get_datetime_db();	//วันที่แก้ไข
 			$this->M_hr_person->update();
 		}
 
@@ -608,7 +616,7 @@ class Profile_official extends Profile_Controller
 	function get_structure_detail_by_stuc_id()
 	{
 		$dp_id = $this->input->post('dp_id');
-		$result = $this->M_hr_person->get_structure_detail_by_confirm(null,$dp_id)->result();
+		$result = $this->M_hr_person->get_structure_detail_by_confirm(null, $dp_id)->result();
 		echo json_encode($result);
 	}
 	function get_profile_structure_detail_list($ps_id, $dp_id)

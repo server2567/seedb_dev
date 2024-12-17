@@ -37,6 +37,24 @@ public $ums_db;
 		}
 	}
 
+	public function index_ams()
+	{
+		if ($this->checkUser()) {// Have Session data
+			$data['permission'] = $this->m_ums_usergroup->get_gear()->result_array();
+			$data['mission'] = $this->m_ums_usergroup->get_mission()->result_array(); 
+			$data['system'] = $this->m_ums_usergroup->get_system()->result_array();
+
+			$data['save'] = explode("?", get_cookie('gear' . $this->session->userdata('us_id')));
+
+			$qry_check_more_menu = $this->m_ums_user->get_data_check_more_umusergroup($this->session->userdata('us_id'));
+			$data['qry_check_more_menu'] = $qry_check_more_menu;
+      echo 'dddd'; die;
+			redirect(site_url().'/ams/Notification_result', 'refresh');
+		} else {
+			$this->login();
+		}
+	}
+
 	public function login()
 	{
     
@@ -53,10 +71,11 @@ public $ums_db;
 	function check_login($us_dp_id = '',$us_his_id = '')
 	{
 		// some logic with MD5 to query
+    // echo $us_his_id; die;
     if($us_his_id){
       $us_dp_id = $us_dp_id;
       $user = $this->m_ums_user->check_login_his($us_his_id); 
-
+      // pre($user->result_array()); die;
     } else {
       $us_dp_id = $this->input->post('department');
       $user = $this->m_ums_user->check_login($_POST['username'],md5("O]O".$_POST['password']."O[O")); 
@@ -215,6 +234,173 @@ public $ums_db;
 		// echo json_encode($result);	// return to jQuery.post()
 	}
 
+	function check_login_ams($us_dp_id = '',$us_his_id = '')
+	{
+		// some logic with MD5 to query
+    // echo $us_his_id; die;
+    if($us_his_id){
+      $us_dp_id = $us_dp_id;
+      $user = $this->m_ums_user->check_login_his($us_his_id); 
+      // pre($user->result_array()); die;
+    } else {
+      $us_dp_id = $this->input->post('department');
+      $user = $this->m_ums_user->check_login($_POST['username'],md5("O]O".$_POST['password']."O[O")); 
+    }
+
+		// check it can log in ?
+    // pre($user->result()); die;		// check it can log in ?
+    if ($user == false) {
+			if($this->config->item('ldap_on')=="on"){
+
+				$this->load->library('service_ldap');
+				$this->service_ldap->connect();
+				if($this->service_ldap->authenticate($_POST['username'],$_POST['password']))
+          {
+            
+            $user = $this->m_ums_user->check_user($_POST['username']);
+            if(!$user)
+            {
+              $this->m_umlog->loginfailed();
+            }
+            else
+            {
+              $usr = $user->row_array();
+
+              $this->session->set_userdata('us_id', $usr['us_id']);
+              $this->session->set_userdata('us_ps_id', $usr['us_ps_id']);
+              $this->session->set_userdata('us_username', $usr['us_username']);
+              $this->session->set_userdata('us_dp_id', $us_dp_id);
+              $this->session->set_userdata('us_name', $usr['us_name']);
+              $this->session->set_userdata('dp_name_th', $usr['dp_name_th']);
+              $this->session->set_userdata('logged_in', TRUE);
+              $this->m_umlog->login();
+            }
+          }
+				else
+				{
+				// when log in fail it have 2 case
+				// If it has user but password wrong
+					$user = $this->m_ums_user->check_user($_POST['username']);
+          if ($user) {
+            foreach ($user->result_array() as $usr) {
+                $this->m_umlog->wrongpass($usr['us_id']);
+                break;
+            }
+
+        } // or It don't have Account
+					// or It don't have Account
+					else
+					{
+            
+						$this->m_umlog->loginfailed();
+					}
+				}
+				$this->service_ldap->close(); 	
+			}else{
+          // Sanitize and validate the input username
+          if ($us_his_id && $user == false) {
+            // ตรวจสอบว่ามีข้อมูลก่อนจะเรียกใช้ row()
+            if ($user) {
+                $user_data = $user->row(); // ดึงข้อมูลแถวแรก
+                $username = $user_data->us_username;
+              } else {
+                // ใช้ SweetAlert2 เพื่อแสดงการแจ้งเตือน
+                $site_url = $this->site_url(); // ดึง URL ของคุณก่อน
+                echo '
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        icon: "error",
+                        title: "ไม่พบข้อมูลผู้ใช้งาน",
+                        confirmButtonText: "ยืนยัน"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "' . $site_url . '/index.php/gear";
+                        }
+                    });
+                });
+                </script>';
+            }
+            } else {
+                // กรณีที่ $us_his_id ไม่มีหรือไม่มีข้อมูลใน query
+                $username = trim($_POST['username']);
+            }
+          if (empty($username)) {
+
+              // Handle the case where username is empty
+              $this->m_umlog->loginfailed();
+              exit; // Exit if username is not provided
+          }
+
+          // Check if the username exists in the database
+          $user = $this->m_ums_user->check_user($username);
+
+          if ($user && !empty($user->result_array())) {
+              // If user exists, log the wrong password attempt for the first found user
+              $usr = $user->result_array()[0];
+              $this->m_umlog->wrongpass($usr['us_id']);
+              
+          } else {
+              // If user does not exist, log the login failed attempt
+              $this->m_umlog->loginfailed();
+              $data['login'] = 'loginfailed';
+              $this->load->view('gear/v_gear_login',$data);
+          }
+          
+			}
+ 
+      // $this->load->view('gear/v_gear_login');
+      // redirect('gear/login', 'refresh');
+      // $this->service_ldap->close();
+		}
+		else
+		{
+			// create a session to log in this main system
+			foreach ($user->result_array() as $usr)
+			{
+				$this->session->set_userdata('us_id',$usr['us_id']);
+				$this->session->set_userdata('us_ps_id',$usr['us_ps_id']);
+				$this->session->set_userdata('us_username',$usr['us_username']);
+				$this->session->set_userdata('us_dp_id',$us_dp_id);
+				$this->session->set_userdata('us_name',$usr['us_name']);
+				$this->session->set_userdata('dp_name_th',$usr['dp_name_th']);
+				$this->session->set_userdata('us_his_id',$usr['us_his_id']);
+				// $this->session->set_userdata('menus',$usr['dp_name_th']);
+				// $this->session->set_userdata('UsWgID',$usr['UsWgID']);
+				// $this->session->set_userdata('UsAdmin',$usr['UsAdmin']);
+				$this->session->set_userdata('logged_in',TRUE);
+        // Update the ums_user table with the selected department
+        $this->ums->where('us_id', $usr['us_id']);
+        $this->ums->update('ums_user', ['us_dp_id' => $us_dp_id]);
+
+				$this->m_umlog->login();
+				break;
+			}
+      
+      redirect(site_url().'/ams/Notification_result', 'refresh');
+			// $data['return_url'] = base_url() . 'index.php/Gear/index_ams';
+      // pre($data['return_url']); die;
+			$data['status_response'] = $this->config->item('status_response_success');
+		}
+
+		// if($_POST['username'] == $_POST['password'])
+		// {
+    //   die;
+      $this->index();
+			// redirect('user/check_pass_change', 'refresh');
+		// } else {
+    //   $this->index();
+    //   // redirect('gear/index','refresh');
+    // }
+
+		// redirect('Gear', 'refresh');
+		
+		// $result = array('data' => $data);
+		// echo json_encode($result);	// return to jQuery.post()
+	}
+
+
 	public function forgetPassword()
 	{
 		$this->load->view('gear/v_gear_forgetPassword');
@@ -323,6 +509,7 @@ public $ums_db;
 			redirect($url,'refresh');
 		}
 	}
+
 	function saveGear()
 	{
 		/*if($this->session->userdata('save')) for old version get save data from session

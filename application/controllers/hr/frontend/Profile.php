@@ -82,45 +82,70 @@ class Profile extends UMS_Controller
   {
     $ps_reward = $this->M_hr_person_reward->get_all_person_reward_data($ps_id)->result();
     $groupedData = [];
+    $undefinedData = []; // เก็บข้อมูล "ไม่ระบุ"
+
     if ($ps_reward) {
-      foreach ($ps_reward as $item) {
-        $year  = $item->rewd_year;
-        if (!isset($groupedData[$year])) {
-          $groupedData[$year] = [];
+        foreach ($ps_reward as $item) {
+            $year = ($item->rewd_year != 0 ? $item->rewd_year : "ไม่ระบุ");
+            if ($year === "ไม่ระบุ") {
+                $undefinedData[] = $item; // แยกข้อมูล "ไม่ระบุ" ออกมา
+            } else {
+                if (!isset($groupedData[$year])) {
+                    $groupedData[$year] = [];
+                }
+                $groupedData[$year][] = $item;
+            }
         }
-        $groupedData[$year][] = $item;
-      }
+
+        // เรียงลำดับปีจากมากไปน้อย
+        krsort($groupedData, SORT_NUMERIC);
+
+        // รวม "ไม่ระบุ" ไว้ท้ายสุด
+        if (!empty($undefinedData)) {
+            $groupedData["ไม่ระบุ"] = $undefinedData;
+        }
     }
+
     return $groupedData;
+
   }
   function get_external_service_list($ps_id)
   {
     $ps_external = $this->M_hr_person_external_service->get_all_external_service_data($ps_id)->result();
     $groupedData = [];
     if ($ps_external) {
-      foreach ($ps_external as $item) {
-        $date = new DateTime($item->pexs_date);
-        $year = $date->format("Y") + 543;
-        if (!isset($groupedData[$year])) {
-          $groupedData[$year] = [];
+        foreach ($ps_external as $item) {
+            // Check if pexs_date is "0000-00-00" and assign "ไม่ระบุ"
+            if ($item->pexs_date == "0000-00-00") {
+                $year = "ไม่ระบุ";
+            } else {
+                $date = new DateTime($item->pexs_date);
+                $year = $date->format("Y") + 543;
+            }
+
+            if (!isset($groupedData[$year])) {
+                $groupedData[$year] = [];
+            }
+
+            // Group by pexs_exts_id within the year
+            if (!isset($groupedData[$year][$item->pexs_exts_id])) {
+                $groupedData[$year][$item->pexs_exts_id] = [];
+            }
+            $groupedData[$year][$item->pexs_exts_id][] = $item;
         }
-        // จัดกลุ่มตาม pexs_exts_id ภายในปี
-        if (!isset($groupedData[$year][$item->pexs_exts_id])) {
-          $groupedData[$year][$item->pexs_exts_id] = [];
+
+        foreach ($groupedData as $year => &$categories) {
+            foreach ($categories as $exts_id => &$items) {
+                usort($items, function ($a, $b) {
+                    $dateA = new DateTime($a->pexs_date);
+                    $dateB = new DateTime($b->pexs_date);
+                    return $dateB <=> $dateA; // Sort from newest to oldest
+                });
+            }
         }
-        $groupedData[$year][$item->pexs_exts_id][] = $item;
-      }
-      foreach ($groupedData as $year => &$categories) {
-        foreach ($categories as $exts_id => &$items) {
-          usort($items, function ($a, $b) {
-            $dateA = new DateTime($a->pexs_date);
-            $dateB = new DateTime($b->pexs_date);
-            return $dateB <=> $dateA; // จากมากไปน้อย
-          });
-        }
-      }
     }
     return $groupedData;
+
   }
   /*
 	* view_profile
@@ -248,6 +273,7 @@ class Profile extends UMS_Controller
           AND twpp_is_public = 1
           AND twpp_ps_id = ?
           AND twpp_dp_id = ?
+          AND twpp_is_holiday = 0
       ORDER BY 
           twpp_ps_id, twpp_start_date;
           ", array($day, $day, $ps_id, $dp_id));

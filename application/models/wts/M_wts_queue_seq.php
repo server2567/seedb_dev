@@ -127,7 +127,7 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 			AND qus_psrm_id = ?
 			AND see_quedb.que_appointment.apm_pri_id != '3'
 			{$where}
-			ORDER BY qus_seq ASC
+			ORDER BY CAST(see_quedb.que_appointment.apm_ql_code AS UNSIGNED) ASC
 		";
 
 		$query = $this->wts->query($sql, array($date, $room));
@@ -151,29 +151,96 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 	 
 			$where = ' AND apm_sta_id in ('.$include_sta_ids_string.') ';
 		}
-    $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 1 OR apm_stde_id NOT IN (81)) ';
-    $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 2 OR apm_stde_id NOT IN (68)) ';
+    // $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 1 OR apm_stde_id NOT IN (81)) ';
+    // $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 2 OR apm_stde_id NOT IN (68)) ';
 
 		$sql = "SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_structure_detail.stde_name_th, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_fname,
-			see_hrdb.hr_person.ps_lname, see_hrdb.hr_person.ps_id, see_hrdb.hr_person_detail.psd_picture, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_app_walk, see_quedb.que_appointment.apm_sta_id, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_time, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name,see_wtsdb.wts_queue_seq.qus_announce
+			see_hrdb.hr_person.ps_lname, see_hrdb.hr_person.ps_id, see_hrdb.hr_person_detail.psd_picture, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_app_walk, see_quedb.que_appointment.apm_sta_id, see_quedb.que_base_status.sta_show, see_quedb.que_base_status.sta_show_en, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_time, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name,see_wtsdb.wts_queue_seq.qus_announce,
+      see_quedb.que_appointment.apm_pt_id
 			FROM see_wtsdb.wts_queue_seq
 			LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
 			LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
 			LEFT JOIN see_hrdb.hr_person_detail ON ps_id = psd_ps_id
 			LEFT JOIN see_hrdb.hr_base_prefix ON ps_pf_id = pf_id
 			LEFT JOIN see_quedb.que_base_priority ON pri_id = apm_pri_id
+			LEFT JOIN see_quedb.que_base_status ON sta_id = apm_sta_id
 			LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id =psrm_id
 			LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
 			LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
 			WHERE see_quedb.que_appointment.apm_date = ?
 			AND apm_ps_id = ?
 			AND see_quedb.que_appointment.apm_pri_id != '3'
+			AND apm_dp_id = '1'
 			{$where}
-      GROUP BY apm_id
-			ORDER BY qus_seq ASC
-      
-		";
+      		GROUP BY apm_id
+			ORDER BY  
+				CASE 
+					WHEN see_quedb.que_appointment.apm_pri_id = 1 THEN 1
+					WHEN see_quedb.que_appointment.apm_pri_id = 6 THEN 2
+					WHEN see_quedb.que_appointment.apm_ql_code LIKE 'I-%' THEN 3
+					ELSE 4
+				END,
+				CASE 
+					WHEN see_quedb.que_appointment.apm_ql_code LIKE 'I-%' THEN see_quedb.que_appointment.apm_time
+					ELSE NULL
+				END,
+				CASE WHEN see_quedb.que_appointment.apm_ql_code IS NULL THEN 1 ELSE 0 END ASC, 
+				CASE WHEN see_wtsdb.wts_queue_seq.qus_seq IS NULL THEN 1 ELSE 0 END ASC, 
+				CAST(see_quedb.que_appointment.apm_ql_code AS UNSIGNED) ASC,  
+				see_wtsdb.wts_queue_seq.qus_seq ASC;
+			";
+		$query = $this->wts->query($sql, array($date, $ps_id));
+    // echo $this->wts->last_query(); die;
+		return $query;
+	}
 
+	function get_waiting_que_by_doctor_clinic($date, $ps_id, $include_sta_ids) {
+		$where = '';
+		if(!empty($include_sta_ids)) {
+			$include_sta_ids_string = implode(", ", array_map(function($item) {
+				return $item;
+			}, $include_sta_ids));
+	 
+			$where = ' AND apm_sta_id in ('.$include_sta_ids_string.') ';
+		}
+    // $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 1 OR apm_stde_id NOT IN (81)) ';
+    // $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 2 OR apm_stde_id NOT IN (68)) ';
+
+		$sql = "SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_structure_detail.stde_name_th, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_fname,
+			see_hrdb.hr_person.ps_lname, see_hrdb.hr_person.ps_id, see_hrdb.hr_person_detail.psd_picture, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_app_walk, see_quedb.que_appointment.apm_sta_id, see_quedb.que_base_status.sta_show, see_quedb.que_base_status.sta_show_en, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_time, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name,see_wtsdb.wts_queue_seq.qus_announce,
+      see_quedb.que_appointment.apm_pt_id
+			FROM see_wtsdb.wts_queue_seq
+			LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
+			LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
+			LEFT JOIN see_hrdb.hr_person_detail ON ps_id = psd_ps_id
+			LEFT JOIN see_hrdb.hr_base_prefix ON ps_pf_id = pf_id
+			LEFT JOIN see_quedb.que_base_priority ON pri_id = apm_pri_id
+			LEFT JOIN see_quedb.que_base_status ON sta_id = apm_sta_id
+			LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id =psrm_id
+			LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
+			LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
+			WHERE see_quedb.que_appointment.apm_date = ?
+			AND apm_ps_id = ?
+			AND see_quedb.que_appointment.apm_pri_id != '3'
+			AND apm_dp_id = '2'
+			{$where}
+      		GROUP BY apm_id
+			ORDER BY  
+				CASE 
+					WHEN see_quedb.que_appointment.apm_pri_id = 1 THEN 1
+					WHEN see_quedb.que_appointment.apm_pri_id = 6 THEN 2
+					WHEN see_quedb.que_appointment.apm_ql_code LIKE 'I-%' THEN 3
+					ELSE 4
+				END,
+				CASE 
+					WHEN see_quedb.que_appointment.apm_ql_code LIKE 'I-%' THEN see_quedb.que_appointment.apm_time
+					ELSE NULL
+				END,
+				CASE WHEN see_quedb.que_appointment.apm_ql_code IS NULL THEN 1 ELSE 0 END ASC, 
+				CASE WHEN see_wtsdb.wts_queue_seq.qus_seq IS NULL THEN 1 ELSE 0 END ASC, 
+				CAST(see_quedb.que_appointment.apm_ql_code AS UNSIGNED) ASC,  
+				see_wtsdb.wts_queue_seq.qus_seq ASC;
+			";
 		$query = $this->wts->query($sql, array($date, $ps_id));
     // echo $this->wts->last_query(); die;
 		return $query;
@@ -188,8 +255,8 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 	
 			$where = ' AND apm_sta_id in ('.$include_sta_ids_string.') ';
 		}
-    $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 1 OR apm_stde_id NOT IN (81)) ';
-    $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 2 OR apm_stde_id IN (68)) ';
+    // $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 1 OR apm_stde_id NOT IN (81)) ';
+    // $where .= ' AND (see_eqsdb.eqs_room.rm_floor != 2 OR apm_stde_id IN (68)) ';
 		$sql = "SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_structure_detail.stde_name_th, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_fname,
 			see_hrdb.hr_person.ps_lname, see_hrdb.hr_person.ps_id, see_hrdb.hr_person_detail.psd_picture, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_app_walk, see_quedb.que_appointment.apm_sta_id, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_time, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name,see_wtsdb.wts_queue_seq.qus_announce
 			FROM see_wtsdb.wts_queue_seq
@@ -209,6 +276,7 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 			ORDER BY qus_seq ASC
 		";
 
+		// echo $sql; die();
 		$query = $this->wts->query($sql, array($date, $ps_id));
     // pre($this->wts->last_query()); die;
 		return $query;
@@ -239,26 +307,211 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 		}
 
 		$sql = "SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_structure_detail.stde_name_th, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_fname,
-			see_hrdb.hr_person.ps_lname, see_hrdb.hr_person.ps_id, see_hrdb.hr_person_detail.psd_picture, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_app_walk, see_quedb.que_appointment.apm_sta_id, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_time, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name,see_wtsdb.wts_queue_seq.qus_announce
+			see_hrdb.hr_person.ps_lname, see_hrdb.hr_person.ps_id, see_hrdb.hr_person_detail.psd_picture, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_app_walk, see_quedb.que_appointment.apm_sta_id, see_quedb.que_base_status.sta_show, see_quedb.que_base_status.sta_show_en, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_time, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name,see_wtsdb.wts_queue_seq.qus_announce
+      		,see_quedb.que_appointment.apm_stde_id
 			FROM see_wtsdb.wts_queue_seq
 			LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
 			LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
 			LEFT JOIN see_hrdb.hr_person_detail ON ps_id = psd_ps_id
 			LEFT JOIN see_hrdb.hr_base_prefix ON ps_pf_id = pf_id
 			LEFT JOIN see_quedb.que_base_priority ON pri_id = apm_pri_id
+			LEFT JOIN see_quedb.que_base_status ON sta_id = apm_sta_id
 			LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id =psrm_id
 			LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
 			LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
 			WHERE see_quedb.que_appointment.apm_date = ?
 			AND apm_ps_id = ?
 			AND see_quedb.que_appointment.apm_pri_id != '3'
-			AND apm_stde_id IN ($stde_id_list)
+			-- AND apm_stde_id IN ($stde_id_list)
 			{$where}
-      GROUP BY apm_id
-			ORDER BY qus_seq ASC
+      		GROUP BY apm_id
+			ORDER BY  
+				CASE 
+					WHEN see_quedb.que_appointment.apm_pri_id = 1 THEN 1
+					WHEN see_quedb.que_appointment.apm_pri_id = 6 THEN 2
+					WHEN see_quedb.que_appointment.apm_ql_code LIKE 'I-%' THEN 3
+					ELSE 4
+				END,
+				CASE 
+					WHEN see_quedb.que_appointment.apm_ql_code LIKE 'I-%' THEN see_quedb.que_appointment.apm_time
+					ELSE NULL
+				END,
+				CASE WHEN see_quedb.que_appointment.apm_ql_code IS NULL THEN 1 ELSE 0 END ASC, 
+				CASE WHEN see_wtsdb.wts_queue_seq.qus_seq IS NULL THEN 1 ELSE 0 END ASC, 
+				CAST(see_quedb.que_appointment.apm_ql_code AS UNSIGNED) ASC,  
+				see_wtsdb.wts_queue_seq.qus_seq ASC;
 		";
 	
 		$query = $this->wts->query($sql, array($date, $ps_id));
+    // echo $this->wts->last_query(); die;
+		return $query;
+	}
+
+	function get_waiting_que_by_finance_medicine($date) {
+    $sql = "SELECT qa_with_rn.*, qs.*, 
+                status.sta_id AS status_sta_id, status.sta_name AS status_name, status.sta_name_en AS status_name_en, status.sta_color AS status_color,
+                subquery.channel_names, subquery.channel_names_en, priority.*
+            FROM (
+            SELECT qa.*, ntd.*, 
+                    ROW_NUMBER() OVER (PARTITION BY qa.apm_id ORDER BY ntd.ntdp_time_start DESC) AS rn
+            FROM see_quedb.que_appointment AS qa
+            LEFT JOIN see_wtsdb.wts_notifications_department AS ntd
+            ON qa.apm_id = ntd.ntdp_apm_id 
+              AND (
+                  (ntdp_seq = 10 AND qa.apm_sta_id = 16) 
+                  OR 
+                  (ntdp_seq = 10 AND qa.apm_sta_id = 18) 
+                  OR 
+                  (ntdp_seq = 11 AND qa.apm_sta_id = 17) 
+                  OR 
+                  (ntdp_seq = 11 AND qa.apm_sta_id = 19)
+              )
+            WHERE qa.apm_date = ? 
+            AND qa.apm_sta_id IN (16,17,18,19) AND apm_dp_id = '1'
+            ) AS qa_with_rn
+            LEFT JOIN see_wtsdb.wts_queue_seq AS qs 
+            ON qs.qus_apm_id = qa_with_rn.apm_id
+            LEFT JOIN see_wtsdb.wts_base_status AS status
+            ON status.sta_id = qs.qus_status
+            LEFT JOIN (
+            SELECT 
+              qs.qus_apm_id,
+              -- Logic for Thai channel names
+              TRIM(TRAILING ', ' FROM 
+                  IF(
+                      GROUP_CONCAT(DISTINCT channel.sta_name ORDER BY channel.sta_id DESC SEPARATOR ', ') REGEXP '^(ช่อง|ห้อง)',
+                      SUBSTRING_INDEX(
+                          GROUP_CONCAT(DISTINCT channel.sta_name ORDER BY channel.sta_id DESC SEPARATOR ', '),
+                          ',',
+                          1
+                      ),
+                      GROUP_CONCAT(DISTINCT channel.sta_name ORDER BY channel.sta_id DESC SEPARATOR ', ')
+                  )
+              ) AS channel_names,
+              -- Logic for English channel names
+              TRIM(TRAILING ', ' FROM 
+                  IF(
+                      GROUP_CONCAT(DISTINCT channel.sta_name_en ORDER BY channel.sta_id DESC SEPARATOR ', ') REGEXP '^(Medicine receptacle|Finance room)',
+                      SUBSTRING_INDEX(
+                          GROUP_CONCAT(DISTINCT channel.sta_name_en ORDER BY channel.sta_id DESC SEPARATOR ', '),
+                          ',',
+                          1
+                      ),
+                      GROUP_CONCAT(DISTINCT channel.sta_name_en ORDER BY channel.sta_id DESC SEPARATOR ', ')
+                  )
+              ) AS channel_names_en
+
+          FROM 
+              see_wtsdb.wts_queue_seq AS qs
+          LEFT JOIN 
+              see_wtsdb.wts_base_status AS channel
+          ON 
+              FIND_IN_SET(channel.sta_id, qs.qus_channel) > 0
+          GROUP BY 
+              qs.qus_apm_id
+            ) AS subquery
+            ON subquery.qus_apm_id = qa_with_rn.apm_id
+            LEFT JOIN see_quedb.que_base_priority AS priority
+            ON qa_with_rn.apm_pri_id = priority.pri_id
+            WHERE qa_with_rn.rn = 1 
+            GROUP BY qa_with_rn.apm_id 
+            ORDER BY 
+            CASE 
+                WHEN priority.pri_id = 1 THEN 1
+                WHEN priority.pri_id = 6 THEN 2
+                ELSE 3
+            END,
+            CASE 
+                WHEN qa_with_rn.apm_ql_code LIKE '%I%' THEN 1
+                ELSE 2
+            END,
+            qa_with_rn.apm_rm_time ASC,
+            qa_with_rn.apm_ql_code ASC";
+		$query = $this->wts->query($sql, array($date));
+		return $query;
+	}
+
+	function get_waiting_que_by_finance_medicine_clinic($date) {
+    $sql = "SELECT qa_with_rn.*, qs.*, 
+                status.sta_id AS status_sta_id, status.sta_name AS status_name, status.sta_name_en AS status_name_en, status.sta_color AS status_color,
+                subquery.channel_names, subquery.channel_names_en, priority.*
+            FROM (
+            SELECT qa.*, ntd.*, 
+                    ROW_NUMBER() OVER (PARTITION BY qa.apm_id ORDER BY ntd.ntdp_time_start DESC) AS rn
+            FROM see_quedb.que_appointment AS qa
+            LEFT JOIN see_wtsdb.wts_notifications_department AS ntd
+            ON qa.apm_id = ntd.ntdp_apm_id 
+              AND (
+                  (ntdp_seq = 10 AND qa.apm_sta_id = 16) 
+                  OR 
+                  (ntdp_seq = 10 AND qa.apm_sta_id = 18) 
+                  OR 
+                  (ntdp_seq = 11 AND qa.apm_sta_id = 17) 
+                  OR 
+                  (ntdp_seq = 11 AND qa.apm_sta_id = 19)
+              )
+            WHERE qa.apm_date = ? 
+            AND qa.apm_sta_id IN (16,17,18,19) AND apm_dp_id = '2'
+            ) AS qa_with_rn
+            LEFT JOIN see_wtsdb.wts_queue_seq AS qs 
+            ON qs.qus_apm_id = qa_with_rn.apm_id
+            LEFT JOIN see_wtsdb.wts_base_status AS status
+            ON status.sta_id = qs.qus_status
+            LEFT JOIN (
+            SELECT 
+              qs.qus_apm_id,
+              -- Logic for Thai channel names
+              TRIM(TRAILING ', ' FROM 
+                  IF(
+                      GROUP_CONCAT(DISTINCT channel.sta_name ORDER BY channel.sta_id DESC SEPARATOR ', ') REGEXP '^(ช่อง|ห้อง)',
+                      SUBSTRING_INDEX(
+                          GROUP_CONCAT(DISTINCT channel.sta_name ORDER BY channel.sta_id DESC SEPARATOR ', '),
+                          ',',
+                          1
+                      ),
+                      GROUP_CONCAT(DISTINCT channel.sta_name ORDER BY channel.sta_id DESC SEPARATOR ', ')
+                  )
+              ) AS channel_names,
+              -- Logic for English channel names
+              TRIM(TRAILING ', ' FROM 
+                  IF(
+                      GROUP_CONCAT(DISTINCT channel.sta_name_en ORDER BY channel.sta_id DESC SEPARATOR ', ') REGEXP '^(Medicine receptacle|Finance room)',
+                      SUBSTRING_INDEX(
+                          GROUP_CONCAT(DISTINCT channel.sta_name_en ORDER BY channel.sta_id DESC SEPARATOR ', '),
+                          ',',
+                          1
+                      ),
+                      GROUP_CONCAT(DISTINCT channel.sta_name_en ORDER BY channel.sta_id DESC SEPARATOR ', ')
+                  )
+              ) AS channel_names_en
+
+          FROM 
+              see_wtsdb.wts_queue_seq AS qs
+          LEFT JOIN 
+              see_wtsdb.wts_base_status AS channel
+          ON 
+              FIND_IN_SET(channel.sta_id, qs.qus_channel) > 0
+          GROUP BY 
+              qs.qus_apm_id
+            ) AS subquery
+            ON subquery.qus_apm_id = qa_with_rn.apm_id
+            LEFT JOIN see_quedb.que_base_priority AS priority
+            ON qa_with_rn.apm_pri_id = priority.pri_id
+            WHERE qa_with_rn.rn = 1 
+            GROUP BY qa_with_rn.apm_id 
+            ORDER BY 
+            CASE 
+                WHEN priority.pri_id = 1 THEN 1
+                WHEN priority.pri_id = 6 THEN 2
+                ELSE 3
+            END,
+            CASE 
+                WHEN qa_with_rn.apm_ql_code LIKE '%I%' THEN 1
+                ELSE 2
+            END,
+            qa_with_rn.apm_rm_time ASC,
+            qa_with_rn.apm_ql_code ASC";
+		$query = $this->wts->query($sql, array($date));
 		return $query;
 	}
 
@@ -298,28 +551,61 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 	* @Create Date 06/09/2024
 	*/
 	function get_waiting_doctor_by_floor($date, $floor) {
-    $sql = "
-        SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_id, see_hrdb.hr_person.ps_fname,
-               see_hrdb.hr_person.ps_lname, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name, see_hrdb.hr_structure_detail.stde_name_th, see_wtsdb.wts_queue_seq.qus_announce
-				FROM see_wtsdb.wts_queue_seq
-				LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
-				LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
-				LEFT JOIN see_hrdb.hr_base_prefix ON ps_pf_id = pf_id
-				LEFT JOIN see_quedb.que_base_priority ON pri_id = apm_pri_id
-        LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id = psrm_id
-				LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
-				LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
-				WHERE 
-				see_quedb.que_appointment.apm_date = ?
-				AND see_eqsdb.eqs_room.rm_floor = ?
-            " . ($floor == 1 ? " AND see_eqsdb.eqs_room.rm_id NOT IN (43, 44)" : "") . "
-            " . ($floor == 2 ? " AND see_eqsdb.eqs_room.rm_id NOT IN (29, 30, 6, 28)" : "") . "
-				ORDER BY psrm_rm_id DESC
-		";
+		$us_dp_id = $this->session->userdata('us_dp_id');
+		$sql = "
+			SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_id, see_hrdb.hr_person.ps_fname,
+					see_hrdb.hr_person.ps_lname, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name, see_hrdb.hr_structure_detail.stde_name_th, see_wtsdb.wts_queue_seq.qus_announce,see_hrdb.hr_person_room.psrm_rm_id,
+			see_quedb.que_appointment.apm_pt_id
+					FROM see_wtsdb.wts_queue_seq
+					LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
+					LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
+					LEFT JOIN see_hrdb.hr_base_prefix ON ps_pf_id = pf_id
+					LEFT JOIN see_quedb.que_base_priority ON pri_id = apm_pri_id
+					LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id = psrm_id
+					LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
+					LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
+					WHERE 
+					see_quedb.que_appointment.apm_date = ?
+					AND see_eqsdb.eqs_room.rm_floor = ?
+        	" . ($floor == 1 ? " AND see_eqsdb.eqs_room.rm_id NOT IN (38)" : "") . "
+					" . ($floor == 2 ? " AND see_eqsdb.eqs_room.rm_id NOT IN (29, 30, 6, 28)" : "") . "
+					AND see_quedb.que_appointment.apm_sta_id IN (2,4,11,12)
+					AND DATE(see_hrdb.hr_person_room.psrm_date) = ?
+					GROUP BY ps_id
+					ORDER BY psrm_rm_id DESC 
+			";
 		// echo $sql; die;
-		$query = $this->wts->query($sql, array($date, $floor));
+			$query = $this->wts->query($sql, array($date, $floor, $date));
+    	// echo $this->wts->last_query(); die;
 		return $query;
 	}
+
+	function get_waiting_doctor_by_floor_clinic($date) {
+		$sql = "
+			SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_id, see_hrdb.hr_person.ps_fname,
+					see_hrdb.hr_person.ps_lname, qus_seq, qus_apm_id, see_quedb.que_appointment.apm_ql_code, see_quedb.que_appointment.apm_date, see_quedb.que_appointment.apm_pri_id, que_base_priority.pri_name, see_hrdb.hr_structure_detail.stde_name_th, see_wtsdb.wts_queue_seq.qus_announce,see_hrdb.hr_person_room.psrm_rm_id,
+			see_quedb.que_appointment.apm_pt_id
+					FROM see_wtsdb.wts_queue_seq
+					LEFT JOIN see_quedb.que_appointment ON qus_apm_id = apm_id
+					LEFT JOIN see_hrdb.hr_person ON ps_id = apm_ps_id
+					LEFT JOIN see_hrdb.hr_base_prefix ON ps_pf_id = pf_id
+					LEFT JOIN see_quedb.que_base_priority ON pri_id = apm_pri_id
+					LEFT JOIN see_hrdb.hr_person_room ON qus_psrm_id = psrm_id
+					LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
+					LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
+					WHERE 
+					see_quedb.que_appointment.apm_date = ?
+					AND see_quedb.que_appointment.apm_sta_id IN (2,4,11,12)
+					AND DATE(see_hrdb.hr_person_room.psrm_date) = ?
+					GROUP BY ps_id
+					ORDER BY psrm_rm_id DESC 
+			";
+		// echo $sql; die;
+			$query = $this->wts->query($sql, array($date, $date));
+    	// echo $this->wts->last_query(); die;
+		return $query;
+	}
+
   function get_waiting_doctor_by_floor_den($date, $floor) {
     $sql = "
         SELECT qus_psrm_id, qus_app_walk, see_eqsdb.eqs_room.rm_name, see_hrdb.hr_person_room.psrm_date, see_hrdb.hr_base_prefix.pf_name, see_hrdb.hr_base_prefix.pf_name_abbr, see_hrdb.hr_person.ps_id, see_hrdb.hr_person.ps_fname,
@@ -334,12 +620,13 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
         LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
         WHERE 
             see_quedb.que_appointment.apm_date = ?
-            AND see_eqsdb.eqs_room.rm_floor = ?
-            " . ($floor == 1 ? " AND see_eqsdb.eqs_room.rm_id NOT IN (43, 44)" : "") . "
+            /* AND see_eqsdb.eqs_room.rm_floor = ?
+            " . ($floor == 1 ? " AND see_eqsdb.eqs_room.rm_id NOT IN (43, 44)" : "") . " */
         ORDER BY psrm_rm_id DESC
     ";
 		// echo $sql; die;
 		$query = $this->wts->query($sql, array($date, $floor));
+		// echo $this->que->last_query();
 		return $query;
 	}
 	function get_announce_by_floor($date, $floor) {
@@ -391,7 +678,7 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 				LEFT JOIN see_eqsdb.eqs_room ON psrm_rm_id = rm_id
 				LEFT JOIN see_hrdb.hr_structure_detail ON rm_stde_id = stde_id
 				WHERE 
-				see_quedb.que_appointment.apm_date = ?
+				see_quedb.que_appointment.apm_date = ? AND apm_sta_id IN (2,4)
 				AND apm_stde_id IN ($stde_id_list)
 				ORDER BY psrm_rm_id DESC
 		";
@@ -442,6 +729,9 @@ class M_wts_queue_seq extends Da_wts_queue_seq {
 		// echo $this->que->last_query();
 		return $query;
 	}
+
+
+
 
 	/*
 	* update_psrm_id_by_apm_id

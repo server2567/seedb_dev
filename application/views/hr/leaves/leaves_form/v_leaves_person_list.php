@@ -351,13 +351,31 @@
     </div>
 </div>
 
+<!-- Modal for leave details -->
+<div class="modal fade" id="leaveDetailsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">เส้นทางอนุมัติการลา</h5>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded via AJAX -->
+                <p>Loading...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
 $(document).ready(function() {
 
     // Set default end date
-    const defaultEndDate = new Date(new Date().getFullYear() + 543, new Date().getMonth(), new Date().getDate()); // Set default end date as 7 days ahead
+    const defaultEndDate = new Date(new Date().getFullYear() + 543, 11, 31); // Set default end date as 7 days ahead
     document.getElementById('leaves_end_date').value = formatDateToThai(defaultEndDate);
 
     // Initial DataTable update
@@ -392,7 +410,7 @@ $(document).ready(function() {
             },
             success: function(response) {
                 data = JSON.parse(response);
-
+               
                 // Clear existing DataTable data
                 dataTable.clear().draw();
 
@@ -401,12 +419,50 @@ $(document).ready(function() {
 
                 index = 1;
                 data.forEach((item, index) => {
-                    
-                    var button = `
-                        <div class="text-center option">
-                            <button class="btn btn-warning" onclick="window.location.href='<?php echo base_url() ?>index.php/hr/leaves/leaves_user/leaves_user_edit/<?php echo 1 ?>'"><i class="bi-pencil-square"></i></button>
+
+                    let button_flow = "";
+                    let button_file = "";
+                    let button_info = "";
+
+                    // Conditional for approval path button
+                    if (item.lafw_id) {
+                        button_flow = `
+                            <a href="#" class="dropdown-item btn btn-primary" onclick="show_modal_approve_flow('${item.lhis_id}')">เส้นทางอนุมัติ</a>
+                        `;
+                    }
+
+                    // Conditional for file link button
+                    if (item.lhis_attach_file) {
+                        button_file = `
+                            <a href="#" class="dropdown-item btn btn-primary" data-file-name="${item.lhis_attach_file}" 
+                            data-preview-path="<?php echo site_url($this->config->item('hr_dir').'Getpreview?path='.$this->config->item('hr_upload_leaves').'&doc='); ?>${item.lhis_attach_file}" 
+                            data-download-path="<?php echo site_url($this->config->item('hr_dir').'Getdoc?path='.$this->config->item('hr_upload_leaves').'&doc='); ?>${item.lhis_attach_file}&rename=${item.lhis_attach_file}"
+                            data-bs-toggle="modal" id="btn_preview_file" data-bs-target="#preview_file_modal" 
+                            title="คลิกเพื่อดูไฟล์เอกสาร" data-toggle="tooltip" data-bs-placement="top">
+                            ไฟล์เอกสาร
+                            </a>
+                        `;
+                    }
+
+                    // Info report button
+                  button_info = `
+                                <a href="#" class="dropdown-item btn btn-primary" onclick="window.open('<?php echo base_url() ?>index.php/hr/leaves/Leaves_report/generate_report_leaves/${item.lhis_id}', '_blank')">รายงาน</a>
+                    `;
+                    // Combine buttons into a dropdown
+                    let button = `
+                        <div class="btn-group" role="group">
+                            <button id="btn_leave_${index}" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="คลิกเพื่อดูรายละเอียด" data-toggle="tooltip" data-bs-placement="top">
+                                <i class="bi-file-earmark"></i>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="btn_leave_${index}">
+                                ${button_flow}
+                                ${button_file}
+                                ${button_info}
+                            </div>
                         </div>
                     `;
+
+
 
                     var status;
 
@@ -433,7 +489,7 @@ $(document).ready(function() {
                             item.lhis_topic,
                             item.leave_name,
                             '<div class="text-center option">' + status + '</div>',
-                            button
+                            '<div class="text-center option">' +  button + '</div>'
                         ]).draw();
                 });
                 
@@ -462,7 +518,7 @@ flatpickr("#leaves_start_date", {
     locale: 'th',
     defaultDate: [
         new Date(new Date().getFullYear() + 543, 0, 1), // วันแรกของเดือนปัจจุบัน
-        new Date(new Date().getFullYear() + 543, new Date().getMonth(), new Date().getDate()) // วันสุดท้ายของเดือนปัจจุบัน
+        new Date(new Date().getFullYear() + 543, 11, 31) // วันสุดท้ายของปีปัจจุบัน
     ],
     onReady: function(selectedDates, dateStr, instance) {
         addMonthNavigationListeners();
@@ -552,23 +608,23 @@ function formatDateToThai(date) {
     const day = ('0' + d.getDate()).slice(-2);
     return `${day}/${month}/${year}`;
 }
+
+function show_modal_approve_flow(lhis_id) {
+    // Trigger the modal to display leave details
+    $('#leaveDetailsModal').modal('show');
+    
+    // Perform AJAX request to fetch data based on lhis_id
+    $.ajax({
+        url: '<?php echo site_url()."/".$controller_dir; ?>leaves_approve_flow/' + lhis_id, // Replace with your actual URL
+        method: 'POST',
+        success: function(response) {
+            // data = JSON.parse(response);
+            // Assuming `response` contains the HTML content for the modal
+            $('#leaveDetailsModal .modal-body').html(response);
+        },
+        error: function() {
+            $('#leaveDetailsModal .modal-body').html('<p>Error loading details.</p>');
+        }
+    });
+}
 </script>
-
-
-        <!-- Main Modal -->
-        <div class="modal modal-lg" id="mainModal" aria-labelledby="mainModalLabel" aria-hidden="true">
-            <div class="modal-dialog ">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="mainModalTitle"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body" id="mainModalBody">
-                    </div>
-                    <div class="modal-footer" id="mainModalFooter">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- End Main Modal -->

@@ -128,7 +128,7 @@ class Profile_summary extends Profile_Controller
 				return $develop->devb_id == $dev->dev_go_service_type;
 			});
 			// ดึงชื่อจากอาร์เรย์ที่กรองแล้ว
-			$dev->dev_server_type_name = !empty($filtered_develop) ? $filtered_develop[0]->devb_name : '';
+			$dev->dev_server_type_name = !empty($filtered_develop) ? array_values($filtered_develop)[0]->devb_name : '';
 		}
 		$data['dev_sum_hour'] = $dev_sum_hour;
 		$data['add_department_list'] = $this->M_hr_person_position->get_department_not_in_by_ps_id($data['ps_id']);

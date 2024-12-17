@@ -98,6 +98,7 @@ class M_hr_person_position extends Da_hr_person_position
 						pos.pos_hire_id,
 						pos.pos_trial_day,
 						pos.pos_status,
+						pos.pos_public_display,
 						pos.pos_retire_id,
 						pos.pos_work_start_date,
 						pos.pos_work_end_date,

@@ -248,7 +248,8 @@ class M_dim_examination_result extends Da_dim_examination_result {
 					CASE WHEN exr.exr_update_date IS NOT NULL THEN exr.exr_update_date ELSE exr.exr_create_date END AS modified_date,
 					dp.dp_name_th, stde.stde_name_th,
 					CONCAT(pt.pt_prefix, pt.pt_fname, ' ', pt.pt_lname) pt_full_name, pt.pt_member, 
-					CONCAT(IFNULL(alp.alp_name_abbr, ''), ps.ps_fname, ' ', ps.ps_lname) ps_full_name
+					CONCAT(IFNULL(alp.alp_name_abbr, ''), ps.ps_fname, ' ', ps.ps_lname) ps_full_name,
+          eqs_id
 				FROM dim_examination_result exr
 				LEFT JOIN ".$this->ums_db.".ums_user us ON us.us_id = exr.exr_update_user
 				LEFT JOIN ".$this->ums_db.".ums_patient pt ON pt.pt_id = exr.exr_pt_id
@@ -598,6 +599,117 @@ class M_dim_examination_result extends Da_dim_examination_result {
 		$query = $this->dim->query($sql, array($exr_eqs_id));
 		return $query;
 	}
+
+	function get_eqs_id($exr_id)
+    {
+        $sql = "SELECT * FROM `dim_examination_result` WHERE exr_id = '".$exr_id."'";
+        $query = $this->dim->query($sql);
+        $result = $query->row();
+        return $result;
+    }
+	function get_exrd_id($exrd_exr_id, $exrd_file_name)
+    {
+        $sql = "SELECT * FROM `dim_examination_result_doc` WHERE exrd_exr_id = '".$exrd_exr_id."' 
+		        AND exrd_file_name = '".$exrd_file_name."' AND exrd_status = 1";
+        $query = $this->dim->query($sql);
+        $result = $query->row();
+		// pre($result);
+		// die();
+        return $result;
+    }
+
+	function insert_pre_lab_result($data) {
+		// pre($data);
+		// die();
+		// เตรียมข้อมูลสำหรับการแทรกลงในฐานข้อมูล
+		$insert_data = [
+			'exrdtp_exrd_id'    => $data['exrd_id'],
+			'exrdtp_pt_id'      => $data['pt_id'],
+			'exrdtp_type'       => $data['test_type'],
+			'exrdtp_test'       => $data['test_name'],
+			'exrdtp_given_name' => $data['test_given_name'],
+			'exrdtp_value'      => $data['test_value'],
+			'exrdtp_unit'       => $data['test_unit'],
+			'exrdtp_level'      => $data['test_level'],
+			'exrdtp_range'      => $data['test_range'],
+			'exrdtp_date'       => $data['test_date'],
+			'exrdtp_created'    => date('Y-m-d H:i:s'), // เพิ่มเวลาที่บันทึก
+			'exrdtp_updated'    => date('Y-m-d H:i:s')  // เพิ่มเวลาที่อัปเดตล่าสุด
+		];
+	
+		// แทรกข้อมูลลงในตาราง dim_examination_result_doc_test_pre
+		$this->dim->insert('dim_examination_result_doc_test_pre', $insert_data);
+	
+		// ตรวจสอบว่าแทรกข้อมูลสำเร็จหรือไม่
+		if ($this->dim->affected_rows() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function insert_lab_result($data) {
+		// เตรียมข้อมูลสำหรับการแทรกลงในฐานข้อมูล
+		$insert_data = [
+			'exrdt_exrd_id'    => $data['exrd_id'],
+			'exrdt_pt_id'      => $data['pt_id'],
+			'exrdt_type'       => $data['test_type'],
+			'exrdt_test'       => $data['test_name'],
+			'exrdt_given_name' => $data['test_given_name'],
+			'exrdt_value'      => $data['test_value'],
+			'exrdt_unit'       => $data['test_unit'],
+			'exrdt_level'	   => $data['test_level'],
+			'exrdt_range'  	   => $data['test_range'],
+			'exrdt_date'       => $data['test_date'],
+			'exrdt_created'    => date('Y-m-d H:i:s'), // เพิ่มเวลาที่บันทึก
+			'exrdt_updated'    => date('Y-m-d H:i:s')  // เพิ่มเวลาที่อัปเดตล่าสุด
+		];
+	
+		// แทรกข้อมูลลงในตาราง dim_examination_result_doc_test
+		$this->dim->insert('dim_examination_result_doc_test', $insert_data);
+	
+		// ตรวจสอบว่าแทรกข้อมูลสำเร็จหรือไม่
+		if ($this->dim->affected_rows() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function update_lab_result($id, $data)
+	{
+		$this->db->where('exrdt_id', $id);
+		$this->db->update('lab_results', $data);
+	}
+
+	public function get_results_by_exrd_id($exrd_id)
+	{
+		$sql = "SELECT * FROM `dim_examination_result_doc_test_pre` WHERE exrdtp_exrd_id = '".$exrd_id."'";
+        $query = $this->dim->query($sql);
+        $result = $query->result();
+        return $result;
+	}
+
+	public function get_patient_info($exrd_id)
+	{
+		$sql = "SELECT CONCAT(UP.pt_prefix,UP.pt_fname,' ',UP.pt_lname) AS fullname, UP.pt_member, UPD.ptd_sex, CONCAT(HBP.pf_name_abbr,HP.ps_fname,' ',HP.ps_lname) AS doctor, DER.exr_create_date, 
+					CASE 
+						WHEN UPD.ptd_birthdate IS NOT NULL THEN TIMESTAMPDIFF(YEAR, UPD.ptd_birthdate, CURDATE()) 
+						ELSE '' 
+					END AS age FROM see_dimdb.dim_examination_result_doc AS DERD
+				LEFT JOIN  see_dimdb.dim_examination_result AS DER ON (DERD.exrd_exr_id  = DER.exr_id)
+				LEFT JOIN  see_umsdb.ums_patient AS UP ON (DER.exr_pt_id  = UP.pt_id)
+				LEFT JOIN  see_umsdb.ums_patient_detail AS UPD ON (UP.pt_id  = UPD.ptd_pt_id)
+				LEFT JOIN  see_hrdb.hr_person AS HP ON (DER.exr_ps_id  = HP.ps_id)
+				LEFT JOIN  see_hrdb.hr_base_prefix AS HBP ON (HP.ps_pf_id  = HBP.pf_id)
+				WHERE DERD.exrd_id  = '".$exrd_id."'";
+        $query = $this->dim->query($sql);
+        $result = $query->row();
+		// pre($result);
+		// die();
+        return $result;
+	}
+
 } // end class M_dim_examination_result
 
 ?>

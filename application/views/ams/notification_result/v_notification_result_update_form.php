@@ -1,5 +1,6 @@
 <?php 
-    $order_no = 0; 
+// dev
+$order_no = 0; 
 
     // permission
     $is_officer = isset($actor) && ($actor == 'officer');
@@ -1071,7 +1072,7 @@
     }
 
     function loadModalExrs(exr_id) {
-        $('#modal-load').modal('show');
+        // $('#modal-load').modal('show');
         $('#modal-content-loading').html(`
             <div class="center-container">
                 <div class="spinner-border text-info" role="status">
@@ -1109,6 +1110,8 @@
                         dataType: 'json',
                         data: { sta_id: result.value },
                         success: function (data) {
+                            // console.log("data",data)
+                            // return
                             if (data.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
                                 reloadDataTableExr();
                             } else {

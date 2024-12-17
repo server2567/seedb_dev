@@ -43,6 +43,19 @@ class Report_person extends Report_Controller
         $data['base_develop_type_list'] = $this->M_hr_develop_type->get_all_by_active('asc')->result();
         $data['base_admin_position_list'] = $this->M_hr_person->get_hr_base_admin_position_data()->result();
         $data['base_hire_list'] = $this->M_hr_hire->get_all_by_active()->result();
+        $hire_data = $this->session->userdata('hr_hire_is_medical');
+        $hire_name = ['N' => 'สายพยาบาล', 'SM' => 'สายสนับสนุนทางการแพทย์',  'A' => 'สายบริหาร','M'=>'สายบริหาร'];
+        $hire_arr = [];
+        foreach ($hire_data as $key => $hire) {
+            if(isset($hire_name[$hire['type']])){
+                $hire_arr[$hire['type']] = $hire_name[$hire['type']];
+            }
+        }
+        foreach ($data['base_hire_list'] as $key => $value) {
+            if ($hire_arr[$value->hire_is_medical]) {
+                $value->hire_name .= ' ' . $hire_arr[$value->hire_is_medical];
+            }
+        }
         $data['base_adline_list'] = $this->M_hr_adline_position->get_all_by_active()->result();
         $data['year_filter'] = $this->M_hr_develop->get_develop_year_filter()->result();
         $this->output('hr/report/v_report_overview_person_info', $data);
@@ -197,8 +210,8 @@ LEFT JOIN see_hrdb.hr_base_adline_position AS alp ON alp.alp_id = hipos.hipos_po
         if ($fitiler_adline != 'all') {
             $sql .= " AND hipos.hipos_pos_alp_id = '$fitiler_adline'";
         }
-        if($fitiler_admin != 'all'){
-            $sql .=" AND hipos.hipos_pos_admin_id = '$fitiler_admin'";
+        if ($fitiler_admin != 'all') {
+            $sql .= " AND hipos.hipos_pos_admin_id = '$fitiler_admin'";
         }
         $sql .= " AND hipos.hipos_pos_status = '$filter_status' GROUP BY hips.hips_ps_id ";
         $this->hr = $this->load->database('hr', TRUE);
@@ -452,7 +465,7 @@ LEFT JOIN see_hrdb.hr_base_adline_position AS alp ON alp.alp_id = hipos.hipos_po
                 if ($key > 0) {
                     $data['education'] .= $lineBreak;
                 }
-                $data['education'] .= '- '.$edu['level'] . ' ' . $edu['major'] . ' ' . $edu['degree'];
+                $data['education'] .= '- ' . $edu['level'] . ' ' . $edu['major'] . ' ' . $edu['degree'];
             }
             $sheet->setCellValue('A' . $row, $sequence++); // ลำดับ
             $sheet->setCellValue('B' . $row, $data['department'] == null ? '-' : $data['department']); // หน่วยงาน
@@ -499,173 +512,6 @@ LEFT JOIN see_hrdb.hr_base_adline_position AS alp ON alp.alp_id = hipos.hipos_po
         header('Content-Disposition: attachment;filename="' . $fileName . '.xlsx"');
         header('Cache-Control: max-age=0');
         $writer->save('php://output');
-        exit;
-    }
-    /*
-	* export_pdf_develop_person
-	* ส่งออกข้อมูลรายการพัฒนาบุคลากรตาม filter แบบ excel
-	* @input filter,g_id
-	* $output -
-	* @author JIRADAT POMYAI
-	* @Create Date 18/10/2024
-	*/
-    public function export_pdf_develop_person($filter, $ps_id = null)
-    {
-        ini_set('memory_limit', '512M'); // เพิ่ม memory limit
-        $filterString = [];
-        $decodedFilterString = urldecode($filter);
-        parse_str($decodedFilterString, $filterString);
-        $filterString['ps_id'] = $ps_id;
-
-        // ดึงข้อมูล
-        $result = $this->M_hr_develop->get_export_develop_list_by_filter($filterString)->result();
-
-        // ตรวจสอบว่ามีข้อมูลหรือไม่
-        if (empty($result)) {
-            show_error('ไม่พบข้อมูล', 404);
-            return;
-        }
-
-        // โหลด autoload ของ mPDF
-        require '/var/www/html/seedb/application/third_party/vendor/autoload.php';
-
-        // สร้างอินสแตนซ์ของ mPDF พร้อมตั้งค่ากระดาษเป็นแนวนอน (landscape)
-        $mpdf = new \Mpdf\Mpdf([
-            'format' => 'A4-L', // กระดาษ A4 แนวนอน
-            'default_font_size' => 16,
-            'default_font' => 'sarabun', // ฟอนต์ Sarabun สำหรับภาษาไทย
-            'margin_top' => 5,
-            'margin_bottom' => 5,
-            'margin_left' => 5,
-            'margin_right' => 5,
-        ]);
-
-        // สร้าง HTML สำหรับ PDF
-        $html = '<h2 style="text-align: center;">รายงานการพัฒนาบุคลากร</h2>';
-
-        foreach ($result as $person) {
-            $html .= '<h4>' . $person->person_name . '</h4>';
-            $html .= '<table border="1" cellspacing="0" cellpadding="5" width="100%">';
-            $html .= '
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>เรื่องไปอบรม</th>
-                    <th>วันที่เริ่มอบรม</th>
-                    <th>ประเภทการไปอบรม</th>
-                    <th>สถานที่</th>
-                    <th>จำนวนชั่วโมง</th>
-                </tr>
-            </thead>
-            <tbody>';
-
-            // ข้อมูลการอบรม
-            $index = 1;
-            foreach (json_decode($person->devps_data_array) as $dev) {
-                $html .= '
-                <tr>
-                    <td>' . $index++ . '</td>
-                    <td>' . $dev->dev_name . '</td>
-                    <td>' . fullDateTH3($dev->dev_start_date) . ' ถึง ' . fullDateTH3($dev->dev_end_date) . '</td>
-                    <td>' . $dev->devb_name . '</td>
-                    <td>' . $dev->dev_place . '</td>
-                    <td style="text-align: right;">' . $dev->dev_hour . '</td>
-                </tr>';
-            }
-
-            // แสดงผลรวมชั่วโมง
-            $html .= '
-            <tr>
-                <td colspan="5" style="text-align: right; font-weight: bold;">รวมทั้งหมด:</td>
-                <td style="text-align: right; font-weight: bold;">' . $person->sum_hour . ' ชั่วโมง</td>
-            </tr>';
-            $html .= '</tbody></table><br>';
-        }
-
-        // เพิ่ม HTML ลงใน PDF
-        $mpdf->WriteHTML($html);
-
-        // ส่งออก PDF
-        $fileName = 'รายงานการพัฒนาบุคลากร.pdf';
-        $mpdf->Output($fileName, \Mpdf\Output\Destination::DOWNLOAD);
-    }
-    public function export_print_develop_person($filter, $ps_id = null)
-    {
-        ini_set('memory_limit', '512M'); // เพิ่ม memory limit
-        $filterString = [];
-        $decodedFilterString = urldecode($filter);
-        parse_str($decodedFilterString, $filterString);
-        $filterString['ps_id'] = $ps_id;
-
-        // ดึงข้อมูล
-        $result = $this->M_hr_develop->get_export_develop_list_by_filter($filterString)->result();
-
-        // ตรวจสอบว่ามีข้อมูลหรือไม่
-        if (empty($result)) {
-            show_error('ไม่พบข้อมูล', 404);
-            return;
-        }
-
-        // โหลด autoload ของ mPDF
-        require '/var/www/html/seedb/application/third_party/vendor/autoload.php';
-
-        // สร้างอินสแตนซ์ของ mPDF พร้อมตั้งค่ากระดาษเป็นแนวนอน (landscape)
-        $mpdf = new \Mpdf\Mpdf([
-            'format' => 'A4-L', // กระดาษ A4 แนวนอน
-            'default_font_size' => 16,
-            'default_font' => 'sarabun', // ฟอนต์ Sarabun สำหรับภาษาไทย
-            'margin_top' => 5,
-            'margin_bottom' => 5,
-            'margin_left' => 5,
-            'margin_right' => 5,
-        ]);
-
-        // สร้าง HTML สำหรับ PDF
-        $html = '<h2 style="text-align: center;">รายงานการพัฒนาบุคลากร</h2>';
-
-        foreach ($result as $person) {
-            $html .= '<h4>' . $person->person_name . '</h4>';
-            $html .= '<table border="1" cellspacing="0" cellpadding="5" width="100%">';
-            $html .= '
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>เรื่องไปอบรม</th>
-                    <th>วันที่เริ่มอบรม</th>
-                    <th>ประเภทการไปอบรม</th>
-                    <th>สถานที่</th>
-                    <th>จำนวนชั่วโมง</th>
-                </tr>
-            </thead>
-            <tbody>';
-
-            // ข้อมูลการอบรม
-            $index = 1;
-            foreach (json_decode($person->devps_data_array) as $dev) {
-                $html .= '
-                <tr>
-                    <td>' . $index++ . '</td>
-                    <td>' . $dev->dev_name . '</td>
-                    <td>' . fullDateTH3($dev->dev_start_date) . ' ถึง ' . fullDateTH3($dev->dev_end_date) . '</td>
-                    <td>' . $dev->devb_name . '</td>
-                    <td>' . $dev->dev_place . '</td>
-                    <td style="text-align: right;">' . $dev->dev_hour . '</td>
-                </tr>';
-            }
-
-            // แสดงผลรวมชั่วโมง
-            $html .= '
-            <tr>
-                <td colspan="5" style="text-align: right; font-weight: bold;">รวมทั้งหมด:</td>
-                <td style="text-align: right; font-weight: bold;">' . $person->sum_hour . ' ชั่วโมง</td>
-            </tr>';
-            $html .= '</tbody></table><br>';
-        }
-
-        // เพิ่ม HTML ลงใน PDF
-        $mpdf->WriteHTML($html);
-
-        $mpdf->Output('รายงานการพัฒนาบุคลากร' . '.pdf', 'I'); // 'I' = แสดงผลในเบราว์เซอร์
         exit;
     }
 }

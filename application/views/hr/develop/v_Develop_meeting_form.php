@@ -151,7 +151,7 @@
                                                 <label for="StNameT" class="form-label" style="font-weight: bold;">รายละเอียดการเข้าร่วม</label>
                                             </div>
                                             <div class="col-8">
-                                            <textarea name="inputField[]" id="dev_desc" class="form-control"><?= isset($develop_info) ? htmlspecialchars($develop_info->dev_desc) : '' ?></textarea>
+                                                <textarea name="inputField[]" id="dev_desc" class="form-control"><?= isset($develop_info) ? htmlspecialchars($develop_info->dev_desc) : '' ?></textarea>
 
                                             </div>
                                         </div>
@@ -173,16 +173,15 @@
                                     <div class="col-12 mb-3">
                                         <div class="row">
                                             <div class="col-2">
-                                                <label for="StNameT" class="form-label required" style="font-weight: bold;">เวลาสิ้นสุดโครงการ</label>
+                                                <label for="StNameT" class="form-label required" style="font-weight: bold;">รวมชั่วโมง</label>
                                             </div>
-                                            <div class="col-2">
+                                            <!-- <div class="col-2">
                                                 <div class="input-group date input-daterange">
                                                     <input type="time" class="form-control" name="inputField[]" id="dev_end_time" placeholder="" value="<?= isset($develop_info) ? $develop_info->dev_end_time : '' ?>">
                                                 </div>
-                                            </div>
+                                            </div> -->
                                             <div class="col-2">
                                                 <div class="input-group date input-daterange">
-                                                    <label for="StNameT" class="form-label " style="font-weight: bold; padding-right:10px">รวม</label>
                                                     <input type="number" class="form-control" name="inputField[]" id="dev_hour" placeholder="" value="<?= isset($develop_info) ? $develop_info->dev_hour : '' ?>">
                                                     <label for="StNameT" class="form-label " style="font-weight: bold; padding-left:10px">ชั่วโมง</label>
                                                 </div>
@@ -243,7 +242,7 @@
                                     <div class="col-12 mb-3">
                                         <div class="row">
                                             <div class="col-2">
-                                                <label for="StNameT" class="form-label required" style="font-weight: bold;">ผู้จัด/โครงการ</label>
+                                                <label for="StNameT" class="form-label required" style="font-weight: bold;">วิทยากร/โครงการ</label>
                                             </div>
                                             <div class="col-8">
                                                 <input type="text" class="form-control" placeholder="กรอกชื่อผู้จัดทำ/โครงการ" id="dev_project" value="<?= isset($develop_info) ? $develop_info->dev_project : '' ?>" name="inputField[]">
@@ -270,9 +269,9 @@
                                             </div>
                                             <div class="col-10">
                                                 <input type="radio" class="form-check-input mb-3" id="type1" <?= !isset($develop_info) ? 'checked' : '' ?> <?= isset($develop_info) && $develop_info->dev_type == 1 ? 'checked' : '' ?> name="dev_type" value="1">
-                                                <label for="age1">พัฒนาตามความต้องการของตนเอง</label><br>
+                                                <label for="age1">อยู่ในแผนฝึกอบรมประจำปี</label><br>
                                                 <input type="radio" class="form-check-input mb-3" id="type3" <?= isset($develop_info) && $develop_info->dev_type == 2 ? 'checked' : '' ?> name="dev_type" value="2">
-                                                <label for="age3">พัฒนาตามนโยบายของโรงพยาบาลจักษุสุราษฏร์</label><br>
+                                                <label for="age3">อยู่นอกแผนฝึกอบรมประจำปี</label><br>
                                             </div>
                                         </div>
                                     </div>
@@ -406,73 +405,102 @@
                         <div id="collapseAdd5" class="accordion-collapse collapse show" aria-labelledby="headingAdd">
                             <div class="accordion-body">
                                 <div class="row p-4 font-16">
-                                    <div class="col-md-4">
-                                        <span>1. ค่าฝึกอบรม ต่อคน / ต่อครั้ง</span>
+                                    <div class="col-md-3">
+                                        <span>1. ค่าฝึกอบรม </span>
                                     </div>
-                                    <div class="col-md-4 font-end">
+                                    <div class="col-md-3 font-end">
                                         <label for="amount">จำนวนเงิน :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_budget" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_budget : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4 font-end mb-4">
+                                    <div class="col-md-3 font-end mb-4">
                                         <label for="amount">รวม VAT :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_budget_vat" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_budget_vat : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <span>2. เบี้ยเลี้ยง ต่อคน / ต่อครั้ง</span>
+                                    <div class="col-md-3 font-end mb-4">
+                                        <label for="dev_budget_type" class="form-label mt-2">เลือกประเภท:</label>
+                                        <select id="dev_budget_type" name="dev_budget_type" class="form-select">
+                                            <option value="group" selected>ต่อครั้ง</option>
+                                            <option value="person" <?= isset($develop_info) && $develop_info->dev_budget_type == 2 ? 'selected' : '' ?>>ต่อคน</option>
+                                        </select>
                                     </div>
-                                    <div class="col-md-4 font-end">
+                                    <div class="col-md-3">
+                                        <span>2. เบี้ยเลี้ยง </span>
+                                    </div>
+                                    <div class="col-md-3 font-end">
                                         <label for="amount">จำนวนเงิน :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_allowance" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_allowance : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4 font-end mb-4">
+                                    <div class="col-md-3 font-end mb-4">
                                         <label for="amount">รวม VAT :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_allowance_vat" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_allowance_vat : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <span>3. ค่าที่พักและอาหาร ต่อคน / ต่อครั้ง</span>
+                                    <div class="col-md-3 font-end mb-4">
+                                        <label for="dev_allowance_type" class="form-label mt-2">เลือกประเภท:</label>
+                                        <select id="dev_allowance_type" name="dev_allowance_type" class="form-select">
+                                            <option value="group" selected>ต่อครั้ง</option>
+                                            <option value="person" <?= isset($develop_info) && $develop_info->dev_allowance_type == 2 ? 'selected' : '' ?>>ต่อคน</option>
+                                        </select>
                                     </div>
-                                    <div class="col-md-4 font-end">
+                                    <div class="col-md-3">
+                                        <span>3. ค่าที่พักและอาหาร </span>
+                                    </div>
+                                    <div class="col-md-3 font-end">
                                         <label for="amount">จำนวนเงิน :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_accommodation" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_accommodation : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4 font-end mb-4">
+                                    <div class="col-md-3 font-end mb-4">
                                         <label for="amount">รวม VAT :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_accommodation_vat" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_accommodation_vat : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <span>4. อื่น ๆ</span>
+                                    <div class="col-md-3 font-end mb-4">
+                                        <label for="dev_accommodation_type" class="form-label mt-2">เลือกประเภท:</label>
+                                        <select id="dev_accommodation_type" name="dev_accommodation_type" class="form-select">
+                                            <option value="group" selected>ต่อครั้ง</option>
+                                            <option value="person" <?= isset($develop_info) && $develop_info->dev_accommodation_type == 2 ? 'selected' : '' ?>>ต่อคน</option>
+                                        </select>
                                     </div>
-                                    <div class="col-md-4 font-end">
+                                    <div class="col-md-3">
+                                        <span>4. อื่น ๆ</span><br>
+                                        <textarea class="form-control w-80" style="height: 100px;" name="inputField[]" id="dev_budget_type_other_text"> <?= isset($develop_info) ? htmlspecialchars($develop_info->dev_budget_type_other_text, ENT_QUOTES, 'UTF-8') : '' ?></textarea>
+                                    </div>
+                                    <div class="col-md-3 font-end">
                                         <label for="amount">จำนวนเงิน :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_budget_type_other" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_budget_type_other : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4 font-end mb-4">
+                                    <div class="col-md-3 font-end mb-4">
                                         <label for="amount">รวม VAT :</label>
                                         <div class="input-with-unit">
                                             <input type="text" name="inputField[]" id="dev_budget_type_other_vat" placeholder="0.00" value="<?= isset($develop_info) ? $develop_info->dev_budget_type_other_vat : '' ?>" class="currency-input" />
                                             <div class="unit-box">บาท</div>
                                         </div>
+                                    </div>
+                                    <div class="col-md-3 font-end mb-4">
+                                        <label for="dev_budget_type_other_type" class="form-label mt-2">เลือกประเภท:</label>
+                                        <select id="dev_budget_type_other_type" name="dev_budget_type_other_type" class="form-select">
+                                            <option value="group" selected>ต่อครั้ง</option>
+                                            <option value="person" <?= isset($develop_info) && $develop_info->dev_budget_type_other_type == 2 ? 'selected' : '' ?>>ต่อคน</option>
+                                        </select>
                                     </div>
                                     <div class="col-md-4">
                                         <span>&nbsp;&nbsp;&nbsp;&nbsp;รวมค่าใช้จ่ายทั้งสิ้น</span>
@@ -512,22 +540,22 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdd3" aria-expanded="true" aria-controls="collapseAdd">
-                                <i class="bi-window-dock icon-menu"></i><span>รายงานการประชุม/อบรม/สัมมนา</span>
+                                <i class="bi-window-dock icon-menu"></i><span>สรุป/รายงาน</span>
                             </button>
                         </h2>
                         <div id="collapseAdd3" class="accordion-collapse collapse show" aria-labelledby="headingAdd">
                             <div class="accordion-body">
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <label style="font-weight: bold;" for="">เป้าหมาย/วัตถุประสงค์การไปประชุม/อบรม/สัมมนา :</label> <br><br>
+                                        <label style="font-weight: bold;" for="">เป้าหมาย/วัตถุประสงค์:</label> <br><br>
                                         <textarea name="inputField[]" id="dev_objecttive" class="form-control"><?= isset($develop_info) ? htmlspecialchars($develop_info->dev_objecttive, ENT_QUOTES, 'UTF-8') : '' ?></textarea>
                                     </div>
                                     <div class="col-md-12">
-                                        <label style="font-weight: bold;" for="">เนื้อหาการประชุมโดยสรุป :</label> <br><br>
+                                        <label style="font-weight: bold;" for="">เนื้อหาการไปพัฒนาตนเอง :</label> <br><br>
                                         <textarea name="inputField[]" id="dev_short_content" class="form-control"><?= isset($develop_info) ? htmlspecialchars($develop_info->dev_short_content, ENT_QUOTES, 'UTF-8') : '' ?></textarea>
                                     </div>
                                     <div class="col-md-12">
-                                        <label style="font-weight: bold;" for="">ประโยชน์ได้รับ :</label> <br><br>
+                                        <label style="font-weight: bold;" for="">ประโยชน์ที่ได้รับ :</label> <br><br>
                                         <textarea name="inputField[]" id="dev_benefits" class="form-control"><?= isset($develop_info) ? htmlspecialchars($develop_info->dev_benefits, ENT_QUOTES, 'UTF-8') : '' ?></textarea>
                                     </div>
                                 </div>
@@ -918,48 +946,146 @@
     }
 
     function calculateTotals() {
-        // Array of IDs for the amount fields
-        const amountIds = [
-            'dev_budget',
-            'dev_budget_vat',
-            'dev_allowance',
-            'dev_allowance_vat',
-            'dev_accommodation',
-            'dev_accommodation_vat',
-            'dev_budget_type_other',
-            'dev_budget_type_other_vat'
-        ];
-
-        // Initialize total and VAT variables
         let totalAmount = 0;
         let totalVAT = 0;
+        const peopleCount = person_list.length > 0 ? person_list.length : 1; // จำนวนคน (ปรับได้ตามต้องการ)
+        // console.log(peopleCount);
 
-        // Iterate through each amount field to calculate the total
-        amountIds.forEach(id => {
-            const input = document.getElementById(id);
-            if (input) {
-                // Remove commas from the value before parsing it
-                let value = input.value.replace(/,/g, '');
-                value = parseFloat(value) || 0; // Get value or default to 0
+        const fields = [{
+                amount: 'dev_budget',
+                vat: 'dev_budget_vat',
+                select: 'dev_budget_type',
+            },
+            {
+                amount: 'dev_allowance',
+                vat: 'dev_allowance_vat',
+                select: 'dev_allowance_type',
+            },
+            {
+                amount: 'dev_accommodation',
+                vat: 'dev_accommodation_vat',
+                select: 'dev_accommodation_type',
+            },
+            {
+                amount: 'dev_budget_type_other',
+                vat: 'dev_budget_type_other_vat',
+                select: 'dev_budget_type_other_type',
+            },
+        ];
 
-                if (id.endsWith('_vat')) {
-                    totalVAT += value;
-                } else {
-                    totalAmount += value;
-                }
-            }
+        fields.forEach(({
+            amount,
+            vat,
+            select
+        }) => {
+            const amountInput = document.getElementById(amount);
+            const vatInput = document.getElementById(vat);
+            const selectInput = document.getElementById(select);
+
+            let amountValue = parseFloat(amountInput.value.replace(/,/g, '')) || 0;
+            let vatValue = parseFloat(vatInput.value.replace(/,/g, '')) || 0;
+
+            if (selectInput.value === 'person') {
+                amountValue *= peopleCount; // คูณจำนวนคน
+                vatValue *= peopleCount; // คูณจำนวนคน
+            } // "group" คูณ 1 โดยไม่ต้องทำอะไรเพิ่มเติม
+
+            totalAmount += amountValue;
+            totalVAT += vatValue;
         });
 
-        // Update total amount and VAT fields with commas and two decimal places
+        // อัปเดตผลรวมในฟิลด์
         document.getElementById('sum-cost').value = totalAmount.toLocaleString('en', {
             minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            maximumFractionDigits: 2,
         });
         document.getElementById('sum-cost-vat').value = totalVAT.toLocaleString('en', {
             minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            maximumFractionDigits: 2,
         });
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        // ฟังก์ชันสำหรับการตรวจสอบและอัปเดตสถานะของ select
+        // function updateSelectStatus() {
+        //     const fields = [{
+        //             amount: 'dev_budget',
+        //             vat: 'dev_budget_vat',
+        //             select: 'dev_budget_type',
+        //         },
+        //         {
+        //             amount: 'dev_allowance',
+        //             vat: 'dev_allowance_vat',
+        //             select: 'dev_allowance_type',
+        //         },
+        //         {
+        //             amount: 'dev_accommodation',
+        //             vat: 'dev_accommodation_vat',
+        //             select: 'dev_accommodation_type',
+        //         },
+        //         {
+        //             amount: 'dev_budget_type_other',
+        //             vat: 'dev_budget_type_other_vat',
+        //             select: 'dev_budget_type_other_type',
+        //         },
+        //     ];
+
+        //     fields.forEach(({
+        //         amount,
+        //         vat,
+        //         select
+        //     }) => {
+        //         const amountInput = document.getElementById(amount);
+        //         const vatInput = document.getElementById(vat);
+        //         const selectInput = document.getElementById(select);
+
+        //         if ((amountInput.value && vatInput.value) && (amountInput.value != '0.00' && vatInput.value != '0.00')) {
+        //             selectInput.disabled = false; // ปลดล็อค select
+        //             console.log(amountInput);
+
+        //         } else {
+        //             selectInput.disabled = true; // ล็อค select
+        //             selectInput.value = 'group'; // ตั้งค่าเริ่มต้นเป็น "ต่อคน"
+        //         }
+        //     });
+        // }
+
+        // ฟังก์ชันสำหรับการคำนวณ
+        const textarea = document.getElementById("dev_budget_type_other_text");
+        textarea.addEventListener("keydown", function(e) {
+            // ตรวจสอบการกด Enter
+            if (e.key === "Enter") {
+                e.preventDefault(); // ยกเลิกการขึ้นบรรทัดปกติ
+                const lines = textarea.value.split("\n"); // แยกข้อความออกเป็นบรรทัด
+                const lastLine = lines[lines.length - 1].trim(); // นำบรรทัดล่าสุดมาใช้งาน
+                const match = lastLine.match(/^(\d+)\./); // ค้นหาเลขนำหน้าข้อความ (1., 2., 3., ...)
+                let nextNumber = 1;
+
+                if (match) {
+                    nextNumber = parseInt(match[1], 10) + 1; // เพิ่มหมายเลขถัดไป
+                }
+
+                textarea.value += `\n${nextNumber}. `; // เพิ่มบรรทัดใหม่พร้อมหมายเลข
+            }
+        });
+        // ตรวจสอบเมื่อกรอกข้อมูลใน input
+        const inputs = document.querySelectorAll('.currency-input');
+        inputs.forEach((input) => {
+            input.addEventListener('input', () => {
+
+                calculateTotals();
+            });
+        });
+
+        // ตรวจสอบเมื่อมีการเปลี่ยน select
+        const selects = document.querySelectorAll('.form-select');
+        selects.forEach((select) => {
+            select.addEventListener('change', calculateTotals);
+        });
+
+        // เรียกใช้ฟังก์ชันเมื่อโหลดหน้า
+
+        calculateTotals();
+    });
     // Calculate totals on document load
     document.addEventListener('DOMContentLoaded', calculateTotals);
     document.addEventListener("DOMContentLoaded", function() {
@@ -1060,7 +1186,7 @@
                             'body': 'เพิ่มผู้เข้าร่วมสำเร็จ'
                         });
                         $('#addPersonModal').modal('hide');
-
+                        calculateTotals()
                     })
                 }
             })
@@ -1087,7 +1213,7 @@
                 }
 
                 var table = document.getElementById("paticipate");
-        
+
 
                 var rowCount = table.getElementsByTagName("tr").length;
                 var row = table.insertRow(-1); // Insert new row at the end
@@ -1123,7 +1249,7 @@
                     'body': 'เพิ่มผู้เข้าร่วมสำเร็จ'
                 });
                 $('#addPersonModal').modal('hide');
-
+                calculateTotals()
             })
         }
     })
@@ -1140,6 +1266,7 @@
         return isoDate;
     }
     document.getElementById('submit-develop').addEventListener('click', function() {
+        valid = false
         const develop_info = {}
         $('[name^="inputField"]').each(function() {
             develop_info[this.id] = this.value;
@@ -1148,13 +1275,14 @@
 
         if (develop_info['dev_start_date'] == '' || develop_info['dev_end_date'] == '' || develop_info['dev_topic'] == '' ||
             develop_info['dev_pv_id'] == 'none' || develop_info['dev_country_id'] == 'none' || develop_info['dev_project'] == '' ||
-            develop_info['dev_end_time'] == '' || develop_info['dev_hour'] == 0 || develop_info['dev_hour'] == ''
+            develop_info['dev_hour'] == 0 || develop_info['dev_hour'] == ''
         ) {
 
             dialog_error({
                 'header': text_toast_default_error_header,
                 'body': 'กรุณากรอกข้อมูลให้ครบถ้วน'
             });
+
             return 0;
         }
         develop_info['dev_start_date'] = convertThaiDateToISO(develop_info['dev_start_date'])
@@ -1172,8 +1300,13 @@
         develop_info['dev_type'] = getSelectedRadioValue('dev_type');
         develop_info['dev_certi'] = getSelectedRadioValue('dev_certi');
         develop_info['dev_organized'] = getSelectedRadioValue('dev_organized');
+        develop_info['dev_budget_type'] = getselectValue('dev_budget_type');
+        develop_info['dev_allowance_type'] = getselectValue('dev_allowance_type');
+        develop_info['dev_accommodation_type'] = getselectValue('dev_accommodation_type');
+        develop_info['dev_budget_type_other_type'] = getselectValue('dev_budget_type_other_type');
         develop_info['dev_person_list'] = person_list
         if (valid == true) {
+
             dialog_error({
                 'header': text_toast_default_error_header,
                 'body': 'กรุณากรอกข้อมูลให้ครบถ้วน'
@@ -1242,11 +1375,12 @@
                         }
                     }
 
- 
+
 
                     // ลบแถวที่ปุ่มลบอยู่
                     var row = button.closest('tr');
                     row.remove();
+                    calculateTotals()
                 }
             });
         }
@@ -1299,10 +1433,25 @@
 
     function getSelectedRadioValue(name) {
         var selectedRadio = $(`input[name="${name}"]:checked`);
+        console.log(valid);
         if (selectedRadio.val() == '' || selectedRadio.val() == null) {
             valid = true;
         }
+
         return selectedRadio.length ? selectedRadio.val() : null;
+    }
+
+    function getselectValue(name) {
+        var selectedOption = $(`select[name="${name}"]`).val();
+        if (selectedOption == '' || selectedOption == null) {
+            valid = true; // หมายเหตุ: คุณอาจต้องนิยามตัวแปร valid ไว้ก่อนหน้านี้
+        }
+        if (selectedOption == 'person') {
+            selectedOption = 2
+        } else if (selectedOption == 'group') {
+            selectedOption = 1
+        }
+        return selectedOption ? selectedOption : null;
     }
 
     function editPersonMeeting(index) {
@@ -1389,7 +1538,7 @@
                 document.getElementById('doc_temp').innerText = "IN-" + formattedDate + shortYear;
             } else if (trainingType === "2") {
                 // ภายนอกโรงพยาบาล
-                document.getElementById('doc_temp').innerText = "PU-" + formattedDate + shortYear;
+                document.getElementById('doc_temp').innerText = "PB-" + formattedDate + shortYear;
             }
         }
     }

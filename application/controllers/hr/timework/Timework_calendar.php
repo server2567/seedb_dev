@@ -136,8 +136,11 @@ class Timework_calendar extends Timework_Controller
 	{
 		$data['session_mn_active_url'] = $this->mn_active_url; // set session_mn_active_url / breadcrumb
 		$data['status_response'] = $this->config->item('status_response_show');
-
-		if ($this->input->get('actor_type') == "approver" || $this->input->get('actor_type') == "medical") {
+		if ($this->input->get('actor_type') == "approver") {
+			// $result = $this->M_hr_timework_person_plan->get_all_profile_data($this->input->get('dp_id'), $this->input->get('hire_id'), $this->input->get('admin_id'), $this->input->get('status_id'))->result();
+			$result = $this->M_hr_timework_person_plan->get_all_profile_data_by_param($this->input->get('dp_id'), $this->input->get('stde_id'), $this->input->get('hire_is_medical'), $this->input->get('hire_type_id'), $this->input->get('status_id'))->result();
+		}
+		else if($this->input->get('actor_type') == "medical") {
 			// $result = $this->M_hr_timework_person_plan->get_all_profile_data($this->input->get('dp_id'), $this->input->get('hire_id'), $this->input->get('admin_id'), $this->input->get('status_id'))->result();
 			$result = $this->M_hr_timework_person_plan->get_all_profile_data_by_param($this->input->get('dp_id'), 0, $this->input->get('hire_is_medical'), $this->input->get('hire_type_id'), $this->input->get('status_id'))->result();
 		} else {
@@ -309,7 +312,7 @@ class Timework_calendar extends Timework_Controller
 		
 		if (!empty($this->input->get('stuc_id')) || $this->input->get('stuc_id') != "") {
 			if ($this->input->get('actor_type') == "approver" || $this->input->get('actor_type') == "medical") {
-				$result = $this->M_hr_person->get_structure_detail_by_confirm($this->input->get('stuc_id'), $this->input->get('dp_id'))->result();
+				$result = $this->M_hr_person->get_structure_detail_by_param($this->input->get('stuc_id'), $this->input->get('dp_id'), 3)->result();
 			} else {
 				$stuc_id = ($this->input->get('stuc_id') == 'all' ? "" : $this->input->get('stuc_id'));
 				$result = $this->M_hr_person->get_structure_detail_by_dpid_psid($this->input->get('dp_id'), $this->session->userdata('us_ps_id'), $stuc_id)->result();
@@ -436,6 +439,7 @@ class Timework_calendar extends Timework_Controller
 		$this->M_hr_timework_person_plan->twpp_rm_id = $this->input->post('twpp_rm_id');
 		$this->M_hr_timework_person_plan->twpp_desc = $this->input->post('twpp_desc');
 		$this->M_hr_timework_person_plan->twpp_is_public = $this->input->post('twpp_is_public');
+		$this->M_hr_timework_person_plan->twpp_is_holiday = $this->input->post('twpp_is_holiday');
 		$this->M_hr_timework_person_plan->twpp_status = ($this->input->post('twpp_status') == 'S' ? 'S' : $this->input->post('twpp_status'));
 
 		// ตรวจสอบว่ามีการแก้ไขหรือสร้างใหม่
@@ -558,7 +562,7 @@ class Timework_calendar extends Timework_Controller
 
 		$check_duplicate_data = $this->M_hr_timework_setting->get_timework_setting_duplicate();
 
-		if($check_duplicate_data->num_rows() > 0){
+		if(empty($twst_id) && $check_duplicate_data->num_rows() > 0){
 			$result['status_response'] = $this->config->item('status_response_error');
 			$result['message_dialog'] = $this->config->item('text_invalid_duplicate');
 		}
@@ -1148,43 +1152,156 @@ class Timework_calendar extends Timework_Controller
 	}
 	// get_timework_plan_preview_report_by_ps_id
 
-
-	// public function get_timework_plan_person_report($ps_id, $isPublic, $actor_type, $dp_id, $filter_start_date, $filter_end_date)
-	// {
-	// 	$ps_id = decrypt_id($ps_id);
-
-	// 	$ps_id = 'all';
-
-	// 	if($ps_id != 'all'){
-	// 		$result = $this->M_hr_timework_person_plan->get_all_timework_param_data_by_person_id($ps_id, $isPublic, $dp_id, $filter_start_date, $filter_end_date)->result();
-	// 	}
-	// 	else{
-	// 		if($actor_type == "approver" || $actor_type == "medical"){
-	// 			$person_list = $this->M_hr_timework_person_plan->get_all_profile_data_by_param($this->input->get('dp_id'), 0, $this->input->get('hire_is_medical'), $this->input->get('hire_type_id'), $this->input->get('status_id'))->result();
-	// 		}
-	// 		else{
-	// 			$person_list = $this->M_hr_timework_person_plan->get_all_profile_data_by_param($this->input->get('dp_id'), $this->input->get('stde_id'), $this->input->get('hire_is_medical'), $this->input->get('hire_type_id'))->result();
-	// 		}
-
-	// 		$ps_ids = []; // สร้าง array ว่างเพื่อเก็บ ps_id
-
-	// 		foreach ($result as $key => $row) {
-	// 			// เพิ่ม ps_id ลงใน array
-	// 			$ps_ids[] = $row->ps_id;
-	// 		}
-
-	// 		// แปลง array เป็นสตริงในรูปแบบ (1,2,3,4,5)
-	// 		$ps_ids_string = '(' . implode(',', $ps_ids) . ')';
-
-	// 		// จากนั้นคุณสามารถใช้ $ps_ids_string ในการ query ได้
-	// 		$result = $this->M_hr_timework_person_plan->get_all_timework_param_data_by_person_id('all', $isPublic, $dp_id, $filter_start_date, $filter_end_date, $ps_ids_string)->result();
-	// 	}
+	/*
+	* encrypt_stuc_id
+	* encrypt รหัสโครงสร้างองค์กร
+	* @input stde_id
+	* $output -
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 28/11/2024
+	*/
+	function encrypt_stuc_id(){
+		echo json_encode(encrypt_id($this->input->post('stuc_id')));
+	}
+	// encrypt_stuc_id
 
 
-	// 	return $result;
-	// }
-	// // get_timework_plan_person_report
+	/*
+	* export_pdf_timework_calendar_by_structure
+	* ส่งออก pdf ตารางการทำงานตามแผนก
+	* @input $isPublic, $actor_type, $dp_id, $filter_start_date, $filter_end_date
+	* $output -
+	* @author Tanadon Tangjaimongkhon
+	* @Create Date 28/11/2024
+	*/
+	function export_pdf_timework_calendar_by_structure($stuc_id, $isPublic, $actor_type, $dp_id, $filter_start_date, $filter_end_date){
+		$this->load->model($this->config->item('ums_dir') . 'M_ums_department');
 
+		$stuc_id = decrypt_id($stuc_id);
+
+		$rs_stuc = $this->M_hr_timework_person_plan->get_structure_detail_by_group_person($stuc_id);
+		$this->M_ums_department->dp_id = $dp_id;
+		$this->M_ums_department->get_by_key(true);
+		$arr = array(); // อาร์เรย์สำหรับเก็บผลลัพธ์ที่จัดรูปแบบ
+		$index = 0;
+
+		foreach ($rs_stuc->result() as $i => $stde) {
+			// ดึงข้อมูล "format_time" ตาม stde_id
+			$stde->format_time = $this->M_hr_timework_person_plan->get_all_timework_param_data_by_stde_id(
+				$stde->stde_id,
+				$isPublic,
+				$actor_type,
+				$dp_id,
+				$filter_start_date,
+				$filter_end_date,
+				"format"
+			);
+
+			// ตรวจสอบว่ามีข้อมูลใน format_time หรือไม่
+			if ($stde->format_time->num_rows() > 0) {
+				$arr[$index]['stde_id'] = $stde->stde_id; // ใส่ stde_id
+				$arr[$index]['stde_name_th'] = $stde->stde_name_th; // ใส่ชื่อแผนก
+
+				foreach ($stde->format_time->result() as $j => $format) {
+					// ดึงข้อมูล format_time
+					$arr[$index]["format_time"][$j]['twac_id'] = $format->twac_id;
+					$arr[$index]["format_time"][$j]['twac_name_th'] = $format->twac_name_th;
+					$arr[$index]["format_time"][$j]['twac_name_abbr_th'] = $format->twac_name_abbr_th;
+					$arr[$index]["format_time"][$j]['twac_start_time'] = $format->twac_start_time;
+					$arr[$index]["format_time"][$j]['twac_end_time'] = $format->twac_end_time;
+
+					// ดึงข้อมูลวันที่ (twac_date) ตาม twac_id
+					$twac_dates = $this->M_hr_timework_person_plan->get_all_timework_date_by_twac_id(
+						$format->twac_id,
+						$isPublic,
+						$actor_type,
+						$dp_id,
+						$filter_start_date,
+						$filter_end_date,
+						"format"
+					);
+
+					// ตรวจสอบว่ามีข้อมูลใน twac_date หรือไม่
+					$arr[$index]["format_time"][$j]['twac_date'] = array();
+					foreach ($twac_dates as $k => $twac_date) {
+						$arr[$index]["format_time"][$j]['twac_date'][$k] = array(
+							'pf_name_abbr' => $twac_date->pf_name_abbr,
+							'ps_fname' => $twac_date->ps_fname,
+							'ps_lname' => $twac_date->ps_lname,
+							'twpp_ps_id' => $twac_date->twpp_ps_id,
+							'twpp_start_date' => $twac_date->twpp_start_date,
+							'twpp_end_date' => $twac_date->twpp_end_date,
+							'twpp_start_time' => $twac_date->twpp_start_time,
+							'twpp_end_time' => $twac_date->twpp_end_time,
+							'rm_name' => $twac_date->rm_name,
+							'twpp_desc' => $twac_date->twpp_desc,
+							'twpp_display_date' => $twac_date->twpp_display_date
+						);
+					}
+				}
+				$index++;
+			}
+		}
+
+		// จัดเก็บผลลัพธ์ในตัวแปร $data เพื่อใช้ในมุมมอง
+		$data['rs_stuc'] = $arr;
+
+		// pre($data['rs_stuc']);
+		// $this->load->view($this->view . 'v_pdf_timework_calendar_by_structure', $data);
+
+		// ดึง HTML จาก view
+		$html = $this->load->view($this->view . 'v_pdf_timework_calendar_by_structure', $data, true);
+
+		// โหลดไลบรารี mPDF
+		require '/var/www/html/seedb/application/third_party/vendor/autoload.php';
+
+		// สร้างอินสแตนซ์ของ mPDF พร้อมตั้งค่ากระดาษเป็นแนวนอน (landscape)
+		$mpdf = new \Mpdf\Mpdf([
+			'format' => 'A4', // กำหนดรูปแบบกระดาษเป็น A4 และแนวนอน
+			'default_font_size' => 12,
+			'default_font' => 'sarabun', // ฟอนต์ Sarabun รองรับภาษาไทย
+			'margin_top' => 30,    // ปรับขอบบน (เพิ่มพื้นที่ให้ Header)
+			'margin_bottom' => 15, // ปรับขอบล่าง (เพิ่มพื้นที่ให้ Footer)
+			'margin_left' => 5,   // ปรับขอบซ้าย
+			'margin_right' => 5,  // ปรับขอบขวา
+		]);
+
+		// ตั้งค่าให้ใช้ฟอนต์ Sarabun ที่ถูกต้อง
+		$mpdf->fontdata['sarabun'] = [
+			'R' => "THSarabunNew.ttf",         // ฟอนต์ปกติ
+			'B' => "THSarabunNew-Bold.ttf",    // ฟอนต์หนา
+			'I' => "THSarabunNew-Italic.ttf",  // ฟอนต์เอียง
+		];
+
+		// กำหนด Header ให้แสดงโลโก้ในทุกหน้า
+		$mpdf->SetHTMLHeader('
+			<div style="text-align: center;">
+				<img src="' . base_url("assets/" . $this->config->item("site_logo")) . '" alt="Logo" width="120">
+			</div>
+		');
+
+		// กำหนด Footer ให้แสดงวันที่อัปเดตข้อมูลและหน่วยงาน
+		$mpdf->SetHTMLFooter('
+			<div style="width: 100%; font-size: 10pt; color: #555;">
+				<div style="float: left; text-align: left; width: 50%;">
+					' . htmlspecialchars($this->M_ums_department->dp_name_th) . '
+				</div>
+				<div style="float: right; text-align: right; width: 50%;">
+					ข้อมูลอัปเดตเมื่อวันที่: ' . abbreDate2(date("Y/m/d")) . '
+				</div>
+			</div>
+		');
+
+
+		// ส่ง HTML ที่โหลดจาก view เข้าไปใน mPDF
+		$mpdf->WriteHTML($html);
+
+		// ส่งออกเป็นไฟล์ PDF
+		$mpdf->Output("ตารางการทำงาน" . '.pdf', 'I'); // 'I' = แสดงผลในเบราว์เซอร์
+		exit;
+
+	}
+	// export_pdf_timework_calendar_by_structure
 
 
 }

@@ -19,6 +19,7 @@ class Da_hr_leave_history_detail extends Hr_model
     public $lhde_end_time;
     public $lhde_num_hour;
     public $lhde_num_minute;
+    public $lhde_sum_minutes;
     public $lhde_type_day;
     public $lhde_seq;
 
@@ -34,9 +35,9 @@ class Da_hr_leave_history_detail extends Hr_model
     {
         // Insert all the relevant fields into the database
         $sql = "INSERT INTO " . $this->hr_db . ".hr_leave_history_detail 
-                (lhde_lhis_id, lhde_clnd_id, lhde_date, lhde_start_time, lhde_end_time, lhde_num_hour, lhde_num_minute, lhde_type_day, lhde_seq)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $this->hr->query($sql, array($this->lhde_lhis_id, $this->lhde_clnd_id, $this->lhde_date, $this->lhde_start_time, $this->lhde_end_time, $this->lhde_num_hour, $this->lhde_num_minute, $this->lhde_type_day, $this->lhde_seq));
+                (lhde_lhis_id, lhde_clnd_id, lhde_date, lhde_start_time, lhde_end_time, lhde_num_hour, lhde_num_minute, lhde_sum_minutes, lhde_type_day, lhde_seq)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $this->hr->query($sql, array($this->lhde_lhis_id, $this->lhde_clnd_id, $this->lhde_date, $this->lhde_start_time, $this->lhde_end_time, $this->lhde_num_hour, $this->lhde_num_minute, $this->lhde_sum_minutes, $this->lhde_type_day, $this->lhde_seq));
         $this->last_insert_id = $this->hr->insert_id();
     }
 
@@ -44,9 +45,9 @@ class Da_hr_leave_history_detail extends Hr_model
     {
         // Update all relevant fields based on the primary key lhde_id
         $sql = "UPDATE " . $this->hr_db . ".hr_leave_history_detail
-				SET lhde_lhis_id=?, lhde_clnd_id=?, lhde_date=?, lhde_start_time=?, lhde_end_time=?, lhde_num_hour=?, lhde_num_minute=?, lhde_type_day=?, lhde_seq=?
+				SET lhde_lhis_id=?, lhde_clnd_id=?, lhde_date=?, lhde_start_time=?, lhde_end_time=?, lhde_num_hour=?, lhde_num_minute=?, lhde_sum_minutes=?, lhde_type_day=?, lhde_seq=?
 				WHERE lhde_id=?";
-        $this->hr->query($sql, array($this->lhde_lhis_id, $this->lhde_clnd_id, $this->lhde_date, $this->lhde_start_time, $this->lhde_end_time, $this->lhde_num_hour, $this->lhde_num_minute, $this->lhde_type_day, $this->lhde_seq, $this->lhde_id));
+        $this->hr->query($sql, array($this->lhde_lhis_id, $this->lhde_clnd_id, $this->lhde_date, $this->lhde_start_time, $this->lhde_end_time, $this->lhde_num_hour, $this->lhde_num_minute, $this->lhde_sum_minutes, $this->lhde_type_day, $this->lhde_seq, $this->lhde_id));
     }
 
     function delete()

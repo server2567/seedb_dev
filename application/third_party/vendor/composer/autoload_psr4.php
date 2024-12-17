@@ -29,4 +29,5 @@ return array(
     'Dompdf\\' => array($vendorDir . '/dompdf/dompdf/src'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
     'Complex\\' => array($vendorDir . '/markbaker/complex/classes/src'),
+    'AgileBM\\ZKLib\\' => array($vendorDir . '/agile-bm/zk-lib/src'),
 );

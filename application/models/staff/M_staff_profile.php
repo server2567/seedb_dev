@@ -62,7 +62,7 @@ class M_staff_profile extends Da_staff_profile
                 LEFT JOIN " . $this->hr_db . ".hr_structure_person AS stdp on ps.ps_id = stdp.stdp_ps_id
                 LEFT JOIN " . $this->hr_db . ".hr_structure_detail AS stde on stde.stde_id = stdp.stdp_stde_id
                 LEFT JOIN " . $this->hr_db . ".hr_structure AS stuc on stuc.stuc_id = stde.stde_stuc_id
-				WHERE $cond AND pos.pos_dp_id = 1 AND stdp.stdp_active = 1
+				WHERE $cond AND pos.pos_dp_id = 1 AND stdp.stdp_active = 1 AND pos.pos_public_display = 1
                 GROUP BY ps.ps_id, pf.pf_name, ps.ps_fname, ps.ps_lname, alp.alp_name, hire.hire_is_medical, psd.psd_picture;";
         $query = $this->hr->query($sql);
         return $query;

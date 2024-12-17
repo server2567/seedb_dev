@@ -363,6 +363,73 @@ class Appointment extends QUE_Controller
 
     $this->output('que/appointment/v_appointment_form_step2', $data);
   }
+
+  public function printcode($apm_visit = '') {
+    $this->load->model('que/M_que_appointment');
+    
+    if ($apm_visit) {
+        // ดึงข้อมูลจากโมเดล
+        $data['get_appointment_by_visit'] = $this->M_que_appointment->get_appointment_by_visit($apm_visit)->result_array();
+        
+        // ตรวจสอบและสร้างโฟลเดอร์ 'uploads/barcodes/' หากไม่มีอยู่
+        // if (!is_dir('uploads/barcodes')) {
+        //     mkdir('uploads/barcodes', 0777, true); // สร้างโฟลเดอร์พร้อมตั้งค่า permissions
+        // }
+
+        // ใช้ Barcode Generator เพื่อสร้างบาร์โค้ด
+        $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+
+        // ข้อมูลสำหรับสร้างบาร์โค้ด (ข้อมูลตามที่คุณให้มา)
+        $raw_data = $data['get_appointment_by_visit'][0]['apm_visit'] . ' ' .
+                        $data['get_appointment_by_visit'][0]['pt_member'] ;
+        $barcode_data = base64_encode($raw_data);
+        // สร้างบาร์โค้ดและบันทึกเป็นไฟล์ PNG
+        $barcode = $generator->getBarcode($barcode_data, $generator::TYPE_CODE_128);
+        $barcode_file = '/var/www/uploads/barcodes/barcode_' . $apm_visit . '.png';
+        $barcode_img = 'barcode_' . $apm_visit . '.png';
+        file_put_contents($barcode_file, $barcode);
+
+        // ส่งข้อมูลไปยัง View พร้อมพาธของรูปภาพบาร์โค้ด
+        $data['barcode_path'] = $barcode_img;
+        $this->output_frontend('que/appointment/v_appointment_printcode', $data);
+    } else {
+        show_error('ไม่พบข้อมูลการเข้ารับบริการ');
+    }
+  }
+
+  public function printtag($apm_visit = '') {
+    $this->load->model('que/M_que_appointment');
+    
+    if ($apm_visit) {
+        // ดึงข้อมูลจากโมเดล
+        $data['get_appointment_by_visit'] = $this->M_que_appointment->get_appointment_by_visit($apm_visit)->result_array();
+        
+        // ตรวจสอบและสร้างโฟลเดอร์ 'uploads/barcodes/' หากไม่มีอยู่
+        // if (!is_dir('uploads/barcodes')) {
+        //     mkdir('uploads/barcodes', 0777, true); // สร้างโฟลเดอร์พร้อมตั้งค่า permissions
+        // }
+
+        // ใช้ Barcode Generator เพื่อสร้างบาร์โค้ด
+        $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+
+        // ข้อมูลสำหรับสร้างบาร์โค้ด (ข้อมูลตามที่คุณให้มา)
+        $raw_data = $data['get_appointment_by_visit'][0]['apm_visit'] . ' ' .
+                        $data['get_appointment_by_visit'][0]['pt_member'] ;
+        $barcode_data = base64_encode($raw_data);
+        // สร้างบาร์โค้ดและบันทึกเป็นไฟล์ PNG
+        $barcode = $generator->getBarcode($barcode_data, $generator::TYPE_CODE_128);
+        $barcode_file = '/var/www/uploads/barcodes/barcode_' . $apm_visit . '.png';
+        $barcode_img = 'barcode_' . $apm_visit . '.png';
+        file_put_contents($barcode_file, $barcode);
+
+        // ส่งข้อมูลไปยัง View พร้อมพาธของรูปภาพบาร์โค้ด
+        $data['barcode_path'] = $barcode_img;
+        $this->output_frontend('que/appointment/v_appointment_printtag', $data);
+    } else {
+        show_error('ไม่พบข้อมูลการเข้ารับบริการ');
+    }
+  }
+
   private function roundToNearest30Minutes($time)
   {
     $timestamp = strtotime($time);

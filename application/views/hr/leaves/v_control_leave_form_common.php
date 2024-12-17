@@ -47,18 +47,19 @@
                         if ($action_code == "add") {
                             $url = site_url() . "/" . $controller_dir . "control_leaves/control_leave_store"; 
                         } else if ($action_code == "update") {
-                            $url = site_url() . "/" . $controller_dir . "control_leaves/control_leave_update_store/" . $leave_control['ctrl_id']; 
+                            $url = site_url() . "/" . $controller_dir . "control_leaves/control_leave_update_store/" . encrypt_id($leave_control['ctrl_id']); 
                         }
+                                    
                         ?>
                     <!-- <form id="leaves_form_input" class="needs-validation novalidate" method="post" action="<?php // echo $url; ?>"> -->
                     <!-- <form id="leaves_form_input" method="post" action="<? //echo $url; ?>"> -->
                     <form id="leaves_form_input" class="needs-validation was-validated" novalidate="" method="post" action="<?= $url; ?>">
                         <div class="row mt-3">
-                            <div class="col-md-3 text-start"><label for="ctrl_hire_id" class="form-label">สายงาน</label></div>
+                            <div class="col-md-3 text-start"><label for="ctrl_hire_id" class="form-label">สายปฏิบัติงาน</label></div>
                             <div class="col-md-4">
                                 <select name="ctrl_hire_id" class="select2" id="ctrl_hire_id">
-                                    <option value="-1" disabled>-- เลือกสายงาน --</option>
-                                    <?php 
+                                    <option value="-1" disabled>-- เลือกสายปฏิบัติงาน --</option>
+                                    <!-- <?php 
                                         foreach ($hire_is_medical as $h) {
                                             if ($action_code == 'update') {
                                                 if ($h['code'] == $leave_control['code']) {
@@ -69,6 +70,31 @@
                                             } else {
                                                 echo "<option value=".$h['code'].">".$h['detail']."</option>";
                                             }
+                                        }
+                                    ?> -->
+                                    <?php
+                                        // Assuming $hire_is_medical is already available as an array
+                                        $medical_types = [
+                                            'M'  => 'สายการแพทย์',
+                                            'N'  => 'สายการพยาบาล',
+                                            'SM' => 'สายสนับสนุนทางการแพทย์',
+                                            'T'  => 'สายเทคนิคและบริการ',
+                                            'A'  => 'สายบริหาร'
+                                        ];
+
+                                        // Loop through hire_is_medical and display corresponding options
+                                        foreach ($this->session->userdata('hr_hire_is_medical') as $value) {
+                                            $type = $value['type'];
+                                            $selected = "";
+                                            if ($action_code == 'update') {
+                                                if ($type == $leave_control['ctrl_hire_id']) {
+                                                    $selected = "selected";
+                                                }
+                                                else{
+                                                    $selected = "";
+                                                }
+                                            }
+                                            echo '<option value="' . $type . '" '.$selected.'>' . $medical_types[$type] . '</option>';
                                         }
                                     ?>
                                 </select>
@@ -123,12 +149,12 @@
                             <div class="col-md-2">
                                 <?php if ($action_code == 'update') { ?>
                                     <div class="input-group">
-                                        <input max=99 value="<?= $leave_control['ctrl_start_age_m']; ?>" name="ctrl_start_age_m" required min="0" type="number" class="form-control">
+                                        <input max=11 value="<?= $leave_control['ctrl_start_age_m']; ?>" name="ctrl_start_age_m" required min="0" type="number" class="form-control">
                                         <span class="input-group-text" id="basic-addon2">เดือน</span>
                                     </div>
                                 <?php } else { ?>
                                     <div class="input-group">
-                                        <input max=99 value=0 name="ctrl_start_age_m" required min="0" type="number" class="form-control">
+                                        <input max=11 value=0 name="ctrl_start_age_m" required min="0" type="number" class="form-control">
                                         <span class="input-group-text" id="basic-addon2">เดือน</span>
                                     </div>
                                 <?php } ?>
@@ -139,12 +165,14 @@
                             <div class="col-md-2">
                                 <?php if ($action_code == 'update') { ?>
                                     <div class="input-group">
-                                        <input max=99 value="<?= $leave_control['ctrl_start_age_d']; ?>" name="ctrl_start_age_d" required min="0" type="number" class="form-control">
+                                        <input max=29 value="<?= $leave_control['ctrl_start_age_d']; ?>" name="ctrl_start_age_d" required min="0" type="number" class="form-control">
+                                        <!-- <input max=99 value="<?= $leave_control['ctrl_start_age_d']; ?>" name="ctrl_start_age_d" required min="0" type="number" class="form-control"> -->
                                         <span class="input-group-text" id="basic-addon2">วัน</span>
                                     </div>
                                 <?php } else { ?>
                                     <div class="input-group">
-                                        <input max=99 value=0 name="ctrl_start_age_d" required min="0" type="number" class="form-control">
+                                        <input max=29 value=0 name="ctrl_start_age_d" required min="0" type="number" class="form-control">
+                                        <!-- <input max=99 value=0 name="ctrl_start_age_d" required min="0" type="number" class="form-control"> -->
                                         <span class="input-group-text" id="basic-addon2">วัน</span>
                                     </div>
                                 <?php } ?>
@@ -190,12 +218,14 @@
                             <div class="col-md-2">
                                 <?php if ($action_code == 'update') { ?>
                                     <div class="input-group">
-                                        <input max=99 value="<?= $leave_control['ctrl_end_age_d']; ?>" name="ctrl_end_age_d" required min="0" type="number" class="form-control">
+                                        <input max=30 value="<?= $leave_control['ctrl_end_age_d']; ?>" name="ctrl_end_age_d" required min="0" type="number" class="form-control">
+                                        <!-- <input max=99 value="<?= $leave_control['ctrl_end_age_d']; ?>" name="ctrl_end_age_d" required min="0" type="number" class="form-control"> -->
                                         <span class="input-group-text" id="basic-addon2">วัน</span>
                                     </div>
                                 <?php } else { ?>
                                     <div class="input-group">
-                                        <input max=99 value=0 name="ctrl_end_age_d" required min="0" type="number" class="form-control">
+                                        <input max=30 value=0 name="ctrl_end_age_d" required min="0" type="number" class="form-control">
+                                        <!-- <input max=99 value=0 name="ctrl_end_age_d" required min="0" type="number" class="form-control"> -->
                                         <span class="input-group-text" id="basic-addon2">วัน</span>
                                     </div>
                                 <?php } ?>
@@ -216,7 +246,7 @@
                                         class="form-control">
                                         <!-- onload="checkIsSettedUnlimited('ctrl_time_per_year', this.value)" > -->
                                 <?php } else { ?>
-                                    <input value=0 id="ctrl_time_per_year" min="0" type="number"  
+                                    <input value="-99" id="ctrl_time_per_year" min="0" type="number"  
                                         name="ctrl_time_per_year" 
                                         class="form-control">
                                 <?php } ?>
@@ -264,6 +294,35 @@
                                 <label for="" class="form-label">ไม่จำกัด</label>
                             </div>
                         </div>
+                        <div class="row mt-3">
+                            <div class="col-md-3 "><label for="ctrl_hour_per_year" class="form-label">จำนวนชั่วโมงที่ลาได้ต่อปี</label></div>
+                            <div class="col-md-8">
+                                <?php if($action_code == "update") { ?>
+                                    <input value="<?= $leave_control['ctrl_hour_per_year']; ?>" min="0" type="number" id="ctrl_hour_per_year" name="ctrl_hour_per_year" class="form-control">
+                                <?php } else { ?>
+                                    <input value=0 min="0" type="number" id="ctrl_hour_per_year" name="ctrl_hour_per_year" class="form-control">
+                                <?php } ?>
+                            </div>
+                            <div class="col-md-1">
+                                <input type="checkbox" class="form-check-input"  id="set_unlimited_ctrl_hour_per_year" onclick="changeInputUI('ctrl_hour_per_year', this.checked)" >
+                                <label for="" class="form-label">ไม่จำกัด</label>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-3 "><label for="ctrl_minute_per_year" class="form-label">จำนวนนาทีที่ลาได้ต่อปี</label></div>
+                            <div class="col-md-8">
+                                <?php if($action_code == "update") { ?>
+                                    <input value="<?= $leave_control['ctrl_minute_per_year']; ?>" min="0" type="number" id="ctrl_minute_per_year" name="ctrl_minute_per_year" class="form-control">
+                                <?php } else { ?>
+                                    <input value=0 min="0" type="number" id="ctrl_minute_per_year" name="ctrl_minute_per_year" class="form-control">
+                                <?php } ?>
+                            </div>
+                            <div class="col-md-1">
+                                <input type="checkbox" class="form-check-input"  id="set_unlimited_ctrl_minute_per_year" onclick="changeInputUI('ctrl_minute_per_year', this.checked)" >
+                                <label for="" class="form-label">ไม่จำกัด</label>
+                            </div>
+                        </div>
+                        
                         <div class="row mt-3">
                             <div class="col-md-3 "><label for="ctrl_date_per_time" class="form-label">จำนวนวันที่ลาได้ในแต่ละครั้ง</label></div>
                             <div class="col-md-8">
@@ -387,23 +446,23 @@
                         </div>
                         <div class="row mt-3">
                             <div class="col-md-3">
-                                <label for="">ประเภทของพนักงานที่สามารถใช้ข้อมูลควบคุมวันลานี้ได้</label>
+                                <label for="">ประเภทบุคลากร</label>
                             </div>
                             <div class="col-md-9">
                             <?php if ($action_code == "update") { ?>
                                     <?php if ($leave_control['ctrl_hire_type'] == '1') { ?>
-                                        <input required checked="true" value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">เต็มเวลา</label>&nbsp;&nbsp;&nbsp;
-                                        <input value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">บางเวลา</label>
+                                        <input required checked="true" value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">ปฏิบัติงานเต็มเวลา (Full-Time)</label>&nbsp;&nbsp;&nbsp;
+                                        <input value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">ปฏิบัติงานบางเวลา (Part-Time)</label>
                                     <?php } else if ($leave_control['ctrl_hire_type'] == '2')  { ?>
-                                        <input required value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">เต็มเวลา</label>&nbsp;&nbsp;&nbsp;
-                                        <input checked="true"  value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">บางเวลา</label>
+                                        <input required value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">ปฏิบัติงานเต็มเวลา (Full-Time)</label>&nbsp;&nbsp;&nbsp;
+                                        <input checked="true"  value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">ปฏิบัติงานบางเวลา (Part-Time)</label>
                                     <?php } else { ?>
-                                        <input required value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">เต็มเวลา</label>&nbsp;&nbsp;&nbsp;
-                                        <input value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">บางเวลา</label>
+                                        <input required value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">ปฏิบัติงานเต็มเวลา (Full-Time)</label>&nbsp;&nbsp;&nbsp;
+                                        <input value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">ปฏิบัติงานบางเวลา (Part-Time)</label>
                                     <?php } ?>
                                     <?php } else { ?>
-                                        <input checked="true" required value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">เต็มเวลา</label>&nbsp;&nbsp;&nbsp;
-                                        <input value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">บางเวลา</label>
+                                        <input checked="true" required value="1" type="radio" class="form-check-input" name="ctrl_hire_type"><label for="">ปฏิบัติงานเต็มเวลา (Full-Time)</label>&nbsp;&nbsp;&nbsp;
+                                        <input value="2" type="radio" name="ctrl_hire_type" class="form-check-input"><label for="" class="form-label">ปฏิบัติงานบางเวลา (Part-Time)</label>
                                     <?php } ?>
                             </div>
                         </div>
@@ -429,8 +488,8 @@
         let inputElement = document.getElementById(targetInputElementId);
         let checkboxElement = document.getElementById(targetCheckboxElementId);
 
-        console.log(inputElement.value);
-        console.log(checkboxElement.checked);
+        // console.log(inputElement.value);
+        // console.log(checkboxElement.checked);
 
         if (Number(inputElement.value) == -99) {
             checkboxElement.checked = true;
@@ -441,6 +500,8 @@
     }
     checkIsSettedUnlimited('ctrl_time_per_year', 'set_unlimited_ctrl_time_per_year');
     checkIsSettedUnlimited('ctrl_day_per_year', 'set_unlimited_ctrl_day_per_year');
+    checkIsSettedUnlimited('ctrl_hour_per_year', 'set_unlimited_ctrl_hour_per_year');
+    checkIsSettedUnlimited('ctrl_minute_per_year', 'set_unlimited_ctrl_minute_per_year');
     checkIsSettedUnlimited('ctrl_date_per_time', 'set_unlimited_ctrl_date_per_time');
     checkIsSettedUnlimited('ctrl_day_before', 'set_unlimited_ctrl_day_before');
     checkIsSettedUnlimited('ctrl_day_after', 'set_unlimited_ctrl_day_after');
@@ -450,7 +511,7 @@
         // console.log(targetInputElementId);
         // console.log(checked);
         // console.log(element.style.color);
-
+        
         if (checked) {
             element.style.color = "transparent";
             element.value = -99;

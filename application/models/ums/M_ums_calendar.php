@@ -174,16 +174,28 @@ class m_ums_calendar extends Da_ums_calendar
 				twpp.twpp_id AS clnd_id,
 				twpp.twpp_ps_id AS clnd_ps_id,
 				CONCAT(
-					CONVERT(rm.rm_name USING utf8mb4),
-					' ',
-					CONVERT(bd.bd_name USING utf8mb4)
+					IF(
+						twpp.twpp_twac_id != 0,
+						twac.twac_name_th,
+						'วันหยุด (OFF)'
+					)
 				) AS clnd_name,
 				CONCAT(
+					IF(
+						twpp.twpp_rm_id != 0,
+						CONCAT(
 					CONVERT(twac.twac_name_th USING utf8mb4),
-					'\nสถานที่: ', CONVERT(rm.rm_name USING utf8mb4),
-					'\nหน่วยงาน: ', CONVERT(bd.bd_name USING utf8mb4)
+							'\nสถานที่: ',
+							CONVERT(rm.rm_name USING utf8mb4),
+							'\nหน่วยงาน: ',
+							CONVERT(bd.bd_name USING utf8mb4)
+						),
+						CONCAT(
+							'\nสถานที่: ',
+							CONVERT(dp.dp_name_th USING utf8mb4)
+						)
+					)
 				) AS clnd_detail,
-
 				twpp.twpp_start_date AS clnd_start_date, 
 				twpp.twpp_end_date AS clnd_end_date, 
 				twpp.twpp_start_time AS clnd_start_time, 
@@ -208,8 +220,10 @@ class m_ums_calendar extends Da_ums_calendar
 				ON pos.pos_hire_id = hire.hire_id
 			LEFT JOIN ".$this->ums_db.".ums_calendar_type AS clt 
 				ON clt.clt_id = IF(hire.hire_is_medical = 'M', 3, 2)
+			LEFT JOIN ".$this->ums_db.".ums_department AS dp 
+				ON dp.dp_id = twpp.twpp_dp_id
 			
-			WHERE twpp.twpp_start_date >= '{$start_date}' AND twpp.twpp_end_date <= '{$end_date}' AND twpp.twpp_status = 'S'
+			WHERE twpp.twpp_start_date >= '{$start_date}' AND twpp.twpp_end_date <= '{$end_date}' AND twpp.twpp_status = 'S' AND twpp.twpp_is_public = 0
 				AND twpp.twpp_ps_id = {$ps_id} AND pos.pos_dp_id = ".$this->session->userdata('us_dp_id')."
 
 			UNION
@@ -372,8 +386,10 @@ class m_ums_calendar extends Da_ums_calendar
 					ON pos.pos_hire_id = hire.hire_id
 				LEFT JOIN ".$this->ums_db.".ums_calendar_type AS clt 
 					ON clt.clt_id = IF(hire.hire_is_medical = 'M', 3, 2)
+				LEFT JOIN ".$this->ums_db.".ums_department AS dp 
+					ON dp.dp_id = twpp.twpp_dp_id
 			
-				WHERE twpp.twpp_start_date >= '{$start_date}' AND twpp.twpp_end_date <= '{$end_date}'  AND twpp.twpp_status = 'S'
+				WHERE twpp.twpp_start_date >= '{$start_date}' AND twpp.twpp_end_date <= '{$end_date}'  AND twpp.twpp_status = 'S' AND twpp.twpp_is_public = 0
 					AND twpp.twpp_ps_id = ".$this->session->userdata('us_ps_id')." AND pos.pos_dp_id = ".$this->session->userdata('us_dp_id')."
 				GROUP BY id
 

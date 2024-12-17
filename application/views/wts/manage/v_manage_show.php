@@ -1,4 +1,5 @@
 <?php
+// dev
 	function DateThai($strDate)
 	{
 		$strYear = date("Y",strtotime($strDate))+543;
@@ -595,7 +596,7 @@ function updateDataTable() {
         }
     });
     
-    // resetInterval(); // Initial call to set the interval
+    resetInterval(); // Initial call to set the interval
 }
 
 let refreshInterval;
@@ -817,8 +818,8 @@ function gotoSeeDoctor(url) {
         type: 'POST',
         data: { sta_id: sta_id },
         success: function(response) {
-            var data = JSON.parse(response);
-            if (data.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
+            // var data = JSON.parse(response);
+            if (response.status_response == "<?php echo $this->config->item('status_response_success'); ?>") {
                 Swal.fire({
                     title: 'เรียกพบแพทย์เสร็จสิ้น',
                     text: '',
@@ -829,9 +830,9 @@ function gotoSeeDoctor(url) {
                     },
                 }).then(() => {
                     // goto AMS noti_result
-                    if (data.returnUrl) {
-                        // window.location.href = data.returnUrl;
-                        showModalNtr(data.returnUrl)
+                    if (response.returnUrl) {
+                        // window.location.href = response.returnUrl;
+                        showModalNtr(response.returnUrl)
                         // $('#dataTable').DataTable().ajax.reload(null, false); // false to stay on the current page
                     }
                     else 
@@ -860,7 +861,7 @@ function gotoSeeDoctor(url) {
     let url_temp = '';
     let is_first_load_exr = true;
     function showModalNtr(url) {
-        console.log("url manage : ",url)
+        // console.log("url manage : ",url)
         url_temp = url;
         // window.location.href = url;
         // $('#notification-result-data').empty();

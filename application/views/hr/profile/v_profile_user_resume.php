@@ -68,11 +68,9 @@
                                     <input type="text" class="form-control" name="psd_id_card_no" id="psd_id_card_no" placeholder="เลขบัตรประชาชน" value="<?php echo isset($row_profile) ? $row_profile->psd_id_card_no : ""; ?>" required>
                                 </div>
                                 <div class="col-md-6 mt-2">
-                              
 
                                     <label for="psd_birthdate" class="form-label required">วันเกิด</label>
                                     <input type="text" class="form-control" name="psd_birthdate" id="psd_birthdate" value="" placeholder="วันเกิด">
-
                                 </div>
                                 <div class="col-md-6 mt-2">
                                     <label for="psd_blood_id" class="form-label">หมู่เลือด</label>

@@ -96,7 +96,7 @@ class Manage_queue_trello extends WTS_Controller
 
 		$this->load->model('eqs/m_eqs_room');
 		$data['rooms'] = $this->m_eqs_room->get_all_by_rm_bdtype_id(2)->result_array(); // 2 = ห้องทำงาน
-
+		
 		$data['get_doctors'] = $unique_doctors; // for gen card doctors
 
 		// encrypt id ddl
@@ -123,6 +123,7 @@ class Manage_queue_trello extends WTS_Controller
 	*/
 	public function floor()
 	{
+    
 		$data['view_dir'] = $this->view_dir;
 
 		$wts_floor_of_manage_queue = $this->session->userdata('wts_floor_of_manage_queue');
@@ -139,6 +140,11 @@ class Manage_queue_trello extends WTS_Controller
 		$selected_departments = $this->session->userdata('selected_departments'); // This is an array of department IDs
 		$data['departments'] = !empty($selected_departments) ? $selected_departments : [];
 
+    if (!empty($data['departments']) && $data['departments'][0] == $this->config->item('wts_finance')) {
+      redirect('wts/Manage_queue_finance_medicine/finance');
+    } else if (!empty($data['departments']) && $data['departments'][0] == $this->config->item('wts_medicine')) {
+      redirect('wts/Manage_queue_finance_medicine/medicine');
+    }
 
 		$this->load->model('eqs/m_eqs_room');
 		$rooms = $this->m_eqs_room->get_all_by_rm_bdtype_id(2)->result_array();
@@ -146,14 +152,15 @@ class Manage_queue_trello extends WTS_Controller
 		$filtered_rooms = array_filter($rooms, function ($room) {
 			return !empty($room['rm_stde_id']);
 		});
-		$data['rooms'] = $filtered_rooms = array_values($filtered_rooms);
 
+		$data['rooms'] = $filtered_rooms = array_values($filtered_rooms);
+		
 		// Get all doctors for create cards
 		$this->load->model('que/m_que_appointment');
-		$doctors = $this->m_que_appointment->get_doctors_by_department_que('66')->result_array();
+		$doctors = $this->m_que_appointment->get_doctors_by_department_que()->result_array();
 		// pre($doctors); die;
 		$data['dep'] = $this->m_que_appointment->get_department_que_appointment()->result_array();
-		// pre($data['dep']);
+
 		// Step 1: Extract the specific key values from the array
 		$doctor_ids = array_column($doctors, 'ps_id');
 		// Step 2: Use array_unique to remove duplicate values
@@ -193,7 +200,7 @@ class Manage_queue_trello extends WTS_Controller
 		usort($data['get_doctors'], function($a, $b) {
 			return $a['rm_id'] <=> $b['rm_id']; // เรียงจากน้อยไปมาก
 		});
-		// pre($data['departments']); die;
+		// pre($data['get_doctors']); die;
 		$data['session_mn_active_url'] = $this->uri->segment(1) . '/' . $this->uri->segment(2); // set session_mn_active_url / breadcrumb
 		$data['status_response'] = $this->config->item('status_response_show');
 		$this->output('wts/manage/trello/v_manage_trello_floor_show', $data);
@@ -250,8 +257,8 @@ class Manage_queue_trello extends WTS_Controller
 	*/
 	public function Manage_queue_trello_get_doctors()
 	{
+		$us_dp_id = $this->session->userdata('us_dp_id');
 		// $department = decrypt_id(trim($this->input->post('department')));
-
 		$date = $this->input->post('date');
 		if (empty($date)) {
 			$date = date('Y-m-d');
@@ -291,7 +298,11 @@ class Manage_queue_trello extends WTS_Controller
 		];
 
 		$this->load->model('que/m_que_appointment');
-		$doctors = $this->m_que_appointment->get_doctors_trello_wts($params);
+		if($us_dp_id == '2'){
+			$doctors = $this->m_que_appointment->get_doctors_trello_wts_clinic($params);
+		}else{
+			$doctors = $this->m_que_appointment->get_doctors_trello_wts($params);
+		}
 
 		$response = [
 			'doctors' => $doctors,
@@ -399,6 +410,7 @@ class Manage_queue_trello extends WTS_Controller
 
 		$this->load->model('eqs/m_eqs_room');
 		$rooms = $this->m_eqs_room->get_room_by_floor($floor)->result_array();
+
 		$filtered_rooms = array_filter($rooms, function ($room) {
 			return $room['rm_bdtype_id'] == 2 && !empty($room['rm_stde_id']);
 		});
@@ -629,6 +641,9 @@ class Manage_queue_trello extends WTS_Controller
 	}
 	public function Manage_queue_trello_get_ques()
 	{
+		// pre($this->session->userdata('us_dp_id'));
+		// die();
+		$us_dp_id = $this->session->userdata('us_dp_id');
 		$date = $this->input->post('date');
 		if (empty($date)) {
 			$date = date('Y-m-d');
@@ -682,7 +697,12 @@ class Manage_queue_trello extends WTS_Controller
 	
 		// ดึงข้อมูลการนัดหมาย
 		$this->load->model('que/m_que_appointment');
-		$result = $this->m_que_appointment->get_appointment_trello_wts($params);
+		if($us_dp_id == '2'){
+			$result = $this->m_que_appointment->get_appointment_trello_wts_clinic($params);
+		}else{
+			$result = $this->m_que_appointment->get_appointment_trello_wts($params);
+		}
+		
 		// ประกาศ array สำหรับ task
 		$tasks = [];
 		foreach ($result as $task) {
@@ -716,7 +736,8 @@ class Manage_queue_trello extends WTS_Controller
 				$status_text = "กำลังพบแพทย์";
 				$status_class = "text-info";
 				$btn_url = site_url('wts/Manage_queue/Manage_queue_result_info/0') . '/' . $encrypted_id;
-				$btn = '<button class="btn btn-success btn-see-doctor ms-1 tooltips p-0 ps-2 pe-2" title="พบแพทย์เสร็จสิ้น" onclick="goto_see_doctor(\'' . base_url() . 'index.php/wts/Manage_queue_trello/Manage_queue_trello_success/' . $encrypted_id . '\', 10)"><i class="bi-person-fill-check font-20"></i></button>'
+				$btn = '<button class="btn btn-dark ms-1 tooltips" title="ย้อนกลับ" onclick="rollback_status(\'' . $task['apm_id'] . '\')"><i class="bi-arrow-counterclockwise"></i></button>';
+				$btn .= '<button class="btn btn-success btn-see-doctor ms-1 tooltips p-0 ps-2 pe-2" title="พบแพทย์เสร็จสิ้น" onclick="goto_see_doctor(\'' . base_url() . 'index.php/wts/Manage_queue_trello/Manage_queue_trello_success/' . $encrypted_id . '\', 10)"><i class="bi-person-fill-check font-20"></i></button>'
 					. '<button class="btn btn-warning ms-1 tooltips" title="แก้ไขเครื่องมือหัตถการ" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-pencil-square"></i></button>';
 				// $btn = '<button class="btn btn-info me-1" title="ข้อมูลการนัดหมาย" onclick="showModalApm(\'' . $btn_apm_url . '\')"><i class="bi-search"></i></button>';
 			} elseif ($apm_sta_id == 11) {
@@ -740,11 +761,12 @@ class Manage_queue_trello extends WTS_Controller
 				$status_text = "ยกเลิกนัดหมาย";
 				$status_class = "text-danger";
 				$btn = '<button class="btn btn-info ms-1 tooltips" title="ข้อมูลการนัดหมาย" onclick="showModalApm(\'' . $btn_apm_url . '\')"><i class="bi-search"></i></button>';
-			} elseif (in_array($apm_sta_id, [5, 10])) {
+			} elseif ($apm_sta_id == 10) {
 				$status_text = "พบแพทย์เสร็จแล้ว";
 				$status_class = "text-success";
 				$btn_url = site_url('wts/Manage_queue/Manage_queue_result_info/1') . '/' . $encrypted_id;
-				$btn = '<button class="btn btn-outline-info ms-1 tooltips" title="ดูรายละเอียด" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-search"></i></button>';
+				$btn = '<button class="btn btn-dark ms-1 tooltips" title="ย้อนกลับ" onclick="rollback_status(\'' . $task['apm_id'] . '\')"><i class="bi-arrow-counterclockwise"></i></button>'
+				. '<button class="btn btn-outline-info ms-1 tooltips" title="ดูรายละเอียด" onclick="showModalNtr(\'' . $btn_url . '\')"><i class="bi-search"></i></button>';
 			} elseif ($apm_sta_id == 13) {
 				$status_text = "คัดกรองผู้ป่วย";
 				$status_class = "text-info";
@@ -756,11 +778,12 @@ class Manage_queue_trello extends WTS_Controller
 			// จัดเก็บข้อมูล task
 			$tasks[] = [
 				'apm_id' => $encrypted_id,
-				 'apm_anounce_id' => $task['apm_id'],
+				'apm_anounce_id' => $task['apm_id'],
 				'apm_ps_id' => $task['apm_ps_id'],
 				'apm_visit' => $task['apm_visit'],
 				'apm_ql_code' => $task['apm_ql_code'],
 				'apm_sta_id' => $task['apm_sta_id'],
+				'apm_ps_active' => $task['apm_ps_active'],
 				'status_text' => $status_text,
 				'status_class' => $status_class,
 				'pt_member' => $task['pt_member'],
@@ -1081,6 +1104,7 @@ private function formatBytes($size, $precision = 2) {
 								}
 						}
 					}
+          
 				}
 			}
 		}
@@ -1126,8 +1150,10 @@ private function formatBytes($size, $precision = 2) {
 	*/
 	public function Manage_queue_trello_update_room()
 	{
+		$us_dp_id = $this->session->userdata('us_dp_id');
 		$psrm_id = $this->input->post('psrm_id');
 		$psrm_rm_id = $this->input->post('psrm_rm_id');
+		$floor = $this->input->post('floor');
 
 		$this->load->model('hr/m_hr_person_room');
 		$this->m_hr_person_room->psrm_rm_id = $psrm_rm_id;
@@ -1165,11 +1191,17 @@ private function formatBytes($size, $precision = 2) {
 				// 'department' => decrypt_id(trim($this->input->post('department'))),
 				'doctor' => $psrm_ps_id,
 				'is_null_ps_id' => false,
+				'floor' => $floor
 			];
 
 			$this->load->model('wts/m_wts_queue_seq');
 			$this->load->model('que/m_que_appointment');
-			$result = $this->m_que_appointment->get_appointment_trello_wts($params);
+			if($us_dp_id == '2'){
+				$result = $this->m_que_appointment->get_appointment_trello_wts_clinic($params);
+			}else{
+				$result = $this->m_que_appointment->get_appointment_trello_wts($params);
+			}
+			
 			foreach ($result as $index => $apm) {
 				$this->m_wts_queue_seq->qus_psrm_id = $psrm_id;
 				$this->m_wts_queue_seq->qus_apm_id = $apm['apm_id'];
@@ -1236,6 +1268,7 @@ private function formatBytes($size, $precision = 2) {
 	*/
 	public function Manage_queue_trello_success($apm_id)
 	{
+		header('Content-Type: application/json');
 		$apm_id = decrypt_id($apm_id);
 		// pre($apm_id); die;
 		$apm_sta_id = !empty($this->input->post('sta_id')) ? $this->input->post('sta_id') : 10; // 10 - 'F' พบแพทย์เสร็จแล้ว
@@ -1471,13 +1504,16 @@ private function formatBytes($size, $precision = 2) {
           $update_data = array(
               'ntdp_date_finish' => date('Y-m-d'),
               'ntdp_time_finish' => date('H:i:s'),
-              'ntdp_in_out' => 1,
+              'ntdp_in_out' => 0,
               'ntdp_function' => 'update_finished_process'
           );
 
           // ทำการอัปเดตข้อมูลโดยใช้ ntdp_id ที่ได้จากการ Query
           $this->db->where('ntdp_id', $ntdp_data->ntdp_id);
           $this->db->update('see_wtsdb.wts_notifications_department', $update_data);
+
+          
+
 
           echo "Update successful.";
       } else {
@@ -1503,10 +1539,95 @@ private function formatBytes($size, $precision = 2) {
 	}
 	public function update_doctor_apm(){
 		$this->load->model('que/m_que_appointment');
-		$this->m_que_appointment->apm_id = decrypt_id($this->input->post('apm_id'));
-		$this->m_que_appointment->apm_ps_id = $this->input->post('ps_id');
-		// pre($this->m_que_appointment->apm_ps_id);
-		// pre($this->m_que_appointment->apm_id);
-		$this->m_que_appointment->update_doctor_by_id();
+
+		// รับค่า apm_id ที่ส่งมาจากการ POST และถอดรหัสถ้าจำเป็น
+		$apm_id = decrypt_id($this->input->post('apm_id'));
+		$apm_app_walk = $this->input->post('apm_app_walk');
+		if (empty($apm_id)) {
+			$apm_id = $this->input->post('apm_id');
+			$this->m_que_appointment->apm_id = $apm_id;
+		} else {
+			$this->m_que_appointment->apm_id = $apm_id;
+		}
+	
+		// กำหนดค่า ps_id เป็น NULL หากไม่ได้ส่งค่าหรือส่ง 'null' มา
+		$ps_id = $this->input->post('ps_id');
+		$this->m_que_appointment->apm_ps_id = ($ps_id === null || $ps_id === 'null' || $ps_id === '') ? null : $ps_id;
+	
+		// เรียกใช้งานโมเดลเพื่ออัปเดตข้อมูล
+		if(empty($apm_app_walk)){
+			$this->m_que_appointment->update_doctor_by_id();
+		}else{
+			$this->m_que_appointment->apm_app_walk = $apm_app_walk;
+			$this->m_que_appointment->update_doctor_appwalk_que();
+			$this->m_que_appointment->update_apmwalk_seq();
+		}
+		
+		$get_person = $this->db->query("SELECT * FROM see_hrdb.hr_person LEFT JOIN see_hrdb.hr_base_prefix ON pf_id = ps_pf_id WHERE ps_id = '".$this->input->post('ps_id')."'")->result_array();
+		$appointment_dep = $this->m_que_appointment->get_appointment_by_id($apm_id)->result_array();
+		$pdo = $this->connect_his_database();
+
+      // ตรวจสอบว่ามีข้อมูล visit อยู่ใน tabDoctorRoom หรือไม่
+      $sql = "SELECT * FROM tabEditDoctor WHERE visit = :visit";
+      $check_visit = $pdo->prepare($sql);
+      $check_visit->bindParam(':visit', $appointment_dep[0]['apm_visit']);
+      $check_visit->execute();
+      // echo $appointment_dep[0]['apm_visit']
+      // pre($check_visit);
+      // ถ้าไม่พบข้อมูล visit
+      // if ($check_visit->rowCount() == 0) {
+        // Prepare SQL query outside the loop
+        $sql = "INSERT INTO tabEditDoctor (visit, department,ps_fname,ps_lname) 
+        VALUES (:visit, :department, :ps_fname, :ps_lname)";
+        $stmt = $pdo->prepare($sql);
+        $ps_fname = $get_person[0]['pf_name_abbr'].''.$get_person[0]['ps_fname'];
+        $stmt->bindParam(':visit', $appointment_dep[0]['apm_visit']);
+        $stmt->bindParam(':department', $appointment_dep[0]['stde_name_th']);
+        $stmt->bindParam(':ps_fname', $ps_fname);
+        $stmt->bindParam(':ps_lname', $get_person[0]['ps_lname']);
+        
+        // Execute the query for each room
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            // Handle exception if needed
+            echo "Error: " . $e->getMessage();
+        }
+      // }
+
+
+	}
+	
+	public function rollback_process() {
+		$apm_id = $this->input->post('apm_id');
+		$this->load->model('que/m_que_appointment');
+	
+		try {
+			$result = $this->m_que_appointment->update_rollback_process($apm_id);
+			if ($result) {
+				echo json_encode(['status' => 'success', 'message' => 'Rollback completed successfully']);
+			} else {
+				echo json_encode(['status' => 'error', 'message' => 'No rows affected, please check the apm_id']);
+			}
+		} catch (Exception $e) {
+			// ส่ง error กลับไปยัง JavaScript
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => 'An error occurred: ' . $e->getMessage()]);
+		}
+	}
+	
+	public function get_all_que() {
+		$apm_date = $this->input->post('apm_date'); // รับวันที่จาก AJAX
+		$this->load->model('que/m_que_appointment');
+		
+		// เรียกใช้ฟังก์ชันใน Model เพื่อดึงข้อมูล
+		$result = $this->m_que_appointment->count_all_que($apm_date);
+	
+		// ตรวจสอบผลลัพธ์และส่งค่ากลับเป็น JSON
+		if (!empty($result) && isset($result->apm_ql_code)) {
+			echo json_encode(['apm_ql_code' => $result->apm_ql_code]); // ส่งเฉพาะ apm_ql_code กลับไป
+		} else {
+			echo json_encode(['apm_ql_code' => 0]); // กรณีไม่มีผลลัพธ์
+		}
 	}
 }

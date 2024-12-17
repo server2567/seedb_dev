@@ -36,6 +36,19 @@ class Report_develop extends Report_Controller
         $data['ps_id'] = $this->session->userdata('us_ps_id');
         $data['base_develop_type_list'] = $this->M_hr_develop_type->get_all_by_active('asc')->result();
         $data['base_hire_list'] = $this->M_hr_hire->get_all_by_active()->result();
+        $hire_data = $this->session->userdata('hr_hire_is_medical');
+        $hire_name = ['N' => 'สายพยาบาล', 'SM' => 'สายสนับสนุนทางการแพทย์',  'A' => 'สายบริหาร', 'M' => 'สายบริหาร'];
+        $hire_arr = [];
+        foreach ($hire_data as $key => $hire) {
+            if (isset($hire_name[$hire['type']])) {
+                $hire_arr[$hire['type']] = $hire_name[$hire['type']];
+            }
+        }
+        foreach ($data['base_hire_list'] as $key => $value) {
+            if ($hire_arr[$value->hire_is_medical]) {
+                $value->hire_name .= ' ' . $hire_arr[$value->hire_is_medical];
+            }
+        }
         $data['base_adline_list'] = $this->M_hr_adline_position->get_all_by_active()->result();
         $data['year_filter'] = $this->M_hr_develop->get_develop_year_filter()->result();
         $this->output('hr/report/v_report_overview_meeting', $data);
@@ -299,7 +312,7 @@ class Report_develop extends Report_Controller
         // เพิ่ม HTML ลงใน PDF
         $mpdf->WriteHTML($html);
 
-        $mpdf->Output('รายงานการพัฒนาบุคลากร'. '.pdf', 'I'); // 'I' = แสดงผลในเบราว์เซอร์
-		exit;
+        $mpdf->Output('รายงานการพัฒนาบุคลากร' . '.pdf', 'I'); // 'I' = แสดงผลในเบราว์เซอร์
+        exit;
     }
 }

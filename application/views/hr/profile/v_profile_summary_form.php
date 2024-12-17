@@ -19,7 +19,7 @@
         background-repeat: no-repeat;
         background-size: contain;
         background-position: right;
-        background-size: auto auto;
+        /* background-size: auto auto; */
     }
 
     .PersonalInfo-background-orange {
@@ -27,7 +27,7 @@
         background-repeat: no-repeat;
         background-size: contain;
         background-position: right;
-        background-size: auto auto;
+        /* background-size: auto auto; */
     }
 
     .PersonalInfo-background-green {
@@ -825,7 +825,7 @@
                                         อายุ
                                     </div>
                                     <div class="col-2 col-md-5  text-start" style="padding-left:0px;">
-                                        <?= $row_profile->psd_birthdate != null ? abbreDate2($row_profile->psd_birthdate) : '60 ปี' ?>
+                                        <?= $row_profile->psd_birthdate != null ? calAge3($row_profile->psd_birthdate).' ปี' : '- ปี' ?>
                                     </div>
                                     <div class="col-4 col-md-2 col-lg-2" style="color:#777">
                                         กรุ๊ปเลือด
@@ -866,24 +866,24 @@
                                 <!-- New row for additional details -->
                                 <div class="row font-18">
                                     <div class="col-md-12" style="padding-left: 30px;">
-                                        <div>
+                                    <div>
                                             <span style="color:#777"> <i class="bi bi-house font-30"></i> ที่อยู่ปัจจุบัน</span><br>
                                             <span style="padding-left:32px"></span>
-                                            <?= $row_profile->psd_addcur_no != null ? '44/1 ถนนศรีวิชัย' : '44/1 ถนนศรีวิชัย' ?>
-                                            ต.<?= $row_profile->psd_addcur_dist_id != null ? $row_profile->dist_name == '' ? '-' : '44/1 ถนนศรีวิชัย' : '44/1 ถนนศรีวิชัย' ?>
-                                            อ.<?= $row_profile->psd_addcur_amph_id != null ? 'มะขามเตี้ย' : 'มะขามเตี้ย' ?>
-                                            จ.<?= $row_profile->psd_addcur_pv_id != null ? 'ราษฎร์ธานี' : 'ราษฎร์ธานี' ?>
-                                            <?= $row_profile->psd_addcur_zipcode != null ? '84000' : '84000' ?>
+                                            <?= $row_profile->psd_addcur_no != null ? $row_profile->psd_addcur_no: '44/1 ถนนศรีวิชัย' ?>
+                                            ต.<?= $row_profile->psd_addcur_dist_id != null ? $row_profile->dist_name == '' ? '-' : $row_profile->dist_name : '44/1 ถนนศรีวิชัย' ?>
+                                            อ.<?= $row_profile->psd_addcur_amph_id != null ? $row_profile->amph_name == '' ? '-' : $row_profile->amph_name :  'มะขามเตี้ย' ?>
+                                            จ.<?= $row_profile->psd_addcur_pv_id != null ? $row_profile->pv_name == '' ? '-' : $row_profile->pv_name :  'ราษฎร์ธานี' ?>
+                                            <?= $row_profile->psd_addcur_zipcode != null ? $row_profile->psd_addcur_zipcode == '' ? '-' : $row_profile->psd_addcur_zipcode : '84000' ?>
                                         </div>
                                         <div>
                                             <span style="color:#777"> <i class="bi bi-house font-30"></i> ที่อยู่ตามสำเนาทะเบียนบ้าน</span>
                                             <br>
                                             <span style="padding-left:32px"></span>
-                                            <?= $row_profile->psd_addhome_no != null ?  '44/1 ถนนศรีวิชัย' : '44/1 ถนนศรีวิชัย' ?>
-                                            ต.<?= $row_profile->psd_addhome_dist_id != null ? $row_profile->dist_name == '' ? '-' : '44/1 ถนนศรีวิชัย' : '44/1 ถนนศรีวิชัย' ?>
-                                            อ.<?= $row_profile->psd_addhome_amph_id != null ? 'มะขามเตี้ย' : 'มะขามเตี้ย' ?>
-                                            จ.<?= $row_profile->psd_addhome_pv_id != null ? 'ราษฎร์ธานี' : 'ราษฎร์ธานี' ?>
-                                            <?= $row_profile->psd_addcur_zipcode != null ? '84000' : '84000' ?>
+                                            <?= $row_profile->psd_addhome_no != null ?  $row_profile->psd_addhome_no : '44/1 ถนนศรีวิชัย' ?>
+                                            ต.<?= $row_profile->psd_addhome_dist_id != null ? $row_profile->home_dist_name == '' ? '-' : $row_profile->home_dist_name : '44/1 ถนนศรีวิชัย' ?>
+                                            อ.<?= $row_profile->psd_addhome_amph_id != null ? $row_profile->home_amph_name == '' ? '-' : $row_profile->home_amph_name : 'มะขามเตี้ย' ?>
+                                            จ.<?= $row_profile->psd_addhome_pv_id != null ? $row_profile->home_pv_name == '' ? '-' : $row_profile->home_pv_name : 'ราษฎร์ธานี' ?>
+                                            <?= $row_profile->psd_addcur_zipcode != null ? $row_profile->psd_addhome_zipcode == '' ? '-' : $row_profile->psd_addhome_zipcode :  '84000' ?>
                                         </div>
                                         <div>
                                             <span style="color:#777"><i class="bi bi-phone font-30"></i> เบอร์โทรศัพท์ที่สามารถติดต่อได้</span> <br>
@@ -895,25 +895,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card PersonalInfo-background-blue">
-                        <div class="card-body m-0" id="PersonalInfo-HR-Section-3">
-                            <div class="row">
-                                <div class="col-sm-12 col-md-3 card-IMG">
-                                    <img src="<?php echo site_url($this->config->item('hr_dir') . "getIcon?type=" . $this->config->item('hr_profile_dir') . "profile_summary_icon&image=Educate.png") ?>" class="img-fluid rounded" width="100px" alt="ชื่อสื่อการเรียนรู้ 1">
-                                </div>
-                                <div class="col-9 p-3 pt-2">
-                                    <h5 class="card-title partial-name font-22" style="margin-bottom: 0px;">ข้อมูลการศึกษา</h5>
-                                    <button class="btn btn-outline-secondary edit btn-sm" onclick="window.location.href='<?php echo base_url() ?>index.php/hr/profile/Profile_user/get_profile_user/<?php echo $row_profile->ps_id ?>/<?= 3 ?>'"><i class="bi bi-pencil"></i></button>
-                                    <div class="row font-18">
-                                        <div class="col-md-12">
-                                            <?php foreach ($person_education_info as $key => $education) : ?>
-                                                <div class="mt-2 mb-3"> <i class="bi-bookmark-star-fill profile-badge text-primary font-30"></i> <span style="color:#777;"><?= $education->edulv_name ?></span></div>
-                                                <div style="padding-left: 40px;">
-                                                    <i class="bi-mortarboard-fill pe-2 font-30"></i>
-                                                    พ.ศ. <?= $education->edu_start_year + 543 ?>-<?= $education->edu_end_year + 543 ?><br><span style="margin-right: 60px;">&nbsp;</span><?= $education->edudg_name ?> <?= $education->edumj_name ?> <br><span style="margin-right: 60px;">&nbsp;</span><?= $education->place_name ?>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
+                    <div class="card PersonalInfo-background-blue" id="PersonalInfo-HR-Section-3">
+                        <div class="row">
+                            <div class="col-sm-12 col-md-3 card-IMG">
+                                <img src="<?php echo site_url($this->config->item('hr_dir') . "getIcon?type=" . $this->config->item('hr_profile_dir') . "profile_summary_icon&image=Educate.png") ?>" class="img-fluid rounded" width="100px" alt="ชื่อสื่อการเรียนรู้ 1">
+                            </div>
+                            <div class="col-9 p-3 pt-2">
+                                <h5 class="card-title partial-name font-22" style="margin-bottom: 0px;">ข้อมูลการศึกษา</h5>
+                                <button class="btn btn-outline-secondary edit btn-sm" onclick="window.location.href='<?php echo base_url() ?>index.php/hr/profile/Profile_user/get_profile_user/<?php echo $row_profile->ps_id ?>/<?= 3 ?>'"><i class="bi bi-pencil"></i></button>
+                                <div class="row font-18">
+                                    <div class="col-md-12">
+                                        <?php foreach ($person_education_info as $key => $education) : ?>
+                                            <div class="mt-2 mb-3"> <i class="bi-bookmark-star-fill profile-badge text-primary font-30"></i> <span style="color:#777;"><?= $education->edulv_name ?></span></div>
+                                            <div style="padding-left: 40px;">
+                                                <i class="bi-mortarboard-fill pe-2 font-30"></i>
+                                                พ.ศ. <?= $education->edu_start_year + 543 ?>-<?= $education->edu_end_year + 543 ?><br><span style="margin-right: 60px;">&nbsp;</span><?= $education->edudg_name ?> <?= $education->edumj_name ?> <br><span style="margin-right: 60px;">&nbsp;</span><?= $education->place_name ?>
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
                             </div>
@@ -1083,7 +1081,7 @@
                                                                                 <p>วันที่เริ่มปฏิบัติงาน</p>
                                                                             </div>
                                                                             <div class="col-md-8">
-                                                                                <?= $timeline['hipos_start_date'] != null ? fullDateTH3($timeline['hipos_start_date']).' ถึง '.($timeline['hipos_end_date'] == '9999-12-31'? 'ปัจจุบัน': fullDateTH3($timeline['hipos_end_date'])) : '-' ?>
+                                                                                <?= $timeline['hipos_start_date'] != null ? fullDateTH3($timeline['hipos_start_date']) . ' ถึง ' . ($timeline['hipos_end_date'] == '9999-12-31' ? 'ปัจจุบัน' : fullDateTH3($timeline['hipos_end_date'])) : '-' ?>
 
                                                                             </div>
                                                                         </div>
@@ -1377,9 +1375,9 @@
                     filter_year: selectedValue
                 },
                 success: function(dataReturn) {
-                   var dataJSON = JSON.parse(dataReturn)
-                   var data = dataJSON.data
-                   
+                    var dataJSON = JSON.parse(dataReturn)
+                    var data = dataJSON.data
+
                     var sum_hour = dataJSON.sum_hour
                     $('#dev_sum_hour').html(sum_hour);
                     var table_in = $('#table-develop-in').DataTable()

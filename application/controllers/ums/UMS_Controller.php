@@ -231,7 +231,8 @@ class UMS_Controller extends CI_Controller{
 		
 		foreach($data['person_reward_list'] as $key=>$row){
 			$row->rewd_id = encrypt_id($row->rewd_id);
-			$row->reward_detail = $this->M_hr_person_reward->get_reward_by_year($row->rewd_year);
+			$row->reward_detail = $this->M_hr_person_reward->get_reward_by_year($ps_id, $row->rewd_year);
+			$row->rewd_year = ($row->rewd_year != 0 ? $row->rewd_year : "ไม่ระบุ");
 			if($row->reward_detail->num_rows() > 0){
 				foreach($row->reward_detail->result() as $rewd){
 					$rewd->rewd_date = ($rewd->rewd_date == "0000-00-00" ? date('d/m/Y', strtotime($rewd->rewd_end_date . ' +543 years')) : date('d/m/Y', strtotime($rewd->rewd_date . ' +543 years')));
@@ -248,6 +249,14 @@ class UMS_Controller extends CI_Controller{
 		$data['session_is_have_menus_sidebar'] = isset($is_have_menus_sidebar) ? $is_have_menus_sidebar: true;
     $this->load->view('template/header_frontend', $data);
   }
+
+  function header_frontend_clinic()
+	{
+		$is_have_menus_sidebar = $this->session->userdata('is_have_menus_sidebar');
+		$data['session_is_have_menus_sidebar'] = isset($is_have_menus_sidebar) ? $is_have_menus_sidebar : true;
+		$this->load->view('template/header_frontend_clinic', $data);
+	}
+
   function header_frontend_staff()
   {
 	  $is_have_menus_sidebar = $this->session->userdata('is_have_menus_sidebar');
@@ -604,6 +613,16 @@ class UMS_Controller extends CI_Controller{
 		$this->load->view($body, $data);
 		$this->footer_frontend();
 	}
+  
+  function output_frontend_clinic_public($body = '', $data = '')
+	{
+		$this->header_frontend_clinic();
+		$this->javascript(isset($data['Menus']) ? $data['Menus'] : array());
+		$this->topbar_frontend(true);
+		$this->load->view($body, $data);
+		$this->footer_frontend();
+	}
+
 	function output_frontend($body = '', $data = '')
 	{
 		$this->header_frontend();
@@ -912,7 +931,38 @@ class UMS_Controller extends CI_Controller{
 		$this->footer();
 		$this->javascript(array());
 	}
+
+	public function his_database()
+	{
+
+		$host = $this->config->item('his_host');
+		$dbname = $this->config->item('his_dbname');
+		$username = $this->config->item('his_username');
+		$password = $this->config->item('his_password');
+
+		try {
+			// สร้างการเชื่อมต่อฐานข้อมูลด้วย PDO
+			$pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+
+			// ตั้งค่า PDO ให้แสดงข้อผิดพลาดเป็น Exception
+			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			// เขียน Query เพื่อดึงข้อมูลจาก tbluserid
+			// $sql = "SELECT * FROM tbluserid";
+			// $stmt = $pdo->prepare($sql);
+			// $stmt->execute();
+
+			// // ดึงผลลัพธ์ทั้งหมด
+			// $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+			// // แสดงผลลัพธ์
+			// foreach ($users as $user) {
+			//     echo "UserID: " . $user['User_ID'] . " - Name: " . $user['Username'] . "<br>";
+			// }
+
+			echo "เชื่อมต่อฐานข้อมูลสำเร็จ!";
+		} catch (PDOException $e) {
+			// กรณีเกิดข้อผิดพลาดในการเชื่อมต่อ
+			echo "เกิดข้อผิดพลาด: " . $e->getMessage();
+		}
+	}
 }
-
-?>
-
